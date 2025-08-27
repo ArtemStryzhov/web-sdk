@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Text } from 'pixi-svelte';
+	import { Text, Rectangle } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 
 	import UiSprite from './UiSprite.svelte';
@@ -27,22 +27,19 @@
 
 <Button {...buttonProps}>
 	{#snippet children({ center, hovered, pressed })}
-		<UiSprite
+		<Rectangle
 			{...center}
 			anchor={0.5}
 			width={buttonProps.sizes.width}
 			height={buttonProps.sizes.height}
-			backgroundColor={variant === 'dark' ? 0x000000 : 0xffffff}
+			backgroundColor={icon === 'autoSpin' ? 0xD9D9D9 : variant === 'dark' ? 0x000000 : 0xffffff}
+			backgroundAlpha={icon === 'autoSpin' ? 0.3 : 1}
+			borderRadius={20}
 			{...buttonProps.disabled
 				? {
 						backgroundColor: 0xaaaaaa,
-					}
-				: {}}
-			{...active
-				? {
-						borderWidth: 10,
-						borderColor: variant === 'dark' ? 0xffffff : 0x000000,
-					}
+						backgroundAlpha: 1,
+				}
 				: {}}
 		/>
 
@@ -54,10 +51,10 @@
 				align: 'center',
 				wordWrap: true,
 				wordWrapWidth: 200,
-				fontFamily: 'proxima-nova',
+				fontFamily: 'Kanit, Arial, sans-serif',
 				fontWeight: '600',
 				fontSize: UI_BASE_FONT_SIZE * 0.9,
-				fill: variant === 'dark' ? 0xffffff : 0x000000,
+				fill: icon === 'autoSpin' ? (active ? 0xC53C3C : 0xD8ECA6) : variant === 'dark' ? 0xffffff : 0x000000,
 			}}
 		/>
 

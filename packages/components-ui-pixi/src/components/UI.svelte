@@ -12,7 +12,7 @@
 	import LabelBalance from './LabelBalance.svelte';
 	import LabelWin from './LabelWin.svelte';
 	import LabelBet from './LabelBet.svelte';
-	import ButtonPayTable from './ButtonPayTable.svelte';
+	
 	import ButtonGameRules from './ButtonGameRules.svelte';
 	import ButtonSettings from './ButtonSettings.svelte';
 	import ButtonBuyBonus from './ButtonBuyBonus.svelte';
@@ -22,7 +22,7 @@
 	import ButtonIncrease from './ButtonIncrease.svelte';
 	import ButtonDecrease from './ButtonDecrease.svelte';
 	import ButtonMenu from './ButtonMenu.svelte';
-	import ButtonMenuClose from './ButtonMenuClose.svelte';
+	import ButtonClose from './ButtonClose.svelte';
 	import ButtonSoundSwitch from './ButtonSoundSwitch.svelte';
 
 	type Props = {
@@ -96,13 +96,11 @@
 			<ButtonMenu {...buttonProps} />
 		{/snippet}
 
-		{#snippet buttonMenuClose(buttonProps)}
-			<ButtonMenuClose {...buttonProps} />
+		{#snippet buttonClose(buttonProps)}
+			<ButtonClose {...buttonProps} />
 		{/snippet}
 
-		{#snippet buttonPayTable(buttonProps)}
-			<ButtonPayTable {...buttonProps} />
-		{/snippet}
+
 
 		{#snippet buttonGameRules(buttonProps)}
 			<ButtonGameRules {...buttonProps} />

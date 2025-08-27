@@ -11,13 +11,15 @@
 		zIndex: number;
 		persistent?: boolean;
 		onclose: () => void;
+		noFullScreenOverlay?: boolean;
+		allowClickOutsideToClose?: boolean;
 	};
 
 	const props: Props = $props();
 
 	const zIndexInternal = {
 		topLayer: 2,
-		clickToCloseLayer: 2,
+		clickToCloseLayer: 1,
 		closeButton: 101,
 		contentLayer: 100,
 	};
@@ -33,31 +35,32 @@
 	});
 </script>
 
-<div>
-	{@render props.children()}
-</div>
-
 <OnHotkey hotkey="Escape" onpress={closeModal} />
 
-<div class="pop-up-wrap" class:disabled style={`z-index: ${props.zIndex};`}>
-	<div class="blur-layer"></div>
-	<div
-		class="top-layer"
-		style="--zIndex: {zIndexInternal.topLayer}"
-		in:blur={{ duration: 300, opacity: 0 }}
-	>
-		<div
-			tabindex={0}
-			class="click-to-close-layer"
-			onclick={closeModal}
-			onkeypress={closeModal}
-			role="button"
-			style="--zIndex: {zIndexInternal.clickToCloseLayer}"
-		></div>
+	<div class="pop-up-wrap" class:disabled style={`z-index: ${props.zIndex};`}>
+		{#if !props.noFullScreenOverlay}
+			<div class="blur-layer"></div>
+		{/if}
 
+		{#if props.allowClickOutsideToClose}
+			<div
+				tabindex={0}
+				class="click-to-close-layer"
+				onclick={closeModal}
+				onkeypress={closeModal}
+				role="button"
+				style="--zIndex: {zIndexInternal.clickToCloseLayer}"
+			></div>
+		{/if}
+
+		<div
+			class="top-layer"
+			style="--zIndex: {zIndexInternal.topLayer}"
+			in:blur={{ duration: 300, opacity: 0 }}
+		>
 		{#if !props.persistent}
 			<div class="close-button-wrap" style="--zIndex: {zIndexInternal.closeButton}">
-				<button class="close-button" data-test="close-button" onclick={closeModal}>×</button>
+				<button class="close-button" data-test="close-button" onclick={closeModal} aria-label="Close modal"></button>
 			</div>
 		{/if}
 		{@render props.children()}
@@ -66,7 +69,7 @@
 
 <style lang="scss">
 	.pop-up-wrap {
-		font-family: 'proxima-nova', sans-serif;
+		font-family: 'Kanit', sans-serif;
 		touch-action: manipulation;
 		color: white;
 		position: fixed;
@@ -90,19 +93,17 @@
 		top: 0;
 		bottom: 0;
 		right: 0;
-		background-color: rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(30px);
-		-webkit-backdrop-filter: blur(30px);
+		background-color: rgba(20, 20, 23, 0.95);
+		/* No blur - removed backdrop-filter */
 	}
 
 	.top-layer {
-		width: 100%;
-		height: 100%;
 		z-index: var(--zIndex);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
+		position: relative;
 	}
 
 	.click-to-close-layer {
@@ -122,13 +123,33 @@
 
 	.close-button {
 		cursor: pointer;
-		color: white;
-		font-size: 3rem;
-		font-weight: 900;
 		background-color: transparent;
-		border-color: transparent;
-		line-height: 0px; /* to remove the button style influence */
-		width: 3rem;
-		height: 3rem;
+		border: none;
+		width: 80px;
+		height: 80px;
+		position: relative;
+		padding: 0;
+		margin: 20px;
+	}
+
+	.close-button::before,
+	.close-button::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 45px;
+		height: 5px;
+		background-color: #D8ECA6;
+		border-radius: 2.5px;
+		transform-origin: center;
+	}
+
+	.close-button::before {
+		transform: translate(-50%, -50%) rotate(45deg);
+	}
+
+	.close-button::after {
+		transform: translate(-50%, -50%) rotate(-45deg);
 	}
 </style>

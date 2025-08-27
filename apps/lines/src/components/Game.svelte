@@ -27,6 +27,7 @@
 	import Transition from './Transition.svelte';
 	import I18nTest from './I18nTest.svelte';
 
+
 	const context = getContext();
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
@@ -75,7 +76,7 @@
 					anchor={{ x: 1, y: 0 }}
 					text="ADD YOUR LOGO"
 					style={{
-						fontFamily: 'proxima-nova',
+						fontFamily: 'Kanit',
 						fontSize: REM * 1.5,
 						fontWeight: '600',
 						lineHeight: REM * 2,
@@ -91,8 +92,11 @@
 		{/if}
 		<FreeSpinOutro />
 		<Transition />
+		{#if false}
+			<I18nTest />
 
-		<I18nTest />
+		{/if}
+
 	{/if}
 </App>
 

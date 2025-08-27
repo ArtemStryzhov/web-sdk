@@ -13,10 +13,27 @@
 	};
 
 	const props: Props = $props();
+	
+	const closeModal = () => {
+		stateModal.modal = null;
+	};
 </script>
 
 {#if stateModal.modal?.name === 'gameRules'}
-	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
+	<!-- Custom background for game rules modal -->
+	<div class="game-rules-background"></div>
+	
+	<!-- Custom close button matching main menu style -->
+	<div class="close-button-container">
+		<button class="custom-close-button" aria-label="Close game rules" onclick={closeModal}>
+			<div class="close-x">
+				<div class="diagonal-line line-1"></div>
+				<div class="diagonal-line line-2"></div>
+			</div>
+		</button>
+	</div>
+	
+	<Popup zIndex={zIndex.modal} persistent={true} onclose={() => (stateModal.modal = null)}>
 		<BaseContent maxWidth="100%">
 			<BaseScrollable type="column">
 				<span>ADD YOUR GAME RULES</span>
@@ -25,3 +42,79 @@
 		</BaseContent>
 	</Popup>
 {/if}
+
+<style lang="scss">
+	.game-rules-background {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: #141417;
+		opacity: 0.95;
+		z-index: 49; // Just below the modal (zIndex.modal is 50)
+		pointer-events: none;
+	}
+
+	.close-button-container {
+		position: fixed;
+		top: 80px;
+		right: 80px;
+		z-index: 51; // Above the modal
+		pointer-events: auto;
+	}
+
+	.custom-close-button {
+		width: 120px;
+		height: 80px;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		
+		// Almost transparent background like the original
+		&::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: #000000;
+			opacity: 0.01;
+			border-radius: 0;
+		}
+
+		&:hover {
+			opacity: 0.8;
+		}
+	}
+
+	.close-x {
+		position: relative;
+		width: 45px;
+		height: 45px;
+	}
+
+	.diagonal-line {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 45px;
+		height: 5px;
+		background-color: #D8ECA6; // Same light green color as main menu
+		border-radius: 2.5px;
+		transform-origin: center;
+		
+		&.line-1 {
+			transform: translate(-50%, -50%) rotate(45deg);
+		}
+		
+		&.line-2 {
+			transform: translate(-50%, -50%) rotate(-45deg);
+		}
+	}
+</style>

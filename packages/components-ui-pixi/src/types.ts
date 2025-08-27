@@ -27,14 +27,15 @@ export type ButtonIcon =
 	| 'decrease'
 	| 'increase'
 	| 'menu'
+	| 'close'
+	| 'bet'
 	| 'turbo'
 	| 'autoSpin'
 	| 'payTable'
 	| 'info'
 	| 'settings'
 	| 'soundOn'
-	| 'soundOff'
-	| 'menuExit';
+	| 'soundOff';
 
 export type LayoutUiProps = {
 	gameName: Snippet;
@@ -49,9 +50,8 @@ export type LayoutUiProps = {
 	buttonIncrease: Snippet<[Partial<ButtonProps>]>;
 	buttonDecrease: Snippet<[Partial<ButtonProps>]>;
 	buttonMenu: Snippet<[Partial<ButtonProps>]>;
-	buttonMenuClose: Snippet<[Partial<ButtonProps>]>;
-	buttonPayTable: Snippet<[Partial<ButtonProps>]>;
+	buttonClose: Snippet<[Partial<ButtonProps>]>;
 	buttonGameRules: Snippet<[Partial<ButtonProps>]>;
 	buttonSettings: Snippet<[Partial<ButtonProps>]>;
-	buttonSoundSwitch: Snippet<[Partial<ButtonProps>]>;
+	buttonSoundSwitch: Snippet<[Partial<ButtonProps & { inMenu?: boolean }>]>;
 };
