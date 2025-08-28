@@ -36,11 +36,11 @@
 		})}
 	>
 		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 50 + 30}>
-			{@render props.amountBalance({ stacked: true })}
+			{@render props.amountBalance({ stacked: false })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 50 + 30 + 260}>
-			{@render props.amountWin({ stacked: true })}
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 15} x={640}>
+			{@render props.amountWin({ stacked: false })}
 		</Container>
 
 		<Container y={DESKTOP_BASE_SIZE * 0.5 - 100} x={20}>
@@ -57,25 +57,25 @@
 			{@render props.buttonSoundSwitch({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 4} scale={0.8}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 10} x={360 + 180 * 5} scale={0.8}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 100} x={-10 + 180 * 5}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 140} x={360 + 180 * 5}>
 			{@render props.amountBet({ stacked: true })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 5}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 50} x={600 + 180 * 5}>
 			{@render props.buttonBet({ anchor: 0.5 })}
 		</Container>
 
 
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 75} x={1560 + 90}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 105} x={1560 + 90}>
 			{@render props.buttonDecrease({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 + 75} x={1560 + 90}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 -10} x={1560 + 90}>
 			{@render props.buttonIncrease({ anchor: 0.5 })}
 		</Container>
 

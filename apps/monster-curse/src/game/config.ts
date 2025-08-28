@@ -6,20 +6,27 @@ export default {
 	numReels: 5,
 	numRows: [5, 5, 5, 5, 5],
 	betModes: {
-		base: {
-			cost: 1.0,
-			feature: true,
-			buyBonus: false,
-			rtp: 0.97,
-			max_win: 5000.0,
+		"base": {
+			"cost": 1.0,
+			"feature": true,
+			"buyBonus": false,
+			"rtp": 0.97,
+			"max_win": 5000.0
 		},
-		bonus: {
-			cost: 100.0,
-			feature: false,
-			buyBonus: true,
-			rtp: 0.97,
-			max_win: 5000.0,
+		"bonus_3": {
+			"cost": 100.0,
+			"feature": false,
+			"buyBonus": true,
+			"rtp": 0.97,
+			"max_win": 5000.0
 		},
+		"bonus_4": {
+			"cost": 300.0,
+			"feature": false,
+			"buyBonus": true,
+			"rtp": 0.97,
+			"max_win": 5000.0
+		}
 	},
 	paylines: {
 		'1': [0, 0, 0, 0, 0],

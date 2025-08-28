@@ -17,11 +17,13 @@
 	const props: Props = $props();
 	const context = getContext();
 
-	// Check if we should stack based on layout type (tablet and portrait should be stacked)
+	// Check if we should stack based on layout type (tablet and portrait should be stacked by default)
+	// But allow explicit stacked: false to override
 	const shouldStack = $derived(
-		props.stacked || 
-		context.stateLayoutDerived.layoutType() === 'tablet' || 
-		context.stateLayoutDerived.layoutType() === 'portrait'
+		props.stacked !== false && (
+			context.stateLayoutDerived.layoutType() === 'tablet' ||
+			context.stateLayoutDerived.layoutType() === 'portrait'
+		)
 	);
 
 	// Double font size for WIN label specifically
@@ -37,7 +39,7 @@
 	const labelStyle = $derived({
 		fontFamily: 'Kanit, Arial, sans-serif',
 		fontSize,
-		fontWeight: isWinLabel ? 'bold' : isBalanceLabel || isBetLabel ? '600' : '400', // Bold for WIN, semibold for balance/bet, normal for others
+		fontWeight: (isWinLabel ? 'bold' : (isBalanceLabel || isBetLabel ? 600 : 400)) as any, // Type assertion needed for Pixi.js compatibility
 		fill: 0xD8ECA6, // Light lime green color for labels
 	});
 
@@ -51,12 +53,11 @@
 {#if shouldStack}
 	{#if props.tiled}
 		<UiSprite
+			key="background-tile"
 			y={isWinLabel ? -40 : -20}
 			anchor={{ x: 0.5, y: 0 }}
 			width={fontSize * 3 * (326 / 73)}
 			height={fontSize * 3}
-			borderRadius={35}
-			backgroundAlpha={0}
 		/>
 	{/if}
 	<Text anchor={{ x: 0.5, y: 0 }} text={props.label} style={labelStyle} />
@@ -64,12 +65,11 @@
 {:else}
 	{#if props.tiled}
 		<UiSprite
+			key="background-tile"
 			x={isWinLabel ? -180 : -90}
 			anchor={{ x: 0, y: 0.5 }}
 			width={fontSize * 3 * (326 / 73)}
 			height={fontSize * 3}
-			borderRadius={35}
-			backgroundAlpha={0}
 		/>
 	{/if}
 		<Container>

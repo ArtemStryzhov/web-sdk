@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { stateUi } from 'state-shared';
+
+	// Type assertion to help TypeScript recognize the autoSpinsCustomRounds property
+	const typedStateUi = stateUi as typeof stateUi & { autoSpinsCustomRounds: number };
 </script>
 
 <div class="range-input-container">
@@ -8,13 +11,13 @@
 			type="range"
 			min="0"
 			max="200"
-			value={stateUi.autoSpinsCustomRounds}
-			oninput={(e) => (stateUi.autoSpinsCustomRounds = parseInt((e.target as HTMLInputElement).value))}
+			value={typedStateUi.autoSpinsCustomRounds}
+			oninput={(e) => (typedStateUi.autoSpinsCustomRounds = parseInt((e.target as HTMLInputElement).value))}
 			class="rounds-slider"
 		/>
 		<div class="value-display">
 			<div class="value-background"></div>
-			<span class="value-text">{stateUi.autoSpinsCustomRounds}</span>
+			<span class="value-text">{typedStateUi.autoSpinsCustomRounds}</span>
 		</div>
 	</div>
 </div>

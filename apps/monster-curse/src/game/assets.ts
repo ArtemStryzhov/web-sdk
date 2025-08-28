@@ -64,6 +64,12 @@ export default {
 		src: new URL('../../assets/sprites/vector-gray.png', import.meta.url).href,
 		preload: true,
 	},
+	// TODO: Replace with proper buy-bonus.png asset when available
+	buyBonus: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/play.png', import.meta.url).href, // Temporary placeholder
+		preload: true,
+	},
 	loader: {
 		type: 'spine',
 		src: {

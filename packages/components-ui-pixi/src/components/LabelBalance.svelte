@@ -22,4 +22,4 @@
 	});
 </script>
 
-<UiLabel tiled {label} {value} spacing={UI_BASE_FONT_SIZE * 4.5} />
+<UiLabel tiled {label} {value} spacing={UI_BASE_FONT_SIZE * 4.5} stacked={props.stacked} />
