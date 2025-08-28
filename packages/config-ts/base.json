@@ -27,7 +27,8 @@
 		"jsx": "react",
 		"allowSyntheticDefaultImports": true,
 		"preserveSymlinks": true,
-		"allowImportingTsExtensions": true
+		"allowImportingTsExtensions": true,
+		"noEmit": true
 	},
 	"exclude": ["node_modules"]
 }
