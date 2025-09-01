@@ -69,6 +69,6 @@
 		height: var(--height-value);
 		background: var(--background-value);
 		border: var(--border-value);
-		border-radius: 10px;
+		border-radius: 135px;
 	}
 </style>

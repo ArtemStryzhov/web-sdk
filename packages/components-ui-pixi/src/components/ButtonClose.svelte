@@ -11,7 +11,7 @@
 
 	const onpress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		stateUi.menuOpen = true;
+		stateUi.menuOpen = false;
 	};
 
 	const center = { x: sizes.width * 0.5, y: sizes.height * 0.5 };
@@ -29,37 +29,29 @@
 			alpha={0.01}
 		/>
 
-		<!-- Three horizontal lines for hamburger menu -->
+		<!-- X icon for close button -->
 		<Container {...center}>
-			<!-- Top line -->
-			<Rectangle
-				x={0}
-				y={-12}
-				width={45}
-				height={5}
-				backgroundColor={0xD8ECA6}
-				borderRadius={2.5}
-				anchor={0.5}
-			/>
-			<!-- Middle line -->
+			<!-- Top-left to bottom-right diagonal line -->
 			<Rectangle
 				x={0}
 				y={0}
-				width={32}
-				height={5}
-				backgroundColor={0xD8ECA6}
-				borderRadius={2.5}
-				anchor={0.5}
-			/>
-			<!-- Bottom line -->
-			<Rectangle
-				x={0}
-				y={12}
 				width={45}
 				height={5}
 				backgroundColor={0xD8ECA6}
 				borderRadius={2.5}
 				anchor={0.5}
+				rotation={0.785398}
+			/>
+			<!-- Top-right to bottom-left diagonal line -->
+			<Rectangle
+				x={0}
+				y={0}
+				width={45}
+				height={5}
+				backgroundColor={0xD8ECA6}
+				borderRadius={2.5}
+				anchor={0.5}
+				rotation={-0.785398}
 			/>
 		</Container>
 	{/snippet}

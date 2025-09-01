@@ -35,24 +35,68 @@ export const createLayout = (layoutOptions: {
 	const canvasSizes = () => ({ width: innerWidth.current ?? 1, height: innerHeight.current ?? 1 }); // because of resizeTo: window
 	const canvasRatio = () => getRatio(canvasSizes());
 	const canvasRatioType = () => {
-		if (canvasRatio() >= CANVAS_RATIO_TYPE_BREAK_POINTS.wideSquare) return 'longWidth' as const;
-		if (canvasRatio() <= CANVAS_RATIO_TYPE_BREAK_POINTS.narrowSquare) return 'longHeight' as const;
+		const ratio = canvasRatio();
+		const sizes = canvasSizes();
+		console.log('🎮 [DEBUG] Screen Analysis:');
+		console.log(`   📐 Dimensions: ${sizes.width}x${sizes.height}px`);
+		console.log(`   📏 Aspect Ratio: ${ratio.toFixed(3)}`);
+
+		if (ratio >= CANVAS_RATIO_TYPE_BREAK_POINTS.wideSquare) {
+			console.log(`   📱 Ratio Type: longWidth (≥${CANVAS_RATIO_TYPE_BREAK_POINTS.wideSquare})`);
+			return 'longWidth' as const;
+		}
+		if (ratio <= CANVAS_RATIO_TYPE_BREAK_POINTS.narrowSquare) {
+			console.log(`   📱 Ratio Type: longHeight (≤${CANVAS_RATIO_TYPE_BREAK_POINTS.narrowSquare})`);
+			return 'longHeight' as const;
+		}
+		console.log(`   📱 Ratio Type: almostSquare (${CANVAS_RATIO_TYPE_BREAK_POINTS.narrowSquare} < ratio < ${CANVAS_RATIO_TYPE_BREAK_POINTS.wideSquare})`);
 		return 'almostSquare' as const;
 	};
 	const canvasSizeType = () => {
 		const deviceWidth = Math.min(canvasSizes().width, canvasSizes().height);
-		if (deviceWidth <= CANVAS_SIZE_TYPE_BREAK_POINTS.smallMobile) return 'smallMobile' as const;
-		if (deviceWidth <= CANVAS_SIZE_TYPE_BREAK_POINTS.mobile) return 'mobile' as const;
-		if (deviceWidth <= CANVAS_SIZE_TYPE_BREAK_POINTS.tablet) return 'tablet' as const;
-		if (deviceWidth <= CANVAS_SIZE_TYPE_BREAK_POINTS.largeTablet) return 'largeTablet' as const;
+		console.log(`   📏 Smaller dimension: ${deviceWidth}px`);
+
+		if (deviceWidth <= CANVAS_SIZE_TYPE_BREAK_POINTS.smallMobile) {
+			console.log(`   📱 Size Type: smallMobile (≤${CANVAS_SIZE_TYPE_BREAK_POINTS.smallMobile}px)`);
+			return 'smallMobile' as const;
+		}
+		if (deviceWidth <= CANVAS_SIZE_TYPE_BREAK_POINTS.mobile) {
+			console.log(`   📱 Size Type: mobile (≤${CANVAS_SIZE_TYPE_BREAK_POINTS.mobile}px)`);
+			return 'mobile' as const;
+		}
+		if (deviceWidth <= CANVAS_SIZE_TYPE_BREAK_POINTS.tablet) {
+			console.log(`   📱 Size Type: tablet (${CANVAS_SIZE_TYPE_BREAK_POINTS.mobile + 1}px - ${CANVAS_SIZE_TYPE_BREAK_POINTS.tablet}px)`);
+			return 'tablet' as const;
+		}
+		if (deviceWidth <= CANVAS_SIZE_TYPE_BREAK_POINTS.largeTablet) {
+			console.log(`   📱 Size Type: largeTablet (≤${CANVAS_SIZE_TYPE_BREAK_POINTS.largeTablet}px)`);
+			return 'largeTablet' as const;
+		}
+		console.log(`   📱 Size Type: desktop (>${CANVAS_SIZE_TYPE_BREAK_POINTS.largeTablet}px)`);
 		return 'desktop' as const;
 	};
 	const layoutType = () => {
-		if (canvasRatioType() === 'almostSquare') return 'tablet' as const;
-		if (canvasRatioType() === 'longHeight') return 'portrait' as const;
-		if (canvasSizeType() === 'mobile' || canvasSizeType() === 'smallMobile')
-			return 'landscape' as const;
-		return 'desktop' as const;
+		const ratioType = canvasRatioType();
+		const sizeType = canvasSizeType();
+
+		let layout: 'tablet' | 'portrait' | 'landscape' | 'desktop';
+
+		if (ratioType === 'almostSquare') {
+			layout = 'tablet';
+			console.log('   🎮 Final Layout: TABLET (almostSquare ratio)');
+		} else if (ratioType === 'longHeight') {
+			layout = 'portrait';
+			console.log('   🎮 Final Layout: PORTRAIT (longHeight ratio)');
+		} else if (sizeType === 'mobile' || sizeType === 'smallMobile') {
+			layout = 'landscape';
+			console.log('   🎮 Final Layout: LANDSCAPE (mobile/smallMobile size)');
+		} else {
+			layout = 'desktop';
+			console.log('   🎮 Final Layout: DESKTOP (default)');
+		}
+
+		console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+		return layout as const;
 	};
 	const isStacked = () => ['portrait', 'almostSquare'].includes(layoutType());
 

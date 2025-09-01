@@ -6,6 +6,7 @@
 
 	import UiLabel from './UiLabel.svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
+	import { UI_BASE_FONT_SIZE } from '../constants';
 
 	type Props = {
 		stacked?: boolean;
@@ -21,4 +22,4 @@
 	});
 </script>
 
-<UiLabel tiled {label} {value} stacked={props.stacked} />
+<UiLabel tiled {label} {value} spacing={UI_BASE_FONT_SIZE * 4.5} stacked={props.stacked} />

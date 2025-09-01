@@ -88,9 +88,13 @@ export const stateGame = $state({
 	scatterCounter: 0,
 });
 
+// 🎯 GAME BOARD POSITION ADJUSTMENT
+// Change this value to move the game board up (negative) or down (positive) in pixels
+const BOARD_Y_OFFSET = -20; // Move up: -50, Move down: +50
+
 const boardLayout = () => ({
 	x: stateLayoutDerived.mainLayout().width * 0.5,
-	y: stateLayoutDerived.mainLayout().height * 0.5,
+	y: stateLayoutDerived.mainLayout().height * 0.5 + BOARD_Y_OFFSET,
 	anchor: { x: 0.5, y: 0.5 },
 	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
 	...BOARD_SIZES,

@@ -5,9 +5,6 @@
 		stateBet,
 		stateModal,
 		stateBetDerived,
-		AUTO_SPINS_TEXT_OPTION_MAP,
-		AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP,
-		AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP,
 	} from 'state-shared';
 	import { getContextEventEmitter } from 'utils-event-emitter';
 
@@ -19,9 +16,7 @@
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 
 	const startAutoBet = () => {
-		stateBet.autoSpinsCounter = AUTO_SPINS_TEXT_OPTION_MAP[stateUi.autoSpinsText];
-		stateBet.autoSpinsLossLimitAmount = stateBet.betAmount * AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsLossLimitText]; // prettier-ignore
-		stateBet.autoSpinsSingleWinLimitAmount = stateBet.betAmount * AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsSingleWinLimitText]; // prettier-ignore
+		stateBet.autoSpinsCounter = stateUi.autoSpinsCustomRounds;
 		if (stateBetDerived.activeBetMode().type === 'buy') stateBet.activeBetModeKey = 'BASE';
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		eventEmitter.broadcast({ type: 'autoBet' });
@@ -29,9 +24,31 @@
 	};
 </script>
 
-<Button disabled={!stateBetDerived.isBetCostAvailable()} onclick={startAutoBet}>
-	<BaseIcon width="100%" height="3rem" />
-	<BaseButtonContent>
-		<span style="font-size: 1rem;">{i18nDerived.startAutoplay()}</span>
-	</BaseButtonContent>
-</Button>
+<div class="button-container">
+	<Button disabled={!stateBetDerived.isBetCostAvailable()} onclick={startAutoBet}>
+		<BaseIcon width="100%" height="3rem" background="rgba(217, 217, 217, 0.3)" />
+		<BaseButtonContent>
+			<span class="start-button-text">{i18nDerived.startAutoplay()}</span>
+		</BaseButtonContent>
+	</Button>
+</div>
+
+<style>
+	.button-container {
+		min-width: 135px;
+		width: max-content;
+		display: flex;
+		justify-content: center;
+		margin: 0 auto;
+	}
+
+	.start-button-text {
+		font-family: 'Kanit', Arial, sans-serif !important;
+		font-size: 25px !important;
+		font-weight: 600 !important;
+		color: #D8ECA6 !important;
+		line-height: 1 !important;
+		white-space: nowrap;
+		padding: 0 1rem;
+	}
+</style>

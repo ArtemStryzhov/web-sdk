@@ -2,8 +2,45 @@
 	import { onMount, type Snippet } from 'svelte';
 
 	import { requestAuthenticate } from 'rgs-requests';
+
+	// Define the response type locally to avoid import issues
+	type AuthenticateResponse = {
+		status?: { statusCode?: string; statusMessage?: string };
+		balance?: { amount: number; currency: string };
+		round?: {
+			roundID?: number;
+			amount?: number;
+			payout?: number;
+			payoutMultiplier?: number;
+			active?: boolean;
+			mode?: string;
+			event?: string;
+			state?: unknown[];
+		};
+		config?: {
+			betLevels?: number[];
+			betModes?: Record<string, { mode?: string; costMultiplier?: number; feature?: boolean }>;
+			defaultBetLevel?: number;
+			jurisdiction: {
+				socialCasino: boolean;
+				disabledFullscreen: boolean;
+				disabledTurbo: boolean;
+				disabledSuperTurbo: boolean;
+				disabledAutoplay: boolean;
+				disabledSlamstop: boolean;
+				disabledSpacebar: boolean;
+				disabledBuyFeature: boolean;
+				displayNetPosition: boolean;
+				displayRTP: boolean;
+				displaySessionTimer: boolean;
+				minimumRoundDuration: number;
+			};
+		};
+		error?: unknown;
+	};
 	import { stateUrlDerived, stateBet, stateConfig, stateModal } from 'state-shared';
 	import { API_AMOUNT_MULTIPLIER, MOST_USED_BET_INDEXES } from 'constants-shared/bet';
+
 
 	type Props = { children: Snippet };
 
@@ -13,6 +50,7 @@
 
 	const authenticate = async () => {
 		try {
+			// Real server authentication
 			const authenticateData = await requestAuthenticate({
 				rgsUrl: stateUrlDerived.rgsUrl(),
 				sessionID: stateUrlDerived.sessionID(),
@@ -22,19 +60,22 @@
 			// error
 			if (authenticateData?.error) throw authenticateData;
 
+			// Cast to proper type to help TypeScript
+			const typedData = authenticateData as AuthenticateResponse;
+
 			// balance
-			if (authenticateData?.balance) {
+			if (typedData?.balance) {
 				// Example of authenticateData.balance
 				// {
 				// 		"amount": 10000000000000000,
 				// 		"currency": "USD"
 				// },
-				stateBet.currency = authenticateData.balance.currency;
-				stateBet.balanceAmount = authenticateData.balance.amount / API_AMOUNT_MULTIPLIER;
+				stateBet.currency = typedData.balance.currency;
+				stateBet.balanceAmount = typedData.balance.amount / API_AMOUNT_MULTIPLIER;
 			}
 
 			// config
-			if (authenticateData?.config) {
+			if (typedData?.config) {
 				// Example of authenticateData.config
 				// {
 				// 	"gameID": "37_test-lines",
@@ -59,9 +100,9 @@
 				// 			"minimumRoundDuration": 0
 				// 	}
 				// }
-				stateConfig.jurisdiction = authenticateData?.config?.jurisdiction;
-				stateConfig.betAmountOptions = (authenticateData.config?.betLevels || []).map(
-					(level) => level / API_AMOUNT_MULTIPLIER,
+				stateConfig.jurisdiction = typedData?.config?.jurisdiction;
+				stateConfig.betAmountOptions = (typedData.config?.betLevels || []).map(
+					(level: number) => level / API_AMOUNT_MULTIPLIER,
 				);
 				stateConfig.betMenuOptions = stateConfig.betAmountOptions.filter((_, index) =>
 					MOST_USED_BET_INDEXES.includes(index),
@@ -69,7 +110,7 @@
 			}
 
 			// round
-			if (authenticateData?.round) {
+			if (typedData?.round) {
 				// Example of authenticateData.round 
 				// {
 				// 	"betID": 62277967,
@@ -82,22 +123,22 @@
 				// 	"event": null
 				// }
 
-				if(authenticateData.round?.state) {
+				if(typedData.round?.state) {
 					// @ts-ignore
-					stateBet.lastBet =  authenticateData.round;
+					stateBet.lastBet =  typedData.round;
 				}
 
-				if(authenticateData.round?.amount) {
+				if(typedData.round?.amount) {
 					const betAmountValue =
-						authenticateData.round.amount > 0
-							? authenticateData.round.amount / API_AMOUNT_MULTIPLIER
+						typedData.round.amount > 0
+							? typedData.round.amount / API_AMOUNT_MULTIPLIER
 							: 0;
 					stateBet.betAmount = betAmountValue;
 					stateBet.wageredBetAmount = betAmountValue;
 				}
 
-				if (authenticateData.round?.mode) {
-					stateBet.activeBetModeKey = authenticateData.round.mode;
+				if (typedData.round?.mode) {
+					stateBet.activeBetModeKey = typedData.round.mode;
 				};
 			}
 		} catch (error) {

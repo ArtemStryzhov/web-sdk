@@ -16,8 +16,8 @@
 </script>
 
 {#if stateModal.modal?.name === 'autoSpinMessage'}
-	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
-		<BaseContent maxWidth="100%">
+	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)} noFullScreenOverlay allowClickOutsideToClose>
+		<BaseContent width="720px" height="420px">
 			<BaseTitle>
 				{i18nDerived.notification()}
 			</BaseTitle>

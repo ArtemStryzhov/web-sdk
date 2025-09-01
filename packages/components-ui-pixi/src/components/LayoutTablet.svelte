@@ -1,4 +1,6 @@
 <script lang="ts">
+	console.log('🎮 [DEBUG] LayoutTablet.svelte is being applied');
+
 	import { stateUi } from 'state-shared';
 	import { BLACK } from 'constants-shared/colors';
 	import { MainContainer } from 'components-layout';
@@ -33,45 +35,49 @@
 			},
 		})}
 	>
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880 - 640}>
-			{@render props.amountBalance({ stacked: true })}
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={120}>
+			{@render props.amountBalance({ stacked: false })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880}>
-			{@render props.amountWin({ stacked: true })}
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 15} x={640}>
+			{@render props.amountWin({ stacked: false })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880 + 640}>
-			{@render props.amountBet({ stacked: true })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20}>
-			{@render props.buttonMenu({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 100} x={20}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 4}>
+		{#if !stateUi.menuOpen}
+			<Container y={DESKTOP_BASE_SIZE * 0.5} x={20}>
+				{@render props.buttonMenu({ anchor: 0.5 })}
+			</Container>
+		{/if}
+
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={80}>
+			{@render props.buttonSoundSwitch({ anchor: 0.5 })}
+		</Container>
+
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 10} x={360 + 180 * 5} scale={0.8}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 5}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 140} x={360 + 180 * 5}>
+			{@render props.amountBet({ stacked: true })}
+		</Container>
+
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 50} x={600 + 180 * 5}>
 			{@render props.buttonBet({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 6}>
-			{@render props.buttonTurbo({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 105} x={1560 + 90}>
 			{@render props.buttonDecrease({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560 + 180}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 -10} x={1560 + 90}>
 			{@render props.buttonIncrease({ anchor: 0.5 })}
 		</Container>
+
+
 
 		{#if stateUi.freeSpinCounterShow}
 			<Container y={DESKTOP_BASE_SIZE * 0.5 - 320} x={668}>
@@ -83,16 +89,19 @@
 
 {#if stateUi.menuOpen}
 	<Rectangle
-		eventMode="static"
-		cursor="pointer"
-		alpha={0.5}
+		alpha={0.95}
 		anchor={0.5}
-		backgroundColor={BLACK}
+		backgroundColor={0x141417}
 		width={context.stateLayoutDerived.canvasSizes().width}
 		height={context.stateLayoutDerived.canvasSizes().height}
 		x={context.stateLayoutDerived.canvasSizes().width * 0.5}
 		y={context.stateLayoutDerived.canvasSizes().height * 0.5}
-		onpointerup={() => (stateUi.menuOpen = false)}
+		eventMode="static"
+		onpointerdown={(e) => e.stopPropagation()}
+		onpointerup={(e) => e.stopPropagation()}
+		onpointerover={(e) => e.stopPropagation()}
+		onpointerout={(e) => e.stopPropagation()}
+		onclick={(e) => e.stopPropagation()}
 	/>
 
 	<MainContainer standard alignVertical="bottom">
@@ -100,25 +109,23 @@
 			x={100}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 30}
 		>
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 3}>
-				{@render props.buttonPayTable({ anchor: 0.5 })}
-			</Container>
-
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 2}>
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 6} x={DESKTOP_BASE_SIZE * 4} >
 				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 1}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 6} x={DESKTOP_BASE_SIZE * 9}>
+				{@render props.buttonTurbo({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185}>
-				{@render props.buttonSoundSwitch({ anchor: 0.5 })}
+			<Container scale={2.4} y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 5} x={DESKTOP_BASE_SIZE * 5.5}>
+				{@render props.buttonSoundSwitch({ anchor: 0.5, inMenu: true })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5}>
-				{@render props.buttonMenuClose({ anchor: 0.5 })}
-			</Container>
 		</Container>
 	</MainContainer>
+
+	<!-- Close button positioned at top right corner of screen -->
+	<Container x={context.stateLayoutDerived.canvasSizes().width - 80} y={80}>
+		{@render props.buttonClose({ anchor: 0.5 })}
+	</Container>
 {/if}

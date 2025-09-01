@@ -392,7 +392,7 @@ const DEFAULT_GAME_RULE_META = {
 				},
 				{
 					title: '',
-					text: 'AUTO SPIN | Open the Auto Spin pop-up menu.',
+					text: 'AUTOPLAY | Open the Autoplay pop-up menu.',
 					image:
 						'https://staging-1-0.twist-game.app/_app/immutable/assets/gameRuleAutoSpin.d542a3b0.webp',
 					imagePosition: 'left',

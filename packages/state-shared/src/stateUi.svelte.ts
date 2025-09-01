@@ -55,6 +55,7 @@ export const AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP = {
 
 export const stateUi = $state({
 	autoSpinsText: '10' as AutoSpinsText,
+	autoSpinsCustomRounds: 10,
 	autoSpinsLossLimitText: INFINITY_MARK as LossLimitText,
 	autoSpinsSingleWinLimitText: INFINITY_MARK as SingleWinLimitText,
 	freeSpinCounterShow: false,
