@@ -8,9 +8,9 @@
 	const canvasWidth = $derived(context.stateLayoutDerived.canvasSizes().width);
 	const canvasHeight = $derived(context.stateLayoutDerived.canvasSizes().height);
 
-	// Calculate gradient area (bottom 20% of screen)
-	const gradientHeight = $derived(canvasHeight * 0.2);
-	const gradientY = $derived(canvasHeight * 0.8);
+	// Calculate gradient area (bottom 30% of screen - higher coverage)
+	const gradientHeight = $derived(canvasHeight * 0.3);
+	const gradientY = $derived(canvasHeight * 0.7);
 </script>
 
 <Container zIndex={1}>
@@ -22,7 +22,7 @@
 			for (let i = 0; i < gradientHeightInt; i++) {
 				// Calculate alpha based on position (transparent at top, solid black at bottom)
 				const progress = i / gradientHeightInt;
-				const alpha = 0.8 * progress; // Start at 0 (transparent), fade to 0.8 (solid black)
+				const alpha = 0.95 * progress; // Start at 0 (transparent), fade to 0.95 (very dark black)
 				const y = gradientY + i;
 				
 				// Draw 1-pixel high rectangle for ultra-smooth gradient
