@@ -344,4 +344,14 @@ export default {
 		src: new URL('../../assets/audio/sounds.json', import.meta.url).href,
 		preload: true,
 	},
+	autospin_mob_default: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/autospin_mob_default.png', import.meta.url).href,
+		preload: true,
+	},
+	autospin_mob_inactive: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/autospin_mob_inactive.png', import.meta.url).href,
+		preload: true,
+	},
 } as const;

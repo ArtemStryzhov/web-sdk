@@ -47,3 +47,21 @@
 		</BonusContentWrap>
 	</Popup>
 {/if}
+
+<style lang="scss">
+	// Ensure close button is visible and properly positioned on portrait layout
+	// Only apply to full-screen modals (not ones with noFullScreenOverlay)
+	:global(.pop-up-wrap:not(.no-fullscreen) .close-button-wrap) {
+		position: fixed !important;
+		top: 20px !important;
+		right: 20px !important;
+		z-index: 999999 !important;
+	}
+
+	// Ensure close button is always on top and visible for full-screen modals
+	:global(.pop-up-wrap:not(.no-fullscreen) .close-button) {
+		background-color: rgba(0, 0, 0, 0.5) !important;
+		border-radius: 50% !important;
+		z-index: 999999 !important;
+	}
+</style>

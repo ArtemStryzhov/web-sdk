@@ -105,6 +105,7 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
+
 		<Container
 			x={100}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 30}
@@ -124,8 +125,14 @@
 		</Container>
 	</MainContainer>
 
-	<!-- Close button positioned at top right corner of screen -->
-	<Container x={context.stateLayoutDerived.canvasSizes().width - 80} y={80}>
+	<!-- Close button at top right corner -->
+	<Container
+		x={context.stateLayoutDerived.canvasSizes().width - 80}
+		y={80}
+		scale={0.8}
+	>
 		{@render props.buttonClose({ anchor: 0.5 })}
 	</Container>
 {/if}
+
+

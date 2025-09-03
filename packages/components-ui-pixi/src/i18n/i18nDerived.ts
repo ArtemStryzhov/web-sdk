@@ -13,6 +13,7 @@ export const i18nDerived = {
 	decrease: () => stateI18nDerived.translate('-'),
 	increase: () => stateI18nDerived.translate('+'),
 	menu: () => stateI18nDerived.translate('MENU'),
+	mainMenu: () => stateI18nDerived.translate('MAIN MENU'),
 	close: () => stateI18nDerived.translate('CLOSE'),
 	turbo: () => stateI18nDerived.translate('TURBO'),
 	autoSpin: () => stateI18nDerived.translate('AUTOPLAY'),

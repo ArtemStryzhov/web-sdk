@@ -2,13 +2,13 @@
 	console.log('🎮 [DEBUG] LayoutDesktop.svelte is being applied');
 
 	import { stateUi } from 'state-shared';
-	import { BLACK } from 'constants-shared/colors';
 	import { MainContainer } from 'components-layout';
 	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
 
 	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
 	import { getContext } from '../context';
 	import type { LayoutUiProps } from '../types';
+	import { i18nDerived } from '../i18n/i18nDerived';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -22,7 +22,7 @@
 	{@render props.logo()}
 </Container>
 
-<MainContainer standard>
+<MainContainer standard alignVertical="bottom">
 	<Container
 		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
 		y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 10}
@@ -101,6 +101,7 @@
 			x={298}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 10}
 		>
+
 			<Container scale={0.8} y={DESKTOP_BASE_SIZE * 0.5 - 550} x={450}>
 				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
@@ -112,7 +113,16 @@
 		</Container>
 	</MainContainer>
 
-	<Container 
+	<!-- Close button at top right corner -->
+	<Container
+		x={context.stateLayoutDerived.canvasSizes().width - 80}
+		y={80}
+		scale={0.8}
+	>
+		{@render props.buttonClose({ anchor: 0.5 })}
+	</Container>
+
+	<Container
 		x={context.stateLayoutDerived.canvasSizes().width * 0.5 - 80}
 		y={context.stateLayoutDerived.canvasSizes().height * 0.5 - 60}
 		scale={1.92}
@@ -120,8 +130,5 @@
 		{@render props.buttonSoundSwitch({ anchor: 0.5, inMenu: true })}
 	</Container>
 
-	<!-- Close button positioned at top right corner of screen -->
-	<Container x={context.stateLayoutDerived.canvasSizes().width - 80} y={80} scale={0.8}>
-		{@render props.buttonClose({ anchor: 0.5 })}
-	</Container>
+
 {/if}

@@ -36,7 +36,18 @@
 		color: #D8ECA6 !important; // Same color as WIN label
 		text-align: center;
 		line-height: 1;
-		margin: 0;
+		margin: 50px 0 20px 0;
 		padding: 0;
+	}
+
+	// Make close button 20% smaller (80px -> 64px)
+	:global(.close-button) {
+		width: 64px !important;
+		height: 64px !important;
+	}
+
+	:global(.close-button::before),
+	:global(.close-button::after) {
+		width: 36px !important; // 45px * 0.8 = 36px
 	}
 </style>

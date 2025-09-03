@@ -5,7 +5,6 @@
 	import { cubicInOut } from 'svelte/easing';
 
 	import { stateUi } from 'state-shared';
-	import { BLACK } from 'constants-shared/colors';
 	import { FadeContainer } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 	import { Container, Rectangle } from 'pixi-svelte';
@@ -80,38 +79,27 @@
 	<!-- drawer container -->
 	<Container y={drawerTween.current}>
 		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 480}
+		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.01 + 60}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 390}
 		>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
 		{#if !stateUi.menuOpen}
 			<Container
-				x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440}
-				y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
+				x={context.stateLayoutDerived.mainLayoutStandard().width * 0.01 + 60}
+				y={context.stateLayoutDerived.mainLayoutStandard().height - 260}
 			>
-				{@render props.buttonMenu({ anchor: 0.5 })}
+				{@render props.buttonMenu({ anchor: 0.5, scale: 1.5 })}
 			</Container>
 		{/if}
 
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440 + 50}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonSoundSwitch({ anchor: 0.5 })}
-		</Container>
+
+
 
 		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 180}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonAutoSpin({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 480}
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 310}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 170}
 		>
 			{@render props.amountBet({ stacked: true })}
 		</Container>
@@ -127,7 +115,7 @@
 
 		<Container
 			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440 + 50 + 30}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 170}
 		>
 			{@render props.amountBalance({ stacked: true })}
 		</Container>
@@ -135,8 +123,8 @@
 
 	<Container y={drawerTween.current}>
 		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440 + 50 + 30 + 260}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 255}
 		>
 			{@render props.amountWin({ stacked: true })}
 		</Container>
@@ -153,15 +141,15 @@
 		</Container>
 	{:else}
 		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 85 - 75}
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 -200}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 85 - 300}
 		>
 			{@render props.buttonDecrease({ anchor: 0.5 })}
 		</Container>
 
 		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 85 + 75}
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 200}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 85 - 300}
 		>
 			{@render props.buttonIncrease({ anchor: 0.5 })}
 		</Container>
@@ -203,27 +191,42 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
+
 		<Container
 			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
 		>
-			<Container y={-190 - 210 * 3}>
+			<Container y={-190 - 210 * 3} x={450}>
 				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={-190 - 210 * 2}>
+			<Container y={-190 - 210 * 2} x={450}>
 				{@render props.buttonTurbo({ anchor: 0.5 })}
 			</Container>
 
-			<Container scale={2.4} y={-190 - 210 * 1}>
+			<Container scale={2.4} y={ -500} x={350}>
 				{@render props.buttonSoundSwitch({ anchor: 0.5, inMenu: true })}
 			</Container>
 
 		</Container>
 	</MainContainer>
 
-	<!-- Close button positioned at top right corner of screen -->
-	<Container x={context.stateLayoutDerived.canvasSizes().width - 80} y={80}>
-		{@render props.buttonClose({ anchor: 0.5 })}
+	<!-- Close button at top right corner -->
+	<Container
+		x={context.stateLayoutDerived.canvasSizes().width - 40}
+		y={context.stateLayoutDerived.canvasSizes().width * 0.15}
+		scale={1.5}
+	>
+		{@render props.buttonClose({ anchor: 1 })}
 	</Container>
 {/if}
+
+<!-- AutoSpin button - positioned AFTER all overlays to ensure it's on top -->
+<Container
+	x={context.stateLayoutDerived.canvasSizes().width * 0.9}
+	y={context.stateLayoutDerived.canvasSizes().height * 0.93}
+>
+	{@render props.buttonAutoSpin({ anchor: 0.5 })}
+</Container>
+
+

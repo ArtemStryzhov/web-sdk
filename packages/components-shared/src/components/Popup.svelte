@@ -37,7 +37,7 @@
 
 <OnHotkey hotkey="Escape" onpress={closeModal} />
 
-	<div class="pop-up-wrap" class:disabled style={`z-index: ${props.zIndex};`}>
+	<div class="pop-up-wrap" class:disabled class:no-fullscreen={props.noFullScreenOverlay} style={`z-index: ${props.zIndex};`}>
 		{#if !props.noFullScreenOverlay}
 			<div class="blur-layer"></div>
 		{/if}

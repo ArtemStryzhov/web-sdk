@@ -33,29 +33,29 @@
 			},
 		})}
 	>
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 170} x={85 + 20} scale={0.8}>
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 50} x={85 + 20} scale={0.8}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
 		{#if !stateUi.menuOpen}
-			<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={85 + 20} scale={0.8}>
+			<Container y={LANDSCAPE_BASE_SIZE * 0.5 +50} x={85 + 20} scale={0.8}>
 				{@render props.buttonMenu({ anchor: 0.5 })}
 			</Container>
 		{/if}
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={85 + 20 + 50} scale={0.8}>
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 +50} x={85 + 20 + 50} scale={0.8}>
 			{@render props.buttonSoundSwitch({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={85 + 20 + 50 + 30} scale={0.8}>
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 + 50} x={300} scale={0.8}>
 			{@render props.amountBalance({ stacked: true })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={85 + 20 + 50 + 30 + 260} scale={0.8}>
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 + 40} x={740} scale={0.8}>
 			{@render props.amountWin({ stacked: true })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1647.5} scale={0.8}>
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 40} x={1647.5} scale={0.8}>
 			{@render props.buttonDecrease({ anchor: 0.5 })}
 		</Container>
 
@@ -75,15 +75,15 @@
 			},
 		})}
 	>
-		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5 - 140} scale={0.8}>
+		<Container x={LANDSCAPE_BASE_SIZE * 0.5 - 380} y={LANDSCAPE_BASE_SIZE * 0.5 + 450} scale={0.8}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5 - 70} scale={0.8}>
+		<Container x={LANDSCAPE_BASE_SIZE * 0.5 -380} y={LANDSCAPE_BASE_SIZE * 0.5 + 340} scale={0.8}>
 			{@render props.amountBet({ stacked: true })}
 		</Container>
 
-		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5} scale={0.8}>
+		<Container x={LANDSCAPE_BASE_SIZE * 0.5 - 180} y={LANDSCAPE_BASE_SIZE * 0.5 + 420} scale={0.8}>
 			{@render props.buttonBet({ anchor: 0.5 })}
 		</Container>
 
@@ -109,6 +109,7 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
+
 		<Container
 			x={165}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - LANDSCAPE_BASE_SIZE - 130}
@@ -128,8 +129,14 @@
 		</Container>
 	</MainContainer>
 
-	<!-- Close button positioned at top right corner of screen -->
-	<Container x={context.stateLayoutDerived.canvasSizes().width - 80} y={80} scale={0.8}>
+	<!-- Close button at top right corner -->
+	<Container
+		x={context.stateLayoutDerived.canvasSizes().width - 80}
+		y={80}
+		scale={0.8}
+	>
 		{@render props.buttonClose({ anchor: 0.5 })}
 	</Container>
 {/if}
+
+
