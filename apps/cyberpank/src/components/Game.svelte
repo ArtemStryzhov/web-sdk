@@ -4,7 +4,7 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Text, REM } from 'pixi-svelte';
+	import { App, Text, REM, Container, Rectangle } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
@@ -32,6 +32,7 @@
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import I18nTest from './I18nTest.svelte';
+	import BottomGradient from './BottomGradient.svelte';
 
 
 	const context = getContext();
@@ -86,24 +87,30 @@
 			<MultiplierTotal />
 		</MainContainer>
 
-		<UI>
-			{#snippet gameName()}
-				<UiGameName name="CYBERPANK GAME" />
-			{/snippet}
-			{#snippet logo()}
-				<Text
-					anchor={{ x: 1, y: 0 }}
-					text="ADD YOUR LOGO"
-					style={{
-						fontFamily: 'Kanit',
-						fontSize: REM * 1.5,
-						fontWeight: '600',
-						lineHeight: REM * 2,
-						fill: 0xffffff,
-					}}
-				/>
-			{/snippet}
-		</UI>
+		<!-- Bottom gradient background - renders behind UI buttons -->
+		<BottomGradient />
+
+		<Container zIndex={10}>
+			<UI>
+				{#snippet gameName()}
+					<UiGameName name="CYBERPANK GAME" />
+				{/snippet}
+				{#snippet logo()}
+					<Text
+						anchor={{ x: 1, y: 0 }}
+						text="ADD YOUR LOGO"
+						style={{
+							fontFamily: 'Kanit',
+							fontSize: REM * 1.5,
+							fontWeight: '600',
+							lineHeight: REM * 2,
+							fill: 0xffffff,
+						}}
+					/>
+				{/snippet}
+			</UI>
+		</Container>
+
 		<Win />
 		<FreeSpinIntro />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
