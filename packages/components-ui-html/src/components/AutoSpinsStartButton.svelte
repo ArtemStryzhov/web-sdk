@@ -40,6 +40,15 @@
 		display: flex;
 		justify-content: center;
 		margin: 0 auto;
+
+		@media (max-width: 480px) {
+			min-width: 120px;
+			width: 100%;
+		}
+
+		@media (max-width: 768px) {
+			min-width: 125px;
+		}
 	}
 
 	.start-button-text {
@@ -50,5 +59,24 @@
 		line-height: 1 !important;
 		white-space: nowrap;
 		padding: 0 1rem;
+
+		@media (max-width: 480px) {
+			font-size: 18px !important;
+			padding: 0 0.75rem;
+		}
+
+		@media (max-width: 768px) {
+			font-size: 22px !important;
+			padding: 0 0.875rem;
+		}
+
+		@media (max-height: 600px) {
+			font-size: 20px !important;
+		}
+
+		@media (max-height: 500px) {
+			font-size: 16px !important;
+			padding: 0 0.5rem;
+		}
 	}
 </style>

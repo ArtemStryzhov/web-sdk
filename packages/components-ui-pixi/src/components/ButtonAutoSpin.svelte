@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { Container, Sprite, Rectangle } from 'pixi-svelte';
+	import { Sprite, Rectangle } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateBet, stateBetDerived, stateModal } from 'state-shared';
 
 	import UiButton from './UiButton.svelte';
 	import { getContext } from '../context';
-	import { UI_BASE_SIZE } from '../constants';
-
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
@@ -16,7 +14,7 @@
 
 	// Different sizes for portrait vs other layouts
 	const sizes = $derived(isPortrait
-		? { width: 90, height: 80 }  // Smaller square for portrait
+		? { width: 40, height: 36 }  // Smaller square for portrait
 		: { width: 230, height: 66 } // Original size for other layouts
 	);
 
@@ -44,11 +42,6 @@
 		context.stateApp.assets?.autospin_mob_default &&
 		context.stateApp.assets?.autospin_mob_inactive
 	);
-
-	// Debug: Check what's actually loaded
-	console.log('AutoSpin Debug - loadedAssets keys:', Object.keys(context.stateApp.loadedAssets || {}));
-	console.log('AutoSpin Debug - has autospin_mob_default:', !!context.stateApp.loadedAssets?.['autospin_mob_default.png']);
-	console.log('AutoSpin Debug - has autospin_mob_default (no ext):', !!context.stateApp.loadedAssets?.['autospin_mob_default']);
 </script>
 
 {#if isPortrait && hasMobileAssets}
@@ -56,8 +49,8 @@
 		{#snippet children({ center, hovered, pressed })}
 			<!-- Invisible hit area rectangle -->
 			<Rectangle
-				x={center.x - sizes.width * 0.5}
-				y={center.y - sizes.height * 0.5}
+				x={center.x - sizes.width}
+				y={center.y - sizes.height}
 				width={sizes.width}
 				height={sizes.height}
 				backgroundColor={0x000000}

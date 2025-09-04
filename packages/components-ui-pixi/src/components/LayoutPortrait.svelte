@@ -1,5 +1,5 @@
 <script lang="ts">
-	console.log('🎮 [DEBUG] LayoutPortrait.svelte is being applied');
+	// console.log('🎮 [DEBUG] LayoutPortrait.svelte is being applied');
 
 	import { Tween } from 'svelte/motion';
 	import { cubicInOut } from 'svelte/easing';
@@ -213,9 +213,9 @@
 
 	<!-- Close button at top right corner -->
 	<Container
-		x={context.stateLayoutDerived.canvasSizes().width - 40}
+		x={context.stateLayoutDerived.canvasSizes().width - 20}
 		y={context.stateLayoutDerived.canvasSizes().width * 0.15}
-		scale={1.5}
+		scale={0.5}
 	>
 		{@render props.buttonClose({ anchor: 1 })}
 	</Container>

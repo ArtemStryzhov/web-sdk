@@ -1,5 +1,5 @@
 <script lang="ts">
-	console.log('🎮 [DEBUG] LayoutDesktop.svelte is being applied');
+	// console.log('🎮 [DEBUG] LayoutDesktop.svelte is being applied');
 
 	import { stateUi } from 'state-shared';
 	import { MainContainer } from 'components-layout';

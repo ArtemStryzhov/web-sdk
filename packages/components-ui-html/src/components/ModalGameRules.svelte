@@ -58,15 +58,15 @@
 
 	.close-button-container {
 		position: fixed;
-		top: 80px;
-		right: 80px;
+		top: 40px;
+		right: 40px;
 		z-index: 51; // Above the modal
 		pointer-events: auto;
 	}
 
 	.custom-close-button {
-		width: 120px;
-		height: 80px;
+		width: 60px; // Reduced by 2x (was 120px)
+		height: 40px; // Reduced by 2x (was 80px)
 		background: transparent;
 		border: none;
 		cursor: pointer;
@@ -95,18 +95,18 @@
 
 	.close-x {
 		position: relative;
-		width: 45px;
-		height: 45px;
+		width: 22.5px; // Reduced by 2x (was 45px)
+		height: 22.5px; // Reduced by 2x (was 45px)
 	}
 
 	.diagonal-line {
 		position: absolute;
 		top: 50%;
 		left: 50%;
-		width: 45px;
-		height: 5px;
+		width: 22.5px; // Reduced by 2x (was 45px)
+		height: 2.5px; // Reduced by 2x (was 5px)
 		background-color: #D8ECA6; // Same light green color as main menu
-		border-radius: 2.5px;
+		border-radius: 1.25px; // Reduced by 2x (was 2.5px)
 		transform-origin: center;
 		
 		&.line-1 {

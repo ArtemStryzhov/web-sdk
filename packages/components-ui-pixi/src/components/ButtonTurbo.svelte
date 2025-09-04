@@ -16,11 +16,6 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		stateBetDerived.updateIsTurbo(!stateBet.isTurbo, { persistent: true });
 	};
-
-	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => stateBetDerived.updateIsTurbo(true, { persistent: false }),
-		stopButtonEnable: () => stateBetDerived.updateIsTurbo(false, { persistent: false }),
-	});
 </script>
 
 <Button {...props} {sizes} {onpress} disabled={disabled}>

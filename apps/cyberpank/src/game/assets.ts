@@ -29,6 +29,11 @@ export default {
 		src: new URL('../../assets/sprites/stop.png', import.meta.url).href,
 		preload: true,
 	},
+	bgback: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/bgback.png', import.meta.url).href,
+		preload: true,
+	},
 	plusEnabled: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/plus_enabled.png', import.meta.url).href,

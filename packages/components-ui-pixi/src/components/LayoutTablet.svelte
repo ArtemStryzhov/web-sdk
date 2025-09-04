@@ -1,5 +1,5 @@
 <script lang="ts">
-	console.log('🎮 [DEBUG] LayoutTablet.svelte is being applied');
+	// console.log('🎮 [DEBUG] LayoutTablet.svelte is being applied');
 
 	import { stateUi } from 'state-shared';
 	import { BLACK } from 'constants-shared/colors';
