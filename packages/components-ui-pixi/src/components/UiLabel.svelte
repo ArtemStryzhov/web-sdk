@@ -17,24 +17,25 @@
 	const props: Props = $props();
 	const context = getContext();
 
-	// Check if we should stack based on layout type (tablet and portrait should be stacked by default)
-	// But allow explicit stacked: false to override
-	const shouldStack = $derived(
-		props.stacked !== false && (
-			context.stateLayoutDerived.layoutType() === 'tablet' ||
-			context.stateLayoutDerived.layoutType() === 'portrait'
-		)
-	);
-
 	// Double font size for WIN label specifically
 	const isWinLabel = $derived(props.label.toUpperCase().includes('WIN'));
 	const fontSize = $derived(isWinLabel ? UI_BASE_FONT_SIZE * 2 : UI_BASE_FONT_SIZE);
 
 	// Check if this is a balance label for semibold weight
 	const isBalanceLabel = $derived(props.label.toUpperCase().includes('BALANCE'));
-	
-	// Check if this is a bet label for semibold weight
+
+	// Check if this is a bet label for semibold weight (and stacking on desktop/landscape)
 	const isBetLabel = $derived(props.label.toUpperCase().includes('BET'));
+
+	// Check if we should stack based on layout type (tablet and portrait should be stacked by default)
+	// Bet labels should also stack on desktop and landscape
+	const shouldStack = $derived(
+		props.stacked !== false && (
+			context.stateLayoutDerived.layoutType() === 'tablet' ||
+			context.stateLayoutDerived.layoutType() === 'portrait' ||
+			(isBetLabel && (context.stateLayoutDerived.layoutType() === 'desktop' || context.stateLayoutDerived.layoutType() === 'landscape'))
+		)
+	);
 
 	const labelStyle = $derived({
 		fontFamily: 'Kanit, Arial, sans-serif',
@@ -53,7 +54,7 @@
 {#if shouldStack}
 	{#if props.tiled}
 		<UiSprite
-			key="background-tile"
+			key=""
 			y={isWinLabel ? -40 : -20}
 			anchor={{ x: 0.5, y: 0 }}
 			width={fontSize * 3 * (326 / 73)}
@@ -65,7 +66,7 @@
 {:else}
 	{#if props.tiled}
 		<UiSprite
-			key="background-tile"
+			key=""
 			x={isWinLabel ? -180 : -90}
 			anchor={{ x: 0, y: 0.5 }}
 			width={fontSize * 3 * (326 / 73)}

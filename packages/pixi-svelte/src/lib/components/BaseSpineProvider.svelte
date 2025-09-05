@@ -16,6 +16,12 @@
 
 	const props: Props = $props();
 	const parentContext = getContextParent();
+	
+	// Ensure spineData exists before creating Spine instance
+	if (!props.spineData) {
+		throw new Error('SpineData is required but was not provided');
+	}
+	
 	const spine = new SPINE_PIXI.Spine(props.spineData);
 
 	propsSyncEffect({ props, target: spine, ignore: ['children'] });

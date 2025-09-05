@@ -2,7 +2,7 @@
 	import { Sprite, type SpriteProps } from 'pixi-svelte';
 
 	export type Props = SpriteProps & {
-		key: string;
+		key?: string;
 	};
 </script>
 

@@ -1,9 +1,25 @@
+/* Font loading strategy - prevent FOUT (Flash of Unstyled Text) */
+@font-face {
+	font-family: 'Kanit';
+	font-display: block; /* Block rendering until font loads */
+	src: local('Kanit');
+}
+
 body {
-	font-family: 'Kanit', sans-serif;
+	font-family: 'Kanit', Arial, sans-serif;
 	cursor: default;
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	user-select: none;
+}
+
+/* Font loading state management */
+body.font-loading {
+	font-family: Arial, sans-serif !important;
+}
+
+body.font-loaded {
+	font-family: 'Kanit', Arial, sans-serif !important;
 }
 
 :root {

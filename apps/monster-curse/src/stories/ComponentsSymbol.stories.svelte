@@ -35,9 +35,11 @@
 		{ name: 'S' },
 		{ name: 'W', multiplier: 2 },
 		{ name: 'H1' },
-		{ name: 'H3' },
 		{ name: 'H2' },
+		{ name: 'H3' },
 		{ name: 'H4' },
+		{ name: 'H5', multiplier: 5 },
+		{ name: 'H6', multiplier: 10 },
 	] as const;
 </script>
 

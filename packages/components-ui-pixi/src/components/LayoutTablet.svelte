@@ -1,5 +1,5 @@
 <script lang="ts">
-	console.log('🎮 [DEBUG] LayoutTablet.svelte is being applied');
+	// console.log('🎮 [DEBUG] LayoutTablet.svelte is being applied');
 
 	import { stateUi } from 'state-shared';
 	import { BLACK } from 'constants-shared/colors';
@@ -35,7 +35,7 @@
 			},
 		})}
 	>
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 50 + 30}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={120}>
 			{@render props.amountBalance({ stacked: false })}
 		</Container>
 
@@ -53,7 +53,7 @@
 			</Container>
 		{/if}
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 50}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={80}>
 			{@render props.buttonSoundSwitch({ anchor: 0.5 })}
 		</Container>
 
@@ -68,8 +68,6 @@
 		<Container y={DESKTOP_BASE_SIZE * 0.5 - 50} x={600 + 180 * 5}>
 			{@render props.buttonBet({ anchor: 0.5 })}
 		</Container>
-
-
 
 		<Container y={DESKTOP_BASE_SIZE * 0.5 - 105} x={1560 + 90}>
 			{@render props.buttonDecrease({ anchor: 0.5 })}
@@ -107,27 +105,34 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
+
 		<Container
 			x={100}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 30}
 		>
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 3}>
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 6} x={DESKTOP_BASE_SIZE * 4} >
 				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 2}>
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 6} x={DESKTOP_BASE_SIZE * 9}>
 				{@render props.buttonTurbo({ anchor: 0.5 })}
 			</Container>
 
-			<Container scale={2.4} y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 1}>
+			<Container scale={2.4} y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 5} x={DESKTOP_BASE_SIZE * 5.5}>
 				{@render props.buttonSoundSwitch({ anchor: 0.5, inMenu: true })}
 			</Container>
 
 		</Container>
 	</MainContainer>
 
-	<!-- Close button positioned at top right corner of screen -->
-	<Container x={context.stateLayoutDerived.canvasSizes().width - 80} y={80}>
+	<!-- Close button at top right corner -->
+	<Container
+		x={context.stateLayoutDerived.canvasSizes().width - 80}
+		y={80}
+		scale={0.8}
+	>
 		{@render props.buttonClose({ anchor: 0.5 })}
 	</Container>
 {/if}
+
+

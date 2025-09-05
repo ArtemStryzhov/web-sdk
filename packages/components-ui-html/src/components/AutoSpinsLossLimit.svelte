@@ -37,10 +37,39 @@
 <style lang="scss">
 	.title {
 		line-height: 1.4rem;
+
+		// Responsive adjustments
+		@media (max-width: 480px) {
+			line-height: 1.2rem;
+			font-size: 0.9rem;
+		}
+
+		@media (max-width: 768px) {
+			line-height: 1.3rem;
+			font-size: 0.95rem;
+		}
+
+		@media (max-height: 500px) {
+			line-height: 1.1rem;
+			font-size: 0.85rem;
+		}
 	}
 
 	.option-wrap {
 		white-space: nowrap;
+
+		// Responsive font size adjustments
+		@media (max-width: 480px) {
+			font-size: 0.85rem !important;
+		}
+
+		@media (max-width: 768px) {
+			font-size: 0.9rem !important;
+		}
+
+		@media (max-height: 500px) {
+			font-size: 0.8rem !important;
+		}
 	}
 
 	.infinity {
@@ -48,5 +77,21 @@
 		line-height: 1rem;
 		margin-top: 0.3rem;
 		vertical-align: middle;
+
+		// Responsive adjustments for infinity symbol
+		@media (max-width: 480px) {
+			font-size: 1.2rem;
+			margin-top: 0.2rem;
+		}
+
+		@media (max-width: 768px) {
+			font-size: 1.3rem;
+			margin-top: 0.25rem;
+		}
+
+		@media (max-height: 500px) {
+			font-size: 1.1rem;
+			margin-top: 0.15rem;
+		}
 	}
 </style>

@@ -151,7 +151,7 @@ export const PORTRAIT_MAIN_SIZES = {
 	height: PORTRAIT_HEIGHT,
 };
 
-export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4', 'H5'];
+export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
@@ -279,7 +279,7 @@ export const SYMBOL_INFO_MAP = {
 		win: {
 			type: 'spine',
 			assetKey: 'H5',
-			animationName: 'h5',
+			animationName: 'h5_golden_carrot',
 			sizeRatios: { width: 0.5 * 0.9, height: HIGH_SYMBOL_SIZE * 0.53 },
 		},
 		postWinStatic: h5Static,
@@ -287,7 +287,20 @@ export const SYMBOL_INFO_MAP = {
 		spin: h5Static,
 		land: h5Static,
 	},
-	L1: {
+	H6: {
+			explosion,
+			win: {
+				type: 'spine',
+				assetKey: 'H5', // Using H5 as placeholder
+				animationName: 'h5', // Using H5 animation as placeholder
+				sizeRatios: { width: 0.5 * 0.9, height: HIGH_SYMBOL_SIZE * 0.53 },
+			},
+			postWinStatic: h5Static, // Using H5 static as placeholder
+			static: h5Static, // Using H5 static as placeholder
+			spin: h5Static, // Using H5 static as placeholder
+			land: h5Static, // Using H5 static as placeholder
+		},
+		L1: {
 		explosion,
 		win: {
 			type: 'spine',

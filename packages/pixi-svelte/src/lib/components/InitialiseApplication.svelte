@@ -32,11 +32,18 @@
 			resizeTo: window,
 		});
 
-		wrap.appendChild(context.stateApp.pixiApplication.canvas);
+		// Ensure canvas exists before appending
+		if (context.stateApp.pixiApplication.canvas) {
+			wrap.appendChild(context.stateApp.pixiApplication.canvas);
+		}
 
 		// to prevent that you can't scroll the page with touch on the canvas. https://github.com/pixijs/pixijs/issues/4824
-		context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;
-		context.stateApp.pixiApplication.renderer.canvas.style.touchAction = 'auto';
+		if (context.stateApp.pixiApplication.renderer) {
+			context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;
+			if (context.stateApp.pixiApplication.renderer.canvas) {
+				context.stateApp.pixiApplication.renderer.canvas.style.touchAction = 'auto';
+			}
+		}
 	};
 
 	onMount(async () => {

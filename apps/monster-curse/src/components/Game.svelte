@@ -4,7 +4,7 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Text, REM } from 'pixi-svelte';
+	import { App, Text, REM, Container } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
@@ -26,7 +26,7 @@
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import I18nTest from './I18nTest.svelte';
-
+	import BottomGradient from './BottomGradient.svelte';
 
 	const context = getContext();
 
@@ -67,6 +67,10 @@
 			<Anticipations />
 		</MainContainer>
 
+				<!-- Bottom gradient background - renders behind UI buttons -->
+				<BottomGradient />
+
+				<Container zIndex={10}>
 		<UI>
 			{#snippet gameName()}
 				<UiGameName name="MONSTER CURSE" />
@@ -85,6 +89,8 @@
 				/>
 			{/snippet}
 		</UI>
+	</Container>
+
 		<Win />
 		<FreeSpinIntro />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}

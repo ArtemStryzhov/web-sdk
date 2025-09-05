@@ -37,10 +37,32 @@
 
 {#if open}
 	<div
-		style="border: 2px solid white; border-radius: 10px;"
+		class="advanced-options-container"
 		transition:slide={{ duration: SLIDE_DURATION }}
 	>
 		<AutoSpinsLossLimit />
 		<AutoSpinsSingleWinLimit />
 	</div>
 {/if}
+
+<style lang="scss">
+	.advanced-options-container {
+		border: 2px solid white;
+		border-radius: 10px;
+
+		// Responsive adjustments
+		@media (max-width: 480px) {
+			border-width: 1px;
+			border-radius: 6px;
+		}
+
+		@media (max-width: 768px) {
+			border-radius: 8px;
+		}
+
+		@media (max-height: 500px) {
+			border-width: 1px;
+			border-radius: 6px;
+		}
+	}
+</style>

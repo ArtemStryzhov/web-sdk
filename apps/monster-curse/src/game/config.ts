@@ -163,6 +163,36 @@ export default {
 				},
 			],
 		},
+		H5: {
+			paytable: [
+				{
+					'5': 25.00,
+				},
+				{
+					'4': 10.00,
+				},
+				{
+					'3': 5.00,
+				},
+			],
+			special_properties: ['wild', 'multiplier'],
+			multiplier_range: { min: 2, max: 10, max_award: 25 },
+		},
+		H6: {
+			paytable: [
+				{
+					'5': 20.00,
+				},
+				{
+					'4': 8.00,
+				},
+				{
+					'3': 4.00,
+				},
+			],
+			special_properties: ['expandable', 'multiplier'],
+			multiplier_range: { min: 2, max: 20 },
+		},
 		W: {
 			paytable: [
 				{
@@ -346,7 +376,7 @@ export default {
 					name: 'L3',
 				},
 				{
-					name: 'W',
+					name: 'H5',
 				},
 				{
 					name: 'H4',
@@ -662,9 +692,6 @@ export default {
 				},
 				{
 					name: 'L4',
-				},
-				{
-					name: 'W',
 				},
 				{
 					name: 'L3',
@@ -1227,7 +1254,7 @@ export default {
 					name: 'H1',
 				},
 				{
-					name: 'W',
+					name: 'H5',
 				},
 				{
 					name: 'L2',

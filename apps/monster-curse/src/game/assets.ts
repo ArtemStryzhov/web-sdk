@@ -29,6 +29,11 @@ export default {
 		src: new URL('../../assets/sprites/stop.png', import.meta.url).href,
 		preload: true,
 	},
+	bgback: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/bgback.png', import.meta.url).href,
+		preload: true,
+	},
 	plusEnabled: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/plus_enabled.png', import.meta.url).href,
@@ -342,6 +347,16 @@ export default {
 	sound: {
 		type: 'audio',
 		src: new URL('../../assets/audio/sounds.json', import.meta.url).href,
+		preload: true,
+	},
+	autospin_mob_default: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/autospin_mob_default.png', import.meta.url).href,
+		preload: true,
+	},
+	autospin_mob_inactive: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/autospin_mob_inactive.png', import.meta.url).href,
 		preload: true,
 	},
 } as const;
