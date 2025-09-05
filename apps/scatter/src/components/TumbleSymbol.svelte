@@ -26,6 +26,10 @@
 	<Symbol
 		state={props.tumbleSymbol.symbolState}
 		rawSymbol={props.tumbleSymbol.rawSymbol}
-		oncomplete={props.tumbleSymbol.oncomplete}
+		oncomplete={() => {
+			if (props.tumbleSymbol.oncomplete) {
+				props.tumbleSymbol.oncomplete();
+			}
+		}}
 	/>
 </SymbolWrap>

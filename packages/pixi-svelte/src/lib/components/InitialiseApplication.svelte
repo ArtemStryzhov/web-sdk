@@ -4,7 +4,7 @@
 	import { devicePixelRatio } from 'svelte/reactivity/window';
 
 	import { getContextApp } from '../context.svelte';
-	import { preloadFont } from '../utils.svelte';
+	import { preloadFont, getFontLoadingState } from '../utils.svelte';
 
 	type Props = { children: Snippet };
 
@@ -13,11 +13,14 @@
 
 	let wrap: HTMLDivElement;
 	let initialised = $state(false);
+	const fontState = getFontLoadingState();
 
 	const initialiseApplication = async () => {
 		PIXI.Assets.reset();
 
-		await preloadFont();
+		// Start font loading in background (completely non-blocking)
+		preloadFont(); // Don't await - let it happen in background
+		
 		context.stateApp.pixiApplication = new PIXI.Application<PIXI.Renderer<HTMLCanvasElement>>();
 		await context.stateApp.pixiApplication.init({
 			autoDensity: true,
@@ -32,11 +35,18 @@
 			resizeTo: window,
 		});
 
-		wrap.appendChild(context.stateApp.pixiApplication.canvas);
+		// Ensure canvas exists before appending
+		if (context.stateApp.pixiApplication.canvas) {
+			wrap.appendChild(context.stateApp.pixiApplication.canvas);
+		}
 
 		// to prevent that you can't scroll the page with touch on the canvas. https://github.com/pixijs/pixijs/issues/4824
-		context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;
-		context.stateApp.pixiApplication.renderer.canvas.style.touchAction = 'auto';
+		if (context.stateApp.pixiApplication.renderer) {
+			context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;
+			if (context.stateApp.pixiApplication.renderer.canvas) {
+				context.stateApp.pixiApplication.renderer.canvas.style.touchAction = 'auto';
+			}
+		}
 	};
 
 	onMount(async () => {

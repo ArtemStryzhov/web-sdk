@@ -9,7 +9,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 
 	import { propsSyncEffect } from '../utils.svelte';
 	import { getContextParent } from '../context.svelte';
@@ -26,8 +26,30 @@
 		props.onresize?.({ width: text.width, height: text.height });
 	});
 
+	// Listen for font loading completion
+	const handleFontLoaded = () => {
+		// Force text style update to trigger re-measurement
+		if (text && props.style?.fontFamily?.includes('Kanit')) {
+			text.style = { ...text.style }; // Trigger style update
+			// Re-measure after style update
+			setTimeout(() => {
+				props.onresize?.({ width: text.width, height: text.height });
+			}, 50);
+		}
+	};
+
 	onMount(() => {
 		props.onresize?.({ width: text.width, height: text.height });
+
+		if (typeof window !== 'undefined') {
+			window.addEventListener('fontLoaded', handleFontLoaded);
+		}
+	});
+
+	onDestroy(() => {
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('fontLoaded', handleFontLoaded);
+		}
 	});
 
 	parentContext.addToParent(text);

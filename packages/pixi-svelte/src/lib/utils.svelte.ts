@@ -58,25 +58,135 @@ export function detectWebGL() {
 	return -1;
 }
 
+// Global font loading state
+let fontLoadingState = $state({
+	isLoaded: false,
+	isLoading: false,
+	error: null as string | null
+});
+
+export const getFontLoadingState = () => fontLoadingState;
+
+// Enhanced font loading with multiple detection methods
 export const preloadFont = () =>
 	new Promise<void>((resolve) => {
+		if (fontLoadingState.isLoaded) {
+			resolve();
+			return;
+		}
+
+		fontLoadingState.isLoading = true;
+		fontLoadingState.error = null;
+		
+		// Add loading class to body
+		if (typeof document !== 'undefined') {
+			document.body.classList.add('font-loading');
+			document.body.classList.remove('font-loaded');
+		}
+
+		// Multi-method font loading approach
+		let resolved = false;
+		const markFontLoaded = () => {
+			if (resolved) return;
+			resolved = true;
+			
+			fontLoadingState.isLoaded = true;
+			fontLoadingState.isLoading = false;
+			
+			// Update body classes
+			if (typeof document !== 'undefined') {
+				document.body.classList.remove('font-loading');
+				document.body.classList.add('font-loaded');
+			}
+			
+			
+			// Force text re-measurement after font loads - multiple attempts for reliability
+			const triggerRemeasurement = () => {
+				if (typeof window !== 'undefined') {
+					// Multiple re-measurement strategies
+					window.dispatchEvent(new CustomEvent('fontLoaded', { detail: { fontFamily: 'Kanit' } }));
+					
+					// Force browser to recalculate all text layouts
+					document.body.style.fontFamily = document.body.style.fontFamily;
+					
+					// Trigger multiple resize events with delays
+					window.dispatchEvent(new Event('resize'));
+					setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
+					setTimeout(() => window.dispatchEvent(new Event('resize')), 300);
+					
+					// Force style recalculation
+					document.body.offsetHeight; // Trigger reflow
+					
+					// Additional custom event for components that need it
+					window.dispatchEvent(new CustomEvent('fontLoadComplete'));
+				}
+			};
+			
+			// Immediate trigger
+			triggerRemeasurement();
+			
+			// Delayed triggers for safety
+			setTimeout(triggerRemeasurement, 100);
+			setTimeout(triggerRemeasurement, 300);
+			setTimeout(() => resolve(), 400);
+		};
+
+		// Method 1: CSS Font Loading API (modern browsers)
+		if (typeof document !== 'undefined' && 'fonts' in document) {
+			Promise.race([
+				document.fonts.load('600 45px Kanit').then(() => {
+					return document.fonts.ready;
+				}),
+				new Promise(resolve => setTimeout(resolve, 3000)) // 3s timeout for CSS API
+			]).then(() => {
+				if (!resolved) markFontLoaded();
+			}).catch(() => {
+				// CSS Font Loading API failed, falling back to WebFont
+			});
+		}
+
+		// Method 2: WebFont Loader (fallback)
 		try {
 			WebFont.load({
 				typekit: {
 					id: 'aba0ebl',
 				},
 				active: () => {
-					resolve();
+					markFontLoaded();
 				},
 				inactive: () => {
-					console.error('Web font load inactive');
-					resolve();
+					fontLoadingState.isLoading = false;
+					fontLoadingState.error = 'Font loading inactive';
+					
+					// Remove loading class even if font fails
+					if (typeof document !== 'undefined') {
+						document.body.classList.remove('font-loading');
+						document.body.classList.add('font-loaded'); // Use fallback fonts
+					}
+					
+					if (!resolved) {
+						resolved = true;
+						resolve();
+					}
 				},
+				timeout: 4000 // 4 second timeout for WebFont
 			});
 		} catch (error) {
-			console.error(error);
-			resolve();
+			fontLoadingState.isLoading = false;
+			fontLoadingState.error = error instanceof Error ? error.message : 'Unknown font loading error';
+			
+			if (!resolved) {
+				resolved = true;
+				resolve();
+			}
 		}
+
+		// Method 3: Ultimate fallback timeout (reduced to not interfere with game loading)
+		setTimeout(() => {
+			if (!resolved) {
+				markFontLoaded();
+			}
+		}, 3000); // 3 second timeout - shorter to not delay game
 	});
 
 export function propsSyncEffect<TProps extends object, TTarget>({

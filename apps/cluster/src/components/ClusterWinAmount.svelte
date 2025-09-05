@@ -59,7 +59,9 @@
 <FadeContainer
 	{show}
 	oncomplete={() => {
-		if (!show) props.win.oncomplete();
+		if (!show && props.win.oncomplete) {
+			props.win.oncomplete();
+		}
 	}}
 >
 	<BitmapText
