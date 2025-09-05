@@ -11,26 +11,28 @@
 
 	const props: Props = $props();
 	const symbolInfo = $derived(
-		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
+		props.reelSymbol ? getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }) : null
 	);
 </script>
 
-<SymbolWrap
-	x={getSymbolX(props.reelIndex)}
-	y={props.reelSymbol.symbolY.current}
-	animating={symbolInfo.type === 'spine' &&
-		(props.reelSymbol.symbolState === 'land' || props.reelSymbol.symbolState === 'win')}
->
-	<Symbol
-		state={props.reelSymbol.symbolState}
-		rawSymbol={props.reelSymbol.rawSymbol}
-		oncomplete={() => {
-			if (props.reelSymbol.symbolState === 'win' && props.reelSymbol.oncomplete) {
-				props.reelSymbol.oncomplete();
-			}
-			if (props.reelSymbol.symbolState === 'land') {
-				props.reelSymbol.symbolState = 'static';
-			}
-		}}
-	/>
-</SymbolWrap>
+{#if props.reelSymbol && symbolInfo}
+	<SymbolWrap
+		x={getSymbolX(props.reelIndex)}
+		y={props.reelSymbol.symbolY.current}
+		animating={symbolInfo.type === 'spine' &&
+			(props.reelSymbol.symbolState === 'land' || props.reelSymbol.symbolState === 'win')}
+	>
+		<Symbol
+			state={props.reelSymbol.symbolState}
+			rawSymbol={props.reelSymbol.rawSymbol}
+			oncomplete={() => {
+				if (props.reelSymbol && props.reelSymbol.symbolState === 'win' && props.reelSymbol.oncomplete) {
+					props.reelSymbol.oncomplete();
+				}
+				if (props.reelSymbol && props.reelSymbol.symbolState === 'land') {
+					props.reelSymbol.symbolState = 'static';
+				}
+			}}
+		/>
+	</SymbolWrap>
+{/if}

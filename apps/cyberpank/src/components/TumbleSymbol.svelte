@@ -11,25 +11,27 @@
 
 	const props: Props = $props();
 	const symbolInfo = $derived(
-		getSymbolInfo({
+		props.tumbleSymbol ? getSymbolInfo({
 			rawSymbol: props.tumbleSymbol.rawSymbol,
 			state: props.tumbleSymbol.symbolState,
-		}),
+		}) : null
 	);
 </script>
 
-<SymbolWrap
-	x={getSymbolX(props.reelIndex)}
-	y={props.tumbleSymbol.symbolY.current}
-	animating={symbolInfo.type === 'spine'}
->
-	<Symbol
-		state={props.tumbleSymbol.symbolState}
-		rawSymbol={props.tumbleSymbol.rawSymbol}
-		oncomplete={() => {
-			if (props.tumbleSymbol.oncomplete) {
-				props.tumbleSymbol.oncomplete();
-			}
-		}}
-	/>
-</SymbolWrap>
+{#if props.tumbleSymbol && symbolInfo}
+	<SymbolWrap
+		x={getSymbolX(props.reelIndex)}
+		y={props.tumbleSymbol.symbolY.current}
+		animating={symbolInfo.type === 'spine'}
+	>
+		<Symbol
+			state={props.tumbleSymbol.symbolState}
+			rawSymbol={props.tumbleSymbol.rawSymbol}
+			oncomplete={() => {
+				if (props.tumbleSymbol && props.tumbleSymbol.oncomplete) {
+					props.tumbleSymbol.oncomplete();
+				}
+			}}
+		/>
+	</SymbolWrap>
+{/if}

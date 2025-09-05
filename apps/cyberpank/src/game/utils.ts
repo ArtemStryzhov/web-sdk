@@ -73,7 +73,31 @@ export const getSymbolInfo = ({
 	state: SymbolState;
 }) => {
 	const symbolKey = getSymbolKey({ rawSymbol });
-	return SYMBOL_INFO_MAP[symbolKey][state];
+	const symbolInfo = SYMBOL_INFO_MAP[symbolKey];
+	
+	if (!symbolInfo) {
+		console.error(`Symbol info not found for key: ${symbolKey}`, { rawSymbol, state });
+		// Return a fallback symbol info to prevent crashes
+		return {
+			type: 'sprite',
+			assetKey: 'H1', // fallback to H1
+			sizeRatios: { width: 1, height: 1 }
+		};
+	}
+	
+	const stateInfo = symbolInfo[state];
+	
+	if (!stateInfo) {
+		console.error(`State info not found for symbol: ${symbolKey}, state: ${state}`, { rawSymbol, state });
+		// Return a fallback state info to prevent crashes
+		return {
+			type: 'sprite',
+			assetKey: 'H1', // fallback to H1
+			sizeRatios: { width: 1, height: 1 }
+		};
+	}
+	
+	return stateInfo;
 };
 
 export const getSymbolBackgroundInfo = ({

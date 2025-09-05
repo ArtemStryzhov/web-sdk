@@ -7,7 +7,6 @@ export function createApp({ assets }: { assets: Assets }) {
 		stateApp.loaded = false;
 		stateApp.loadingProgress = 0;
 		stateApp.loadedAssets = {};
-		stateApp.pixiApplication = undefined as PIXI.Application | undefined;
 	};
 
 	const stateApp = $state({
