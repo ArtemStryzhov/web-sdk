@@ -102,7 +102,7 @@ function createSound<TSoundName extends string>() {
 
 	const enableEffect = () => {
 		$effect(() => {
-			if (audioContextState === 'running' && visibilityState === 'visible') {
+			if (audioContextState === 'running' && visibilityState === 'visible' && stateSoundDerived.volumeMaster() > 0) {
 				enable();
 			} else {
 				disable();
