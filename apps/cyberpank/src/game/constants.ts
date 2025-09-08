@@ -749,6 +749,7 @@ export const SYMBOL_INFO_MAP = {
 } as const;
 
 export const MULTIPLIER_BACKGROUND_INFO_MAP = {
+	M: backgroundLow,     // Fallback for multiplier symbols without specific multiplier value
 	M_2: backgroundLow,
 	M_3: backgroundLow,   // 3x uses low background
 	M_4: backgroundLow,

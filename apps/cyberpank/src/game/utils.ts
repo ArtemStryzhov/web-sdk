@@ -109,7 +109,23 @@ export const getSymbolBackgroundInfo = ({
 }) => {
 	if (rawSymbol.name === 'M') {
 		const symbolKey = getSymbolKey({ rawSymbol }) as keyof typeof MULTIPLIER_BACKGROUND_INFO_MAP;
-		return MULTIPLIER_BACKGROUND_INFO_MAP[symbolKey][state];
+		const backgroundInfo = MULTIPLIER_BACKGROUND_INFO_MAP[symbolKey];
+		
+		if (!backgroundInfo) {
+			console.error(`Background info not found for multiplier symbol: ${symbolKey}`, { rawSymbol, state });
+			// Return a fallback background info to prevent crashes
+			return MULTIPLIER_BACKGROUND_INFO_MAP.M_2[state] || null;
+		}
+		
+		const stateInfo = backgroundInfo[state];
+		
+		if (!stateInfo) {
+			console.error(`State info not found for multiplier background: ${symbolKey}, state: ${state}`, { rawSymbol, state });
+			// Return a fallback state info to prevent crashes
+			return MULTIPLIER_BACKGROUND_INFO_MAP.M_2.static || null;
+		}
+		
+		return stateInfo;
 	}
 
 	return null;
