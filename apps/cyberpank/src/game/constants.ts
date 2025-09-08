@@ -731,10 +731,21 @@ export const SYMBOL_INFO_MAP = {
 		},
 	},
 	M_TAKEN_2: backgroundLow,
+	M_TAKEN_3: backgroundLow,
 	M_TAKEN_4: backgroundLow,
 	M_TAKEN_5: backgroundMid,
+	M_TAKEN_6: backgroundMid,
 	M_TAKEN_7: backgroundMid,
+	M_TAKEN_8: backgroundMid,
 	M_TAKEN_10: backgroundHigh,
+	M_TAKEN_12: backgroundHigh,
+	M_TAKEN_15: backgroundHigh,
+	M_TAKEN_20: backgroundHigh,
+	M_TAKEN_25: backgroundHigh,
+	M_TAKEN_50: backgroundHigh,
+	M_TAKEN_100: backgroundHigh,
+	M_TAKEN_250: backgroundHigh,
+	M_TAKEN_500: backgroundHigh,
 } as const;
 
 export const MULTIPLIER_BACKGROUND_INFO_MAP = {
