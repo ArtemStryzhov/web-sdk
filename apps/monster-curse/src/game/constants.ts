@@ -198,16 +198,16 @@ const explosion = {
 	sizeRatios: { width: 1, height: 1 },
 };
 
-const h1Static = { type: 'sprite', assetKey: 'h1.webp', sizeRatios: { width: 1, height: 1 } };
-const h2Static = { type: 'sprite', assetKey: 'h2.webp', sizeRatios: { width: 1, height: 1 } };
-const h3Static = { type: 'sprite', assetKey: 'h3.webp', sizeRatios: { width: 1, height: 1 } };
-const h4Static = { type: 'sprite', assetKey: 'h4.webp', sizeRatios: { width: 1, height: 1 } };
-const h5Static = { type: 'sprite', assetKey: 'h5.webp', sizeRatios: { width: 1, height: 1 } };
+const h1Static = { type: 'sprite', assetKey: 'h1.png', sizeRatios: { width: 0.91, height: 0.93 }, composite: true };
+const h2Static = { type: 'sprite', assetKey: 'h2.png', sizeRatios: { width: 0.92, height: 0.92 }, composite: true };
+const h3Static = { type: 'sprite', assetKey: 'h3.png', sizeRatios: { width: 0.92, height: 0.92 }, composite: true };
+const h4Static = { type: 'sprite', assetKey: 'h4.png', sizeRatios: { width: 0.92, height: 0.92 }, composite: true };
+const h5Static = { type: 'sprite', assetKey: 'h5.png', sizeRatios: { width: 0.92, height: 0.92 }, composite: true };
 
-const l1Static = { type: 'sprite', assetKey: 'l1.webp', sizeRatios: { width: 1, height: 1 } };
-const l2Static = { type: 'sprite', assetKey: 'l2.webp', sizeRatios: { width: 1, height: 1 } };
-const l3Static = { type: 'sprite', assetKey: 'l3.webp', sizeRatios: { width: 1, height: 1 } };
-const l4Static = { type: 'sprite', assetKey: 'l4.webp', sizeRatios: { width: 1, height: 1 } };
+const l1Static = { type: 'sprite', assetKey: 'l1.png', sizeRatios: { width: 0.92, height: 0.92 }, composite: true };
+const l2Static = { type: 'sprite', assetKey: 'l2.png', sizeRatios: { width: 0.92, height: 0.92 }, composite: true };
+const l3Static = { type: 'sprite', assetKey: 'l3.png', sizeRatios: { width: 0.92, height: 0.92 }, composite: true };
+const l4Static = { type: 'sprite', assetKey: 'l4.png', sizeRatios: { width: 0.92, height: 0.92 }, composite: true };
 const l5Static = {
 	type: 'spine',
 	assetKey: 'M',
@@ -224,12 +224,7 @@ const sSizeRatios = { width: 2.5, height: SPECIAL_SYMBOL_SIZE * 2.3 };
 export const SYMBOL_INFO_MAP = {
 	H1: {
 		explosion,
-		win: {
-			type: 'spine',
-			assetKey: 'H1',
-			animationName: 'h1',
-			sizeRatios: { width: 0.5 * 1.15, height: HIGH_SYMBOL_SIZE * 0.57 },
-		},
+		win: h1Static,
 		postWinStatic: h1Static,
 		static: h1Static,
 		spin: h1Static,
@@ -276,30 +271,25 @@ export const SYMBOL_INFO_MAP = {
 	},
 	H5: {
 		explosion,
-		win: {
-			type: 'spine',
-			assetKey: 'H5',
-			animationName: 'h5_golden_carrot',
-			sizeRatios: { width: 0.5 * 0.9, height: HIGH_SYMBOL_SIZE * 0.53 },
-		},
+		win: h5Static, // Use static version instead of missing spine animation
 		postWinStatic: h5Static,
 		static: h5Static,
 		spin: h5Static,
 		land: h5Static,
 	},
 	H6: {
-			explosion,
-			win: {
-				type: 'spine',
-				assetKey: 'H5', // Using H5 as placeholder
-				animationName: 'h5', // Using H5 animation as placeholder
-				sizeRatios: { width: 0.5 * 0.9, height: HIGH_SYMBOL_SIZE * 0.53 },
-			},
-			postWinStatic: h5Static, // Using H5 static as placeholder
-			static: h5Static, // Using H5 static as placeholder
-			spin: h5Static, // Using H5 static as placeholder
-			land: h5Static, // Using H5 static as placeholder
+		explosion,
+		win: {
+			type: 'spine',
+			assetKey: 'H5', // Using H5 as placeholder
+			animationName: 'h5', // Using H5 animation as placeholder
+			sizeRatios: { width: 0.5 * 0.9, height: HIGH_SYMBOL_SIZE * 0.53 },
 		},
+		postWinStatic: h5Static, // Using H5 static as placeholder
+		static: h5Static, // Using H5 static as placeholder
+		spin: h5Static, // Using H5 static as placeholder
+		land: h5Static, // Using H5 static as placeholder
+	},
 		L1: {
 		explosion,
 		win: {

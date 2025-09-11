@@ -1,9 +1,11 @@
 <script lang="ts">
 	import SymbolSpine from './SymbolSpine.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
+	import SymbolComposite from './SymbolComposite.svelte';
 	import { getSymbolInfo } from '../game/utils';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { getContext } from '../game/context';
+	import { getSymbolConfig } from '../config/symbolConfig';
 	import { BitmapText } from 'pixi-svelte';
 
 	type Props = {
@@ -19,9 +21,15 @@
 	const context = getContext();
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
 	const isSprite = $derived(symbolInfo.type === 'sprite');
+	const isComposite = $derived((symbolInfo as any).composite === true);
+	
+	// Check if symbol has configuration (meaning it should use SymbolComposite)
+	const hasSymbolConfig = $derived(getSymbolConfig(props.rawSymbol.name) !== null);
 </script>
 
-{#if isSprite}
+{#if isSprite && (isComposite || hasSymbolConfig)}
+	<SymbolComposite {symbolInfo} rawSymbol={props.rawSymbol} x={props.x} y={props.y} state={props.state} loop={props.loop} oncomplete={props.oncomplete} />
+{:else if isSprite}
 	<SymbolSprite {symbolInfo} x={props.x} y={props.y} oncomplete={props.oncomplete} />
 {:else}
 	<SymbolSpine
