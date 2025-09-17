@@ -20,21 +20,21 @@ rune2
   index: -1
 rune3
   rotate: false
-  xy: 0, 290
+  xy: 0, 145
   size: 145, 145
   orig: 145, 145
   offset: 0, 0
   index: -1
 rune4
   rotate: false
-  xy: 0, 435
+  xy: 145, 145
   size: 145, 145
   orig: 145, 145
   offset: 0, 0
   index: -1
 rune5
   rotate: false
-  xy: 145, 290
+  xy: 0, 290
   size: 145, 145
   orig: 145, 145
   offset: 0, 0

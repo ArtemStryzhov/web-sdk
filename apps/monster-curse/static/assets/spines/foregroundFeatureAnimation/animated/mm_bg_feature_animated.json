@@ -136,7 +136,7 @@
           }
         },
         "rune5": {
-          "rune1": {
+          "rune5": {
             "scaleX": 1.0,
             "scaleY": 1.0,
             "width": 145,
@@ -486,7 +486,7 @@
           ],
           "attachment": [
             {
-              "name": "rune1"
+              "name": "rune5"
             }
           ]
         }
