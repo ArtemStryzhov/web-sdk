@@ -1,0 +1,588 @@
+{
+  "skeleton": {
+    "hash": "runesDust",
+    "spine": "4.1.23",
+    "x": -800,
+    "y": -600,
+    "width": 1600,
+    "height": 1200
+  },
+  "bones": [
+    {
+      "name": "root"
+    },
+    {
+      "name": "runes",
+      "parent": "root"
+    },
+    {
+      "name": "rune1",
+      "parent": "runes",
+      "x": -650,
+      "y": 200
+    },
+    {
+      "name": "rune2",
+      "parent": "runes",
+      "x": 750,
+      "y": -350
+    },
+    {
+      "name": "rune3",
+      "parent": "runes",
+      "x": -200,
+      "y": -500
+    },
+    {
+      "name": "rune4",
+      "parent": "runes",
+      "x": 400,
+      "y": 480
+    },
+    {
+      "name": "rune5",
+      "parent": "runes",
+      "x": -500,
+      "y": -150
+    },
+    {
+      "name": "dust_effects",
+      "parent": "root"
+    },
+    {
+      "name": "dust_left",
+      "parent": "dust_effects",
+      "x": 1104,
+      "y": -220
+    },
+    {
+      "name": "dust_right",
+      "parent": "dust_effects",
+      "x": -400,
+      "y": -220
+    }
+  ],
+  "slots": [
+    {
+      "name": "rune1",
+      "bone": "rune1",
+      "blend": "normal"
+    },
+    {
+      "name": "rune2",
+      "bone": "rune2",
+      "blend": "normal"
+    },
+    {
+      "name": "rune3",
+      "bone": "rune3",
+      "blend": "normal"
+    },
+    {
+      "name": "rune4",
+      "bone": "rune4",
+      "blend": "normal"
+    },
+    {
+      "name": "rune5",
+      "bone": "rune5",
+      "blend": "normal"
+    },
+    {
+      "name": "dust_left",
+      "bone": "dust_left",
+      "blend": "additive"
+    },
+    {
+      "name": "dust_right",
+      "bone": "dust_right",
+      "blend": "additive"
+    }
+  ],
+  "skins": [
+    {
+      "name": "default",
+      "attachments": {
+        "rune1": {
+          "rune1": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "rune2": {
+          "rune2": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "rune3": {
+          "rune3": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "rune4": {
+          "rune4": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "rune5": {
+          "rune1": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "dust_left": {
+          "dust": {
+            "scaleX": 0.3,
+            "scaleY": 0.3,
+            "width": 1175,
+            "height": 1223
+          }
+        },
+        "dust_right": {
+          "dust": {
+            "scaleX": 0.3,
+            "scaleY": 0.3,
+            "width": 1175,
+            "height": 1223
+          }
+        }
+      }
+    }
+  ],
+  "animations": {
+    "idle": {
+      "slots": {
+        "rune1": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 1.2,
+              "color": "ffffff00"
+            },
+            {
+              "time": 1.8,
+              "color": "ffffffff"
+            },
+            {
+              "time": 4.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 5.0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 8.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 9.1,
+              "color": "ffffffff"
+            },
+            {
+              "time": 11.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 12.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 17.8,
+              "color": "ffffff00"
+            },
+            {
+              "time": 18.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 20.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 21.0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune1"
+            }
+          ]
+        },
+        "rune2": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 3.4,
+              "color": "ffffff00"
+            },
+            {
+              "time": 4.0,
+              "color": "ffffffff"
+            },
+            {
+              "time": 6.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 7.0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 11.7,
+              "color": "ffffff00"
+            },
+            {
+              "time": 12.3,
+              "color": "ffffffff"
+            },
+            {
+              "time": 15.0,
+              "color": "ffffffff"
+            },
+            {
+              "time": 15.6,
+              "color": "ffffff00"
+            },
+            {
+              "time": 20.2,
+              "color": "ffffff00"
+            },
+            {
+              "time": 20.8,
+              "color": "ffffffff"
+            },
+            {
+              "time": 22.6,
+              "color": "ffffffff"
+            },
+            {
+              "time": 23.2,
+              "color": "ffffff00"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune2"
+            }
+          ]
+        },
+        "rune3": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 0.8,
+              "color": "ffffff00"
+            },
+            {
+              "time": 1.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 3.7,
+              "color": "ffffffff"
+            },
+            {
+              "time": 4.3,
+              "color": "ffffff00"
+            },
+            {
+              "time": 7.3,
+              "color": "ffffff00"
+            },
+            {
+              "time": 7.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 10.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 11.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 15.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 16.1,
+              "color": "ffffffff"
+            },
+            {
+              "time": 18.1,
+              "color": "ffffffff"
+            },
+            {
+              "time": 18.7,
+              "color": "ffffff00"
+            },
+            {
+              "time": 22.1,
+              "color": "ffffff00"
+            },
+            {
+              "time": 22.7,
+              "color": "ffffffff"
+            },
+            {
+              "time": 23.8,
+              "color": "ffffffff"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune3"
+            }
+          ]
+        },
+        "rune4": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 2.7,
+              "color": "ffffff00"
+            },
+            {
+              "time": 3.3,
+              "color": "ffffffff"
+            },
+            {
+              "time": 5.3,
+              "color": "ffffffff"
+            },
+            {
+              "time": 5.9,
+              "color": "ffffff00"
+            },
+            {
+              "time": 10.8,
+              "color": "ffffff00"
+            },
+            {
+              "time": 11.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 13.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 14.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 18.9,
+              "color": "ffffff00"
+            },
+            {
+              "time": 19.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 21.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 22.1,
+              "color": "ffffff00"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune4"
+            }
+          ]
+        },
+        "rune5": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 4.8,
+              "color": "ffffff00"
+            },
+            {
+              "time": 5.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 7.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 8.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 12.9,
+              "color": "ffffff00"
+            },
+            {
+              "time": 13.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 16.8,
+              "color": "ffffffff"
+            },
+            {
+              "time": 17.4,
+              "color": "ffffff00"
+            },
+            {
+              "time": 19.4,
+              "color": "ffffff00"
+            },
+            {
+              "time": 20.0,
+              "color": "ffffffff"
+            },
+            {
+              "time": 22.3,
+              "color": "ffffffff"
+            },
+            {
+              "time": 22.9,
+              "color": "ffffff00"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune1"
+            }
+          ]
+        }
+      }
+    },
+    "dust": {
+      "slots": {
+        "dust_left": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 2,
+              "color": "ffffff80"
+            },
+            {
+              "time": 4,
+              "color": "ffffff00"
+            },
+            {
+              "time": 6,
+              "color": "ffffff80"
+            },
+            {
+              "time": 8,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "dust"
+            }
+          ]
+        },
+        "dust_right": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 2,
+              "color": "ffffff80"
+            },
+            {
+              "time": 4,
+              "color": "ffffff00"
+            },
+            {
+              "time": 6,
+              "color": "ffffff80"
+            },
+            {
+              "time": 8,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "dust"
+            }
+          ]
+        }
+      },
+      "bones": {
+        "dust_left": {
+          "scale": [
+            {
+              "x": 2.0,
+              "y": 2.0
+            }
+          ]
+        },
+        "dust_right": {
+          "scale": [
+            {
+              "x": 2.0,
+              "y": 2.0
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,11 @@
-import { createAsset } from 'pixi-svelte';
+import backgroundAsset from './background';
+import animatedAsset from './animated';
 
-import img from './mm_bg_feature.webp';
-import rawAtlas from './mm_bg_feature.atlas?raw';
-import spine from './mm_bg_feature.json';
+// Export individual assets
+export { backgroundAsset, animatedAsset };
 
-export default createAsset({ img, rawAtlas, spine, preload: true });
+// Export combined for convenience
+export default { 
+  background: backgroundAsset, 
+  animated: animatedAsset 
+};

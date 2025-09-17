@@ -257,11 +257,34 @@ export default {
 			scale: 2,
 		},
 	},
+	// Static backgrounds for responsive layouts
+	backgroundDesktop: {
+		type: 'sprite',
+		src: new URL('../../assets/spines/foregroundAnimation/background/desktop/background_desktop.png', import.meta.url).href,
+		preload: true,
+	},
+	backgroundPortrait: {
+		type: 'sprite',
+		src: new URL('../../assets/spines/foregroundAnimation/background/portrait/background_portrait.png', import.meta.url).href,
+		preload: true,
+	},
+	backgroundFeatureDesktop: {
+		type: 'sprite', 
+		src: new URL('../../assets/spines/foregroundFeatureAnimation/background/desktop/background_desktop.png', import.meta.url).href,
+		preload: true,
+	},
+	backgroundFeaturePortrait: {
+		type: 'sprite', 
+		src: new URL('../../assets/spines/foregroundFeatureAnimation/background/portrait/background_portrait.png', import.meta.url).href,
+		preload: true,
+	},
+	
+	// Animated overlays (updated paths)
 	foregroundAnimation: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/foregroundAnimation/mm_bg.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/foregroundAnimation/mm_bg.json', import.meta.url).href,
+			atlas: new URL('../../assets/spines/foregroundAnimation/animated/mm_bg_animated.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/foregroundAnimation/animated/mm_bg_animated.json', import.meta.url).href,
 			scale: 2,
 		},
 		preload: true,
@@ -269,8 +292,8 @@ export default {
 	foregroundFeatureAnimation: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/foregroundFeatureAnimation/mm_bg_feature.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/foregroundFeatureAnimation/mm_bg_feature.json', import.meta.url).href,
+			atlas: new URL('../../assets/spines/foregroundFeatureAnimation/animated/mm_bg_feature_animated.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/foregroundFeatureAnimation/animated/mm_bg_feature_animated.json', import.meta.url).href,
 			scale: 2,
 		},
 		preload: true,

@@ -1,0 +1,576 @@
+{
+  "skeleton": {
+    "hash": "runesDust",
+    "spine": "4.1.23",
+    "x": -800,
+    "y": -600,
+    "width": 1600,
+    "height": 1200
+  },
+  "bones": [
+    {
+      "name": "root"
+    },
+    {
+      "name": "runes",
+      "parent": "root"
+    },
+    {
+      "name": "rune1",
+      "parent": "runes",
+      "x": 300,
+      "y": -400
+    },
+    {
+      "name": "rune2",
+      "parent": "runes",
+      "x": -600,
+      "y": 350
+    },
+    {
+      "name": "rune3",
+      "parent": "runes",
+      "x": 800,
+      "y": 200
+    },
+    {
+      "name": "rune4",
+      "parent": "runes",
+      "x": -200,
+      "y": -500
+    },
+    {
+      "name": "rune5",
+      "parent": "runes",
+      "x": 650,
+      "y": 450
+    },
+    {
+      "name": "dust_effects",
+      "parent": "root"
+    },
+    {
+      "name": "dust_left",
+      "parent": "dust_effects",
+      "x": 1104,
+      "y": -220
+    },
+    {
+      "name": "dust_right",
+      "parent": "dust_effects",
+      "x": -400,
+      "y": -220
+    }
+  ],
+  "slots": [
+    {
+      "name": "rune1",
+      "bone": "rune1",
+      "blend": "normal"
+    },
+    {
+      "name": "rune2",
+      "bone": "rune2",
+      "blend": "normal"
+    },
+    {
+      "name": "rune3",
+      "bone": "rune3",
+      "blend": "normal"
+    },
+    {
+      "name": "rune4",
+      "bone": "rune4",
+      "blend": "normal"
+    },
+    {
+      "name": "rune5",
+      "bone": "rune5",
+      "blend": "normal"
+    },
+    {
+      "name": "dust_left",
+      "bone": "dust_left",
+      "blend": "additive"
+    },
+    {
+      "name": "dust_right",
+      "bone": "dust_right",
+      "blend": "additive"
+    }
+  ],
+  "skins": [
+    {
+      "name": "default",
+      "attachments": {
+        "rune1": {
+          "rune1": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "rune2": {
+          "rune2": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "rune3": {
+          "rune3": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "rune4": {
+          "rune4": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "rune5": {
+          "rune1": {
+            "scaleX": 1.0,
+            "scaleY": 1.0,
+            "width": 145,
+            "height": 145
+          }
+        },
+        "dust_left": {
+          "dust": {
+            "scaleX": 0.3,
+            "scaleY": 0.3,
+            "width": 1175,
+            "height": 1223
+          }
+        },
+        "dust_right": {
+          "dust": {
+            "scaleX": 0.3,
+            "scaleY": 0.3,
+            "width": 1175,
+            "height": 1223
+          }
+        }
+      }
+    }
+  ],
+  "animations": {
+    "idle": {
+      "slots": {
+        "rune1": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 2.1,
+              "color": "ffffff00"
+            },
+            {
+              "time": 2.7,
+              "color": "ffffffff"
+            },
+            {
+              "time": 5.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 6.0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 9.7,
+              "color": "ffffff00"
+            },
+            {
+              "time": 10.3,
+              "color": "ffffffff"
+            },
+            {
+              "time": 12.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 13.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 17.9,
+              "color": "ffffff00"
+            },
+            {
+              "time": 18.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 20.3,
+              "color": "ffffffff"
+            },
+            {
+              "time": 20.9,
+              "color": "ffffff00"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune1"
+            }
+          ]
+        },
+        "rune2": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 4.6,
+              "color": "ffffff00"
+            },
+            {
+              "time": 5.2,
+              "color": "ffffffff"
+            },
+            {
+              "time": 7.6,
+              "color": "ffffffff"
+            },
+            {
+              "time": 8.2,
+              "color": "ffffff00"
+            },
+            {
+              "time": 12.4,
+              "color": "ffffff00"
+            },
+            {
+              "time": 13.0,
+              "color": "ffffffff"
+            },
+            {
+              "time": 15.7,
+              "color": "ffffffff"
+            },
+            {
+              "time": 16.3,
+              "color": "ffffff00"
+            },
+            {
+              "time": 21.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 22.1,
+              "color": "ffffffff"
+            },
+            {
+              "time": 23.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune2"
+            }
+          ]
+        },
+        "rune3": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 1.3,
+              "color": "ffffff00"
+            },
+            {
+              "time": 1.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 4.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 5.1,
+              "color": "ffffff00"
+            },
+            {
+              "time": 8.2,
+              "color": "ffffff00"
+            },
+            {
+              "time": 8.8,
+              "color": "ffffffff"
+            },
+            {
+              "time": 11.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 12.0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 16.1,
+              "color": "ffffff00"
+            },
+            {
+              "time": 16.7,
+              "color": "ffffffff"
+            },
+            {
+              "time": 19.0,
+              "color": "ffffffff"
+            },
+            {
+              "time": 19.6,
+              "color": "ffffff00"
+            },
+            {
+              "time": 22.8,
+              "color": "ffffff00"
+            },
+            {
+              "time": 23.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 24,
+              "color": "ffffffff"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune3"
+            }
+          ]
+        },
+        "rune4": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 3.8,
+              "color": "ffffff00"
+            },
+            {
+              "time": 4.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 6.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 7.5,
+              "color": "ffffff00"
+            },
+            {
+              "time": 11.9,
+              "color": "ffffff00"
+            },
+            {
+              "time": 12.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 15.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 16.1,
+              "color": "ffffff00"
+            },
+            {
+              "time": 19.6,
+              "color": "ffffff00"
+            },
+            {
+              "time": 20.2,
+              "color": "ffffffff"
+            },
+            {
+              "time": 22.1,
+              "color": "ffffffff"
+            },
+            {
+              "time": 22.7,
+              "color": "ffffff00"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune4"
+            }
+          ]
+        },
+        "rune5": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 5.9,
+              "color": "ffffff00"
+            },
+            {
+              "time": 6.5,
+              "color": "ffffffff"
+            },
+            {
+              "time": 9.6,
+              "color": "ffffffff"
+            },
+            {
+              "time": 10.2,
+              "color": "ffffff00"
+            },
+            {
+              "time": 13.8,
+              "color": "ffffff00"
+            },
+            {
+              "time": 14.4,
+              "color": "ffffffff"
+            },
+            {
+              "time": 17.0,
+              "color": "ffffffff"
+            },
+            {
+              "time": 17.6,
+              "color": "ffffff00"
+            },
+            {
+              "time": 20.3,
+              "color": "ffffff00"
+            },
+            {
+              "time": 20.9,
+              "color": "ffffffff"
+            },
+            {
+              "time": 23.8,
+              "color": "ffffffff"
+            },
+            {
+              "time": 24,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "rune1"
+            }
+          ]
+        }
+      }
+    },
+    "dust": {
+      "slots": {
+        "dust_left": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 2,
+              "color": "ffffff80"
+            },
+            {
+              "time": 4,
+              "color": "ffffff00"
+            },
+            {
+              "time": 6,
+              "color": "ffffff80"
+            },
+            {
+              "time": 8,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "dust"
+            }
+          ]
+        },
+        "dust_right": {
+          "rgba": [
+            {
+              "time": 0,
+              "color": "ffffff00"
+            },
+            {
+              "time": 2,
+              "color": "ffffff80"
+            },
+            {
+              "time": 4,
+              "color": "ffffff00"
+            },
+            {
+              "time": 6,
+              "color": "ffffff80"
+            },
+            {
+              "time": 8,
+              "color": "ffffff00"
+            }
+          ],
+          "attachment": [
+            {
+              "name": "dust"
+            }
+          ]
+        }
+      },
+      "bones": {
+        "dust_left": {
+          "scale": [
+            {
+              "x": 2.0,
+              "y": 2.0
+            }
+          ]
+        },
+        "dust_right": {
+          "scale": [
+            {
+              "x": 2.0,
+              "y": 2.0
+            }
+          ]
+        }
+      }
+    }
+  }
+}
