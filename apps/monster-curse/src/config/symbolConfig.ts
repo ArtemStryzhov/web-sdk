@@ -1,15 +1,18 @@
 /**
  * Symbol Configuration System
- * 
+ *
  * This file defines the configuration for all symbols including:
  * - Background layers and their properties
- * - Animation configurations
  * - Layer ordering and sizing
  */
 
 export interface LayerConfig {
-	/** The sprite key for this layer */
-	key: string;
+	/** The sprite key for this layer (for static sprites) */
+	key?: string;
+	/** The spine asset key for animated layers */
+	spineKey?: string;
+	/** The spine animation name for animated layers */
+	animationName?: string;
 	/** Size multiplier relative to SYMBOL_SIZE */
 	sizeMultiplier: number;
 	/** Whether this layer is always visible */
@@ -20,44 +23,8 @@ export interface LayerConfig {
 	zIndex: number;
 	/** Optional alpha value (0-1) */
 	alpha?: number;
-}
-
-export interface AnimationConfig {
-	/** Animation type identifier */
-	type: string;
-	/** Duration in milliseconds */
-	duration: number;
-	/** States that trigger this animation */
-	triggerStates: string[];
-	/** Layers affected by this animation */
-	affectedLayers: string[];
-	/** Animation properties */
-	properties: {
-		/** Scale animation from/to values */
-		scale?: {
-			from: number;
-			to: number;
-			/** Layers to apply scaling to */
-			layers?: string[];
-			/** Custom duration for scale animation */
-			duration?: number;
-		};
-		/** Alpha/fade animation */
-		fade?: {
-			from: number;
-			to: number;
-			/** Layers to apply fade to */
-			layers?: string[];
-			/** Custom duration for fade animation */
-			duration?: number;
-		};
-	};
-	/** Custom durations per layer (overrides default duration) */
-	layerDurations?: Record<string, number>;
-	/** Whether animation should loop */
+	/** Whether to loop the animation */
 	loop?: boolean;
-	/** Easing function type */
-	easing?: 'linear' | 'easeInOut' | 'easeIn' | 'easeOut';
 }
 
 export interface SymbolConfig {
@@ -67,8 +34,6 @@ export interface SymbolConfig {
 	baseSprite: string;
 	/** Background layers configuration */
 	backgroundLayers: LayerConfig[];
-	/** Animation configurations */
-	animations: AnimationConfig[];
 	/** Whether this symbol supports scatter mode */
 	supportsScatter?: boolean;
 }
@@ -82,59 +47,36 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 		baseSprite: 'h1.png',
 		backgroundLayers: [
 			{
-				key: 'BG.png',
+				key: 'bg_stone.png',
 				sizeMultiplier: 1.0,
 				alwaysVisible: true,
 				zIndex: 1,
 			},
 			{
-				key: 'h1_bg2.png',// pink cloud
-				sizeMultiplier: 1,
-				alwaysVisible: true,
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_pink_static',
+				sizeMultiplier: 0.7,
+				alwaysVisible: false,
+				visibleInStates: ['static', 'land', 'postWinStatic'],
 				zIndex: 2,
+				loop: false,
 			},
 			{
-				key: 'h1_bg3.png', //ring
-				sizeMultiplier: 1.0,
-				alwaysVisible: false,
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_spin',
+				sizeMultiplier: 0.7,
+				alwaysVisible: true,
 				visibleInStates: ['win'],
 				zIndex: 4,
-				alpha: 0,
+				loop: true,
 			},
 			{
-				key: 'h1_bg4.png', //square
-				sizeMultiplier: 1.5,
-				alwaysVisible: false,
+				spineKey: 'symbolsAnimated',
+				animationName: 'electric_cloud_spin',
+				sizeMultiplier: 0.7,
+				alwaysVisible: true,
 				visibleInStates: ['win'],
 				zIndex: 5,
-				alpha: 0,
-			},
-		],
-		animations: [
-			{
-				type: 'h1_win_animation',
-				duration: 3000, // Total animation duration
-				triggerStates: ['win'],
-				affectedLayers: ['h1_bg2.png', 'h1_bg3.png', 'h1_bg4.png'],
-				properties: {
-					scale: {
-						from: 1.0,
-						to: 1.5,
-						layers: ['h1_bg2.png'],
-						duration: 2000, // h1_bg2 scaling takes 2 seconds
-					},
-					fade: {
-						from: 0.0,
-						to: 1.0,
-						layers: ['h1_bg3.png', 'h1_bg4.png'],
-					},
-				},
-				layerDurations: {
-					'h1_bg2.png': 2300, // 2 second duration for scaling
-					'h1_bg3.png': 2400, // 2 second duration for fade
-					'h1_bg4.png': 3000, // 3 second duration for extended fade
-				},
-				easing: 'easeInOut',
 				loop: true,
 			},
 		],
@@ -145,13 +87,29 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 		baseSprite: 'h2.png',
 		backgroundLayers: [
 			{
-				key: 'BG.png',
+				key: 'bg_stone.png',
 				sizeMultiplier: 1.0,
 				alwaysVisible: true,
 				zIndex: 1,
 			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_blue_static',
+				sizeMultiplier: 0.7,
+				alwaysVisible: false,
+				visibleInStates: ['static', 'land', 'postWinStatic'],
+				zIndex: 2,
+			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_spin',
+				sizeMultiplier: 0.7,
+				alwaysVisible: true,
+				visibleInStates: ['win'],
+				zIndex: 5,
+				loop: true,
+			},
 		],
-		animations: [],
 		supportsScatter: false,
 	},
 	h3: {
@@ -159,13 +117,30 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 		baseSprite: 'h3.png',
 		backgroundLayers: [
 			{
-				key: 'BG.png',
+				key: 'bg_stone.png',
 				sizeMultiplier: 1.0,
 				alwaysVisible: true,
 				zIndex: 1,
 			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_green_static',
+				sizeMultiplier: 0.7,
+				alwaysVisible: false,
+				visibleInStates: ['static', 'land', 'postWinStatic'],
+				zIndex: 2,
+				loop: false,
+			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_spin',
+				sizeMultiplier: 0.7,
+				alwaysVisible: true,
+				visibleInStates: ['win'],
+				zIndex: 5,
+				loop: true,
+			},
 		],
-		animations: [],
 		supportsScatter: false,
 	},
 	h4: {
@@ -173,27 +148,29 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 		baseSprite: 'h4.png',
 		backgroundLayers: [
 			{
-				key: 'BG.png',
+				key: 'bg_stone.png',
 				sizeMultiplier: 1.0,
 				alwaysVisible: true,
 				zIndex: 1,
 			},
-		],
-		animations: [],
-		supportsScatter: false,
-	},
-	h5: {
-		symbolId: 'h5',
-		baseSprite: 'h5.png',
-		backgroundLayers: [
 			{
-				key: 'BG.png',
-				sizeMultiplier: 1.0,
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_blue_static',
+				sizeMultiplier: 0.7,
+				alwaysVisible: false,
+				visibleInStates: ['static', 'land', 'postWinStatic'],
+				zIndex: 2,
+			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_spin',
+				sizeMultiplier: 0.7,
 				alwaysVisible: true,
-				zIndex: 1,
+				visibleInStates: ['win'],
+				zIndex: 5,
+				loop: true,
 			},
 		],
-		animations: [],
 		supportsScatter: false,
 	},
 	l1: {
@@ -201,13 +178,12 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 		baseSprite: 'l1.png',
 		backgroundLayers: [
 			{
-				key: 'BG.png',
+				key: 'bg_stone.png',
 				sizeMultiplier: 1.0,
 				alwaysVisible: true,
 				zIndex: 1,
 			},
 		],
-		animations: [],
 		supportsScatter: false,
 	},
 	l2: {
@@ -215,13 +191,12 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 		baseSprite: 'l2.png',
 		backgroundLayers: [
 			{
-				key: 'BG.png',
+				key: 'bg_stone.png',
 				sizeMultiplier: 1.0,
 				alwaysVisible: true,
 				zIndex: 1,
 			},
 		],
-		animations: [],
 		supportsScatter: false,
 	},
 	l3: {
@@ -229,13 +204,12 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 		baseSprite: 'l3.png',
 		backgroundLayers: [
 			{
-				key: 'BG.png',
+				key: 'bg_stone.png',
 				sizeMultiplier: 1.0,
 				alwaysVisible: true,
 				zIndex: 1,
 			},
 		],
-		animations: [],
 		supportsScatter: false,
 	},
 	l4: {
@@ -243,13 +217,99 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 		baseSprite: 'l4.png',
 		backgroundLayers: [
 			{
-				key: 'BG.png',
+				key: 'bg_stone.png',
 				sizeMultiplier: 1.0,
 				alwaysVisible: true,
 				zIndex: 1,
 			},
 		],
-		animations: [],
+		supportsScatter: false,
+	},
+	l5: {
+		symbolId: 'l5',
+		baseSprite: 'l5.png',
+		backgroundLayers: [
+			{
+				key: 'bg_stone.png',
+				sizeMultiplier: 1.0,
+				alwaysVisible: true,
+				zIndex: 1,
+			},
+		],
+		supportsScatter: false,
+	},
+	w: {
+		symbolId: 'w',
+		baseSprite: 'w.png',
+		backgroundLayers: [
+			{
+				key: 'bg_crystal.png',
+				sizeMultiplier: 1.0,
+				alwaysVisible: true,
+				zIndex: 1,
+			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'electric_cloud_pink_static',
+				sizeMultiplier: 0.7,
+				alwaysVisible: false,
+				visibleInStates: ['static', 'land', 'postWinStatic'],
+				zIndex: 2,
+				loop: false,
+			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'electric_cloud_spin',
+				sizeMultiplier: 0.7,
+				alwaysVisible: true,
+				visibleInStates: ['win'],
+				zIndex: 5,
+				loop: true,
+			},
+		],
+		supportsScatter: false,
+	},
+	s: {
+		symbolId: 's',
+		baseSprite: 's.png',
+		backgroundLayers: [
+			{
+				key: 'bg_crystal.png',
+				sizeMultiplier: 1.0,
+				alwaysVisible: true,
+				zIndex: 1,
+			},
+		],
+		supportsScatter: false,
+	},
+	b: {
+		symbolId: 'b',
+		baseSprite: 'b.png',
+		backgroundLayers: [
+			{
+				key: 'bg_crystal.png',
+				sizeMultiplier: 1.0,
+				alwaysVisible: true,
+				zIndex: 1,
+			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_blue_static',
+				sizeMultiplier: 0.7,
+				alwaysVisible: false,
+				visibleInStates: ['static', 'land', 'postWinStatic'],
+				zIndex: 2,
+			},
+			{
+				spineKey: 'symbolsAnimated',
+				animationName: 'tornado_spin',
+				sizeMultiplier: 0.7,
+				alwaysVisible: true,
+				visibleInStates: ['win'],
+				zIndex: 5,
+				loop: true,
+			},
+		],
 		supportsScatter: false,
 	},
 };
@@ -280,14 +340,3 @@ export function getSymbolLayers(symbolName: string, currentState: string): Layer
 		.sort((a, b) => a.zIndex - b.zIndex);
 }
 
-/**
- * Get animations that should trigger for a given state
- */
-export function getActiveAnimations(symbolName: string, currentState: string): AnimationConfig[] {
-	const config = getSymbolConfig(symbolName);
-	if (!config) return [];
-
-	return config.animations.filter(animation =>
-		animation.triggerStates.includes(currentState)
-	);
-}

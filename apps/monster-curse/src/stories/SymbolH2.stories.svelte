@@ -48,7 +48,7 @@
 					x={400}
 					y={60}
 					anchor={{ x: 0.5, y: 0 }}
-					text="This symbol uses single background layer: BG.png + h2.png"
+					text="This symbol uses single background layer: bg_stone.png + h2.png"
 					style={{
 						fontFamily: 'Arial',
 						fontSize: 16,

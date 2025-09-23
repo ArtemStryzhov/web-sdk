@@ -50,5 +50,8 @@
 		"xstate"
 	],
 	"workbench.editor.empty.hint": "hidden",
-	"scm.showHistoryGraph": false
+	"scm.showHistoryGraph": false,
+	"[json]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
+	}
 }

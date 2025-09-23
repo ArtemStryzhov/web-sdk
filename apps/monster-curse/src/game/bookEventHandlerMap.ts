@@ -57,6 +57,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			revealEvent: bookEvent,
 			paddingBoard: config.paddingReels[bookEvent.gameType],
 		});
+
+		// Debug logging: Show visible symbols that landed on this spin (middle 5 per reel)
+		const landedSymbols = bookEvent.board.map(reel => {
+			// Skip padding symbols, show only the visible middle symbols
+			const startIndex = Math.floor((reel.length - 5) / 2);
+			return reel.slice(startIndex, startIndex + 5).map(symbol => symbol.name).join('');
+		}).join(' ');
+		console.log(`🎰 Spin: ${landedSymbols}`);
+
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {

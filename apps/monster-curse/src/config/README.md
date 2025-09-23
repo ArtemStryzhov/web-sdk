@@ -1,6 +1,6 @@
 # Symbol Configuration System
 
-This directory contains the configuration-driven system for managing symbol backgrounds, layers, and animations.
+This directory contains the configuration-driven system for managing symbol backgrounds and layers.
 
 ## Overview
 
@@ -31,7 +31,7 @@ myNewSymbol: {
   baseSprite: 'myNewSymbol.png',
   backgroundLayers: [
     {
-      key: 'BG.png',
+      key: 'bg_stone.png',
       sizeMultiplier: 1.0,
       alwaysVisible: true,
       zIndex: 1,
@@ -42,18 +42,6 @@ myNewSymbol: {
       alwaysVisible: false,
       visibleInStates: ['win'],
       zIndex: 2,
-    },
-  ],
-  animations: [
-    {
-      type: 'win_glow',
-      duration: 1000,
-      triggerStates: ['win'],
-      affectedLayers: ['myNewSymbol.png'],
-      properties: {
-        scale: { from: 1.0, to: 1.2 },
-      },
-      easing: 'easeInOut',
     },
   ],
   supportsScatter: false,
@@ -70,32 +58,63 @@ Each layer supports:
 - **zIndex**: Layer ordering (lower = behind)
 - **alpha**: Optional transparency
 
-### Animation Configuration
+### Symbol Properties
 
-Each animation supports:
-- **type**: Unique animation identifier
-- **duration**: Animation length in milliseconds
-- **triggerStates**: States that start this animation
-- **affectedLayers**: Layers to animate
-- **properties**: Animation effects (scale, fade)
-- **loop**: Whether to loop the animation
-- **easing**: Easing function type
+#### `supportsScatter`
+**Type**: `boolean` (optional)  
+**Default**: `false`  
+**Description**: Indicates whether this symbol supports scatter-based gameplay mechanics.
+
+When `supportsScatter` is `true`, the symbol may participate in scatter-specific behaviors such as:
+- Special rendering modes (e.g., no background layers)
+- Scatter collection mechanics
+- Unique animation sequences
+- Alternative win conditions
+
+**Current Usage**: All symbols currently have `supportsScatter: false`. This property is reserved for future scatter-based game features.
+
+**Example**:
+```typescript
+// Regular symbol (no scatter support)
+h1: {
+  symbolId: 'h1',
+  baseSprite: 'h1.png',
+  backgroundLayers: [...],
+  supportsScatter: false,  // Default - participates in normal gameplay
+}
+
+// Scatter-enabled symbol (future feature)
+scatterSymbol: {
+  symbolId: 'scatterSymbol',
+  baseSprite: 'scatterSymbol.png',
+  backgroundLayers: [...],
+  supportsScatter: true,   // Enables scatter-specific behaviors
+}
+```
 
 ## Benefits
 
 1. **Centralized Configuration**: All symbol definitions in one place
 2. **Reusable System**: Same code handles all symbols
-3. **Easy Maintenance**: Add new symbols/animations without code changes
+3. **Easy Maintenance**: Add new symbols without code changes
 4. **Type Safety**: Full TypeScript support
 5. **Flexible Layering**: Support for complex multi-layer symbols
-6. **Animation System**: Configurable animations for any symbol
 
 ## Integration
 
 The system integrates with:
-- `SymbolComposite.svelte` - Renders configured symbols
-- `AnimationSystem.ts` - Handles all animations
+- `SymbolComposite.svelte` - Renders configured symbols with background layers
+- Pixi Spine animations - Handles all symbol animations
 - Symbol utilities and game logic
+
+### Background Layer Rendering
+
+Background layers are now **fully implemented** and rendered in `SymbolComposite.svelte`:
+- Layers are sorted by `zIndex` (lower = behind)
+- Only rendered for non-scatter symbols
+- Support transparency with `alpha` property
+- Scale with `sizeMultiplier`
+- Positioned behind main symbol (zIndex < 10)
 
 ## Example Configurations
 
@@ -105,30 +124,19 @@ h2: {
   symbolId: 'h2',
   baseSprite: 'h2.png',
   backgroundLayers: [
-    { key: 'BG.png', sizeMultiplier: 1.0, alwaysVisible: true, zIndex: 1 }
+    { key: 'bg_stone.png', sizeMultiplier: 1.0, alwaysVisible: true, zIndex: 1 }
   ],
-  animations: [],
 }
 ```
 
-### Complex Symbol (Multiple Layers + Animations)
+### Complex Symbol (Multiple Layers)
 ```typescript
 h1: {
   symbolId: 'h1',
   baseSprite: 'h1.png',
   backgroundLayers: [
-    { key: 'BG.png', sizeMultiplier: 1.0, alwaysVisible: true, zIndex: 1 },
-    { key: 'h1_bg2.png', sizeMultiplier: 1.0, alwaysVisible: true, zIndex: 2 },
-  ],
-  animations: [
-    {
-      type: 'win_pulse',
-      duration: 1600,
-      triggerStates: ['win'],
-      affectedLayers: ['h1.png', 'h1_bg2.png'],
-      properties: { scale: { from: 1.0, to: 1.6 } },
-      easing: 'easeInOut',
-    },
+    { key: 'bg_stone.png', sizeMultiplier: 1.0, alwaysVisible: true, zIndex: 1 },
+    { key: 'electric_cloud_pink.png', sizeMultiplier: 1.0, alwaysVisible: true, zIndex: 2 },
   ],
 }
 ```

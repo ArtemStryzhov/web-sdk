@@ -163,51 +163,27 @@ export default {
 				},
 			],
 		},
-		H5: {
-			paytable: [
-				{
-					'5': 25.00,
-				},
-				{
-					'4': 10.00,
-				},
-				{
-					'3': 5.00,
-				},
-			],
-			special_properties: ['wild', 'multiplier'],
-			multiplier_range: { min: 2, max: 10, max_award: 25 },
-		},
-		H6: {
-			paytable: [
-				{
-					'5': 20.00,
-				},
-				{
-					'4': 8.00,
-				},
-				{
-					'3': 4.00,
-				},
-			],
-			special_properties: ['expandable', 'multiplier'],
-			multiplier_range: { min: 2, max: 20 },
-		},
 		W: {
-			paytable: [
-				{
-					'5': 25.00,
-				},
-			],
 			special_properties: ['wild', 'multiplier'],
+			multiplier_range: { min: 2, max: 50 },
 		},
 		S: {
+			special_properties: ['scatter', 'expandable', 'multiplier'],
+			multiplier_range: { min: 2, max: 50 },
+		},
+		B: {
 			paytable: [
 				{
-					'5': 25.00,
+					'5': 'Blades of fate Free Spins (10 spins with sticky Silver Swords)',
+				},
+				{
+					'4': 'Blades of fate Free Spins (10 spins with sticky Silver Swords)',
+				},
+				{
+					'3': 'Monster Contract Free Spins (10 spins)',
 				},
 			],
-			special_properties: ['scatter'],
+			special_properties: ['bonus'],
 		},
 	},
 	paddingReels: {
@@ -244,6 +220,9 @@ export default {
 					name: 'S',
 				},
 				{
+					name: 'B',
+				},
+				{
 					name: 'L5',
 				},
 				{
@@ -331,6 +310,9 @@ export default {
 					name: 'S',
 				},
 				{
+					name: 'B',
+				},
+				{
 					name: 'L3',
 				},
 				{
@@ -374,9 +356,6 @@ export default {
 				},
 				{
 					name: 'L3',
-				},
-				{
-					name: 'H5',
 				},
 				{
 					name: 'H4',
@@ -1252,9 +1231,6 @@ export default {
 				},
 				{
 					name: 'H1',
-				},
-				{
-					name: 'H5',
 				},
 				{
 					name: 'L2',
