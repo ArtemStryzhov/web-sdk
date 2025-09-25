@@ -34,6 +34,7 @@
 	const SYMBOLS_RIGHT = [
 		{ name: 'S' },
 		{ name: 'W', multiplier: 2 },
+		{ name: 'B' },
 		{ name: 'H1' },
 		{ name: 'H2' },
 		{ name: 'H3' },

@@ -19,11 +19,35 @@
 			"name": "global",
 			"parent": "root",
 			"length": 200,
-			"x": 600,
-			"y": 400
+			"x": 900,
+			"y": 370
+		},
+		{
+			"name": "electric_purple",
+			"parent": "global",
+			"length": 100
 		}
 	],
-	"slots": [],
+	"slots": [
+		{
+			"name": "electric_purple",
+			"bone": "electric_purple",
+			"attachment": "electric_purple"
+		}
+	],
+	"skins": [
+		{
+			"name": "default",
+			"attachments": {
+				"electric_purple": {
+					"electric_purple": {
+						"width": 285,
+						"height": 285
+					}
+				}
+			}
+		}
+	],
 	"animations": {
 		"l2": {
 			"slots": {},
@@ -39,6 +63,39 @@
 							"time": 1,
 							"x": 1.2,
 							"y": 1.2
+						}
+					]
+				}
+			}
+		},
+		"electric_purple_spin": {
+			"slots": {
+				"electric_purple": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "electric_purple"
+						}
+					]
+				}
+			},
+			"bones": {
+				"electric_purple": {
+					"scale": [
+						{
+							"time": 0,
+							"x": 1.0,
+							"y": 1.0
+						},
+						{
+							"time": 1.2,
+							"x": 1.9,
+							"y": 1.9
+						},
+						{
+							"time": 2.4,
+							"x": 1.0,
+							"y": 1.0
 						}
 					]
 				}

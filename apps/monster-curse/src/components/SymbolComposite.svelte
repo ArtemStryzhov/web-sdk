@@ -51,8 +51,8 @@
 						>
 							<SpineTrack
 								trackIndex={0}
-								animationName={layer.animationName}
-								loop={layer.loop ?? false}
+								animationName={layer.animationName!}
+								loop={props.loop ?? layer.loop ?? false}
 								timeScale={stateBetDerived.timeScale()}
 							/>
 						</SpineProvider>

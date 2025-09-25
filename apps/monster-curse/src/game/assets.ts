@@ -190,14 +190,6 @@ export default {
 			scale: 2,
 		},
 	},
-	explosion: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/symbols3/symbols3.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols3/explosion.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
 	W: {
 		type: 'spine',
 		src: {
@@ -355,14 +347,6 @@ export default {
 	winSmall: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url).href,
-	},
-	clusterWin: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/clusterWin/clusterpay.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/clusterWin/clusterpay.json', import.meta.url).href,
-			scale: 2,
-		},
 	},
 	transition: {
 		type: 'spine',

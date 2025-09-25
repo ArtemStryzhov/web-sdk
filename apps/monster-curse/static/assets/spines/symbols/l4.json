@@ -19,11 +19,35 @@
 			"name": "global",
 			"parent": "root",
 			"length": 200,
-			"x": 600,
-			"y": 400
+			"x": 900,
+			"y": 370
+		},
+		{
+			"name": "electric_blue",
+			"parent": "global",
+			"length": 100
 		}
 	],
-	"slots": [],
+	"slots": [
+		{
+			"name": "electric_blue",
+			"bone": "electric_blue",
+			"attachment": "electric_blue"
+		}
+	],
+	"skins": [
+		{
+			"name": "default",
+			"attachments": {
+				"electric_blue": {
+					"electric_blue": {
+						"width": 285,
+						"height": 285
+					}
+				}
+			}
+		}
+	],
 	"animations": {
 		"l4": {
 			"slots": {},
@@ -39,6 +63,39 @@
 							"time": 1,
 							"x": 1.2,
 							"y": 1.2
+						}
+					]
+				}
+			}
+		},
+		"electric_blue_spin": {
+			"slots": {
+				"electric_blue": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "electric_blue"
+						}
+					]
+				}
+			},
+			"bones": {
+				"electric_blue": {
+					"scale": [
+						{
+							"time": 0,
+							"x": 1.0,
+							"y": 1.0
+						},
+						{
+							"time": 1.2,
+							"x": 1.9,
+							"y": 1.9
+						},
+						{
+							"time": 2.4,
+							"x": 1.0,
+							"y": 1.0
 						}
 					]
 				}

@@ -25,18 +25,12 @@
 
 	// Available animations from symbolsAnimated.json
 	const ANIMATIONS = [
-		'magic_ring_spin',
-		'electric_cloud_spin',
-		'tornado_blue_static',
-		'electric_cloud_pink_static'
+		'magic_ring_spin'
 	];
 
 	// Test data for different animation types
 	const TEST_ITEMS = [
-		{ name: 'Magic Ring Spin', animation: 'magic_ring_spin' },
-		{ name: 'Electric Cloud Spin', animation: 'electric_cloud_spin' },
-		{ name: 'Tornado Blue Static', animation: 'tornado_blue_static' },
-		{ name: 'Electric Cloud Pink Static', animation: 'electric_cloud_pink_static' }
+		{ name: 'Magic Ring Spin', animation: 'magic_ring_spin' }
 	];
 
 	const ITEM_SIZE = 120;
@@ -88,19 +82,19 @@
 
 					<Container {x} {y}>
 						<!-- Animation display -->
-						<SpineProvider
-							key="symbolsAnimated"
-							width={ITEM_SIZE}
-							height={ITEM_SIZE}
-							anchor={0.5}
-						>
-							<SpineTrack
-								trackIndex={0}
-								animationName={item.animation}
-								loop={true}
-								timeScale={1}
-							/>
-						</SpineProvider>
+					<SpineProvider
+						key="symbolsAnimated"
+						width={ITEM_SIZE}
+						height={ITEM_SIZE}
+						anchor={0.5}
+					>
+						<SpineTrack
+							trackIndex={0}
+							animationName={item.animation}
+							loop={true}
+							timeScale={1}
+						/>
+					</SpineProvider>
 
 						<!-- Item name label -->
 						<Text

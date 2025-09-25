@@ -19,11 +19,35 @@
 			"name": "global",
 			"parent": "root",
 			"length": 200,
-			"x": 600,
-			"y": 400
+			"x": 900,
+			"y": 370
+		},
+		{
+			"name": "electric_green",
+			"parent": "global",
+			"length": 100
 		}
 	],
-	"slots": [],
+	"slots": [
+		{
+			"name": "electric_green",
+			"bone": "electric_green",
+			"attachment": "electric_green"
+		}
+	],
+	"skins": [
+		{
+			"name": "default",
+			"attachments": {
+				"electric_green": {
+					"electric_green": {
+						"width": 285,
+						"height": 285
+					}
+				}
+			}
+		}
+	],
 	"animations": {
 		"l5": {
 			"slots": {},
@@ -39,6 +63,39 @@
 							"time": 1,
 							"x": 1.2,
 							"y": 1.2
+						}
+					]
+				}
+			}
+		},
+		"electric_green_spin": {
+			"slots": {
+				"electric_green": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "electric_green"
+						}
+					]
+				}
+			},
+			"bones": {
+				"electric_green": {
+					"scale": [
+						{
+							"time": 0,
+							"x": 1.0,
+							"y": 1.0
+						},
+						{
+							"time": 1.2,
+							"x": 1.9,
+							"y": 1.9
+						},
+						{
+							"time": 2.4,
+							"x": 1.0,
+							"y": 1.0
 						}
 					]
 				}

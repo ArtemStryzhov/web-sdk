@@ -102,14 +102,6 @@
 								fontWeight: 'bold',
 							}}
 						/>
-						<Graphics
-							draw={(g) => {
-								g.clear();
-								g.rect(-120, -120, 240, 240);
-								g.fill({ color: 0x333333, alpha: 0.8 });
-								g.stroke({ color: 0x666666, width: 2 });
-							}}
-						/>
 						<Symbol
 							x={0}
 							y={0}
