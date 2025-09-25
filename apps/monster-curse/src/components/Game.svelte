@@ -11,6 +11,7 @@
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
+	import assets from '../game/assets';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
@@ -39,7 +40,7 @@
 	});
 </script>
 
-<App>
+<App assets={assets}>
 	<EnableSound />
 	<EnableHotkey />
 	<EnableGameActor />

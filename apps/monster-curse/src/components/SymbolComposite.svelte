@@ -8,6 +8,7 @@
 	import { SYMBOL_SIZE } from '../game/constants';
 	import type { RawSymbol, SymbolState } from '../game/types';
 	import { getSymbolConfig } from '../config/symbolConfig';
+	import { getContext } from '../game/context';
 
 	type Props = {
 		x?: number;
@@ -44,7 +45,6 @@
 							x={0}
 							y={0}
 							anchor={0.5}
-							width={SYMBOL_SIZE * layer.sizeMultiplier}
 							height={SYMBOL_SIZE * layer.sizeMultiplier}
 							alpha={layer.alpha ?? 1}
 							zIndex={layer.zIndex}

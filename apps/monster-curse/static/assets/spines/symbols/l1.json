@@ -1,0 +1,48 @@
+{
+	"skeleton": {
+		"hash": "l1",
+		"spine": "4.1.23",
+		"x": -600,
+		"y": -400,
+		"width": 1200,
+		"height": 800,
+		"images": "../images/",
+		"audio": ""
+	},
+	"bones": [
+		{
+			"name": "root",
+			"x": -600,
+			"y": -400
+		},
+		{
+			"name": "global",
+			"parent": "root",
+			"length": 200,
+			"x": 600,
+			"y": 400
+		}
+	],
+	"slots": [],
+	"animations": {
+		"l1": {
+			"slots": {},
+			"bones": {
+				"root": {
+					"scale": [
+						{
+							"time": 0,
+							"x": 1,
+							"y": 1
+						},
+						{
+							"time": 1,
+							"x": 1.2,
+							"y": 1.2
+						}
+					]
+				}
+			}
+		}
+	}
+}

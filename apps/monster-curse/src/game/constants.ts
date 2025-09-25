@@ -225,8 +225,8 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
-			animationName: 'h1',
+			assetKey: 'H1',
+			animationName: 'h1_win',
 			sizeRatios: { width: 0.7, height: HIGH_SYMBOL_SIZE * 1 },
 		},
 		postWinStatic: h1Static,
@@ -238,8 +238,8 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
-			animationName: 'h2',
+			assetKey: 'H2',
+			animationName: 'h2_win',
 			sizeRatios: { width: 0.7, height: HIGH_SYMBOL_SIZE * 1 },
 		},
 		postWinStatic: h2Static,
@@ -251,8 +251,8 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
-			animationName: 'h3',
+			assetKey: 'H3',
+			animationName: 'h3_win',
 			sizeRatios: { width: 0.7, height: HIGH_SYMBOL_SIZE * 1 },
 		},
 		postWinStatic: h3Static,
@@ -264,8 +264,8 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
-			animationName: 'h4',
+			assetKey: 'H4',
+			animationName: 'h4_win',
 			sizeRatios: { width: 0.7, height: HIGH_SYMBOL_SIZE * 1 },
 		},
 		postWinStatic: h4Static,
@@ -277,7 +277,7 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
+			assetKey: 'L1',
 			animationName: 'l1',
 			sizeRatios: { width: 0.7, height: LOW_SYMBOL_SIZE * 1 },
 		},
@@ -290,7 +290,7 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
+			assetKey: 'L2',
 			animationName: 'l2',
 			sizeRatios: { width: 0.7, height: LOW_SYMBOL_SIZE * 1 },
 		},
@@ -303,7 +303,7 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
+			assetKey: 'L3',
 			animationName: 'l3',
 			sizeRatios: { width: 0.7, height: LOW_SYMBOL_SIZE * 1 },
 		},
@@ -316,7 +316,7 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
+			assetKey: 'L4',
 			animationName: 'l4',
 			sizeRatios: { width: 0.7, height: LOW_SYMBOL_SIZE * 1 },
 		},
@@ -329,7 +329,7 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		win: {
 			type: 'spine',
-			assetKey: 'symbolsAnimated',
+			assetKey: 'L5',
 			animationName: 'l5',
 			sizeRatios: { width: 0.7, height: LOW_SYMBOL_SIZE * 1 },
 		},

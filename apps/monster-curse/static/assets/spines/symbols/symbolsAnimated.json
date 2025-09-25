@@ -5,7 +5,9 @@
 		"x": -600,
 		"y": -400,
 		"width": 1200,
-		"height": 800
+		"height": 800,
+		"images": "../images/",
+		"audio": ""
 	},
 	"bones": [
 		{
@@ -21,17 +23,7 @@
 			"y": 400
 		},
 		{
-			"name": "bg_crystal_pivot",
-			"parent": "global",
-			"length": 100
-		},
-		{
 			"name": "magic_ring",
-			"parent": "global",
-			"length": 100
-		},
-		{
-			"name": "winning_border",
 			"parent": "global",
 			"length": 100
 		},
@@ -44,39 +36,9 @@
 			"name": "electric_cloud_pink",
 			"parent": "global",
 			"length": 100
-		},
-		{
-			"name": "tornado_pink",
-			"parent": "global",
-			"length": 100
-		},
-		{
-			"name": "tornado_green",
-			"parent": "global",
-			"length": 100
-		},
-		{
-			"name": "electric_green",
-			"parent": "global",
-			"length": 100
-		},
-		{
-			"name": "electric_purple",
-			"parent": "global",
-			"length": 100
-		},
-		{
-			"name": "electric_blue",
-			"parent": "global",
-			"length": 100
 		}
 	],
 	"slots": [
-		{
-			"name": "bg_crystal_pivot",
-			"bone": "bg_crystal_pivot",
-			"attachment": "bg_crystal_pivot"
-		},
 		{
 			"name": "magic_ring1",
 			"bone": "magic_ring",
@@ -98,11 +60,6 @@
 			"attachment": "magic_ring4"
 		},
 		{
-			"name": "winning_border",
-			"bone": "winning_border",
-			"attachment": "winning_border"
-		},
-		{
 			"name": "tornado_blue",
 			"bone": "tornado_blue",
 			"attachment": "tornado_blue"
@@ -111,31 +68,6 @@
 			"name": "electric_cloud_pink",
 			"bone": "electric_cloud_pink",
 			"attachment": "electric_cloud_pink"
-		},
-		{
-			"name": "tornado_pink",
-			"bone": "tornado_pink",
-			"attachment": "tornado_pink"
-		},
-		{
-			"name": "tornado_green",
-			"bone": "tornado_green",
-			"attachment": "tornado_green"
-		},
-		{
-			"name": "electric_green",
-			"bone": "electric_green",
-			"attachment": "electric_green"
-		},
-		{
-			"name": "electric_purple",
-			"bone": "electric_purple",
-			"attachment": "electric_purple"
-		},
-		{
-			"name": "electric_blue",
-			"bone": "electric_blue",
-			"attachment": "electric_blue"
 		}
 	],
 	"animations": {
@@ -190,168 +122,56 @@
 					]
 				}
 			},
-			"bones": {}
-		},
-		"tornado_spin": {
-			"slots": {},
 			"bones": {
-				"tornado_blue": {
+				"magic_ring": {
 					"scale": [
 						{
 							"time": 0,
-							"x": 0.5,
-							"y": 0.5
+							"x": 0.7,
+							"y": 0.7
 						},
 						{
 							"time": 1.15,
-							"x": 1.3,
-							"y": 1.3,
-							"curve": "stepped"
+							"x": 1.0,
+							"y": 1.0
 						},
 						{
 							"time": 2.3,
-							"x": 0.5,
-							"y": 0.5
-						}
-					],
-					"rotation": [
-						{
-							"time": 0,
-							"angle": 0
-						},
-						{
-							"time": 2.3,
-							"angle": 360
-						}
-					]
-				},
-				"tornado_pink": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 0.5,
-							"y": 0.5
-						},
-						{
-							"time": 1.15,
-							"x": 1.3,
-							"y": 1.3,
-							"curve": "stepped"
-						},
-						{
-							"time": 2.3,
-							"x": 0.5,
-							"y": 0.5
-						}
-					]
-				},
-				"tornado_green": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 0.5,
-							"y": 0.5
-						},
-						{
-							"time": 1.15,
-							"x": 1.3,
-							"y": 1.3,
-							"curve": "stepped"
-						},
-						{
-							"time": 2.3,
-							"x": 0.5,
-							"y": 0.5
+							"x": 0.7,
+							"y": 0.7
 						}
 					]
 				}
 			}
 		},
 		"electric_cloud_spin": {
-			"slots": {},
+			"slots": {
+				"electric_cloud_pink": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "electric_cloud_pink"
+						}
+					]
+				}
+			},
 			"bones": {
 				"electric_cloud_pink": {
 					"scale": [
 						{
 							"time": 0,
-							"x": 0.5,
-							"y": 0.5
+							"x": 0.7,
+							"y": 0.7
 						},
 						{
 							"time": 1.15,
-							"x": 1.3,
-							"y": 1.3,
-							"curve": "stepped"
+							"x": 1.0,
+							"y": 1.0
 						},
 						{
 							"time": 2.3,
-							"x": 0.5,
-							"y": 0.5
-						}
-					]
-				}
-			}
-		},
-		"electric_spin": {
-			"slots": {},
-			"bones": {
-				"electric_green": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 0.5,
-							"y": 0.5
-						},
-						{
-							"time": 1.15,
-							"x": 1.3,
-							"y": 1.3,
-							"curve": "stepped"
-						},
-						{
-							"time": 2.3,
-							"x": 0.5,
-							"y": 0.5
-						}
-					]
-				},
-				"electric_purple": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 0.5,
-							"y": 0.5
-						},
-						{
-							"time": 1.15,
-							"x": 1.3,
-							"y": 1.3,
-							"curve": "stepped"
-						},
-						{
-							"time": 2.3,
-							"x": 0.5,
-							"y": 0.5
-						}
-					]
-				},
-				"electric_blue": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 0.5,
-							"y": 0.5
-						},
-						{
-							"time": 1.15,
-							"x": 1.3,
-							"y": 1.3,
-							"curve": "stepped"
-						},
-						{
-							"time": 2.3,
-							"x": 0.5,
-							"y": 0.5
+							"x": 0.7,
+							"y": 0.7
 						}
 					]
 				}
@@ -373,69 +193,13 @@
 					"scale": [
 						{
 							"time": 0,
-							"x": 0.5,
-							"y": 0.5
+							"x": 0.7,
+							"y": 0.7
 						},
 						{
 							"time": 1,
-							"x": 0.5,
-							"y": 0.5
-						}
-					]
-				}
-			}
-		},
-		"tornado_pink_static": {
-			"slots": {
-				"tornado_pink": {
-					"attachment": [
-						{
-							"time": 0,
-							"name": "tornado_pink"
-						}
-					]
-				}
-			},
-			"bones": {
-				"tornado_pink": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 0.5,
-							"y": 0.5
-						},
-						{
-							"time": 1,
-							"x": 0.5,
-							"y": 0.5
-						}
-					]
-				}
-			}
-		},
-		"tornado_green_static": {
-			"slots": {
-				"tornado_green": {
-					"attachment": [
-						{
-							"time": 0,
-							"name": "tornado_green"
-						}
-					]
-				}
-			},
-			"bones": {
-				"tornado_green": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 0.5,
-							"y": 0.5
-						},
-						{
-							"time": 1,
-							"x": 0.5,
-							"y": 0.5
+							"x": 0.7,
+							"y": 0.7
 						}
 					]
 				}
@@ -457,184 +221,13 @@
 					"scale": [
 						{
 							"time": 0,
-							"x": 0.5,
-							"y": 0.5
+							"x": 0.7,
+							"y": 0.7
 						},
 						{
 							"time": 1,
-							"x": 0.5,
-							"y": 0.5
-						}
-					]
-				}
-			}
-		},
-		"h1": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
-						}
-					]
-				}
-			}
-		},
-		"h2": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
-						}
-					]
-				}
-			}
-		},
-		"h3": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
-						}
-					]
-				}
-			}
-		},
-		"h4": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
-						}
-					]
-				}
-			}
-		},
-		"l1": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
-						}
-					]
-				}
-			}
-		},
-		"l2": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
-						}
-					]
-				}
-			}
-		},
-		"l3": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
-						}
-					]
-				}
-			}
-		},
-		"l4": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
-						}
-					]
-				}
-			}
-		},
-		"l5": {
-			"slots": {},
-			"bones": {
-				"root": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1,
-							"y": 1
-						},
-						{
-							"time": 1,
-							"x": 1.2,
-							"y": 1.2
+							"x": 0.7,
+							"y": 0.7
 						}
 					]
 				}
