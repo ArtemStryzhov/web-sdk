@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { SpineProvider, SpineTrack, type SpineTrackProps } from 'pixi-svelte';
+	import { onMount } from 'svelte';
 
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { getSymbolInfo } from '../game/utils';
@@ -15,6 +16,11 @@
 	};
 
 	const props: Props = $props();
+
+	// Complete immediately to prevent hanging, regardless of spine animation
+	onMount(() => {
+		props.listener?.complete?.({} as any);
+	});
 </script>
 
 <!-- main -->
@@ -28,7 +34,7 @@
 
 <!-- tumble frame -->
 {#if props.showWinFrame}
-	<!-- <SpineProvider x={props.x} y={props.y} key="anticipation" width={SYMBOL_SIZE * 0.19}>
+	<SpineProvider x={props.x} y={props.y} key="anticipation" width={SYMBOL_SIZE * 0.19} zIndex={100}>
 		<SpineTrack trackIndex={0} animationName={'payframe'} loop />
-	</SpineProvider> -->
+	</SpineProvider>
 {/if}
