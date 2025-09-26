@@ -8,23 +8,30 @@
 	import { getSymbolConfig } from '../config/symbolConfig';
 	import { BitmapText } from 'pixi-svelte';
 
-	type Props = {
-		x?: number;
-		y?: number;
-		state: SymbolState;
-		rawSymbol: RawSymbol;
-		oncomplete?: () => void;
-		loop?: boolean;
-	};
+type Props = {
+	x?: number;
+	y?: number;
+	state: SymbolState;
+	rawSymbol: RawSymbol;
+	oncomplete?: () => void;
+	loop?: boolean;
+	key?: string;
+};
 
 	const props: Props = $props();
 	const context = getContext();
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
 	const isSprite = $derived(symbolInfo.type === 'sprite');
 	const isComposite = $derived((symbolInfo as any).composite === true);
-	
+
 	// Check if symbol has configuration (meaning it should use SymbolComposite)
 	const hasSymbolConfig = $derived(getSymbolConfig(props.rawSymbol.name) !== null);
+
+	// Force reactivity when state changes
+	$effect(() => {
+		props.state;
+		props.key;
+	});
 </script>
 
 {#if isSprite && (isComposite || hasSymbolConfig)}
