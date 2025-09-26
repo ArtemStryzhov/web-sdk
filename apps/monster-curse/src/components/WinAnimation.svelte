@@ -4,6 +4,7 @@
 	import { SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import { stateBetDerived } from 'state-shared';
 
 	type AnimationState = 'intro' | 'idle' | 'outro';
 
@@ -28,11 +29,12 @@
 	let animationState = $state<AnimationState>('intro');
 </script>
 
-<SpineProvider width={context.stateGameDerived.boardLayout().width} key="bigwin">
+<SpineProvider width={context.stateGameDerived.boardLayout().width} key="bigwin" zIndex={1000}>
 	<SpineTrack
 		trackIndex={0}
 		animationName={props.animationMap[animationState]}
 		loop={animationState === 'idle'}
+		timeScale={stateBetDerived.timeScale()}
 		listener={{
 			complete: () => {
 				if (animationState === 'intro') animationState = 'idle';

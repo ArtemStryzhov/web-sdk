@@ -1,0 +1,189 @@
+{
+	"skeleton": {
+		"hash": "W",
+		"spine": "4.1.23",
+		"x": -600,
+		"y": -400,
+		"width": 1200,
+		"height": 800,
+		"images": "../images/",
+		"audio": ""
+	},
+	"bones": [
+		{
+			"name": "root",
+			"x": -600,
+			"y": -400
+		},
+		{
+			"name": "global",
+			"parent": "root",
+			"length": 200,
+			"x": 900,
+			"y": 370
+		},
+		{
+			"name": "magic_ring1",
+			"parent": "global",
+			"length": 100
+		},
+		{
+			"name": "magic_ring2",
+			"parent": "global",
+			"length": 100
+		},
+		{
+			"name": "magic_ring3",
+			"parent": "global",
+			"length": 100
+		},
+		{
+			"name": "magic_ring4",
+			"parent": "global",
+			"length": 100
+		},
+		{
+			"name": "electric_cloud_pink",
+			"parent": "global",
+			"length": 100
+		}
+	],
+	"slots": [
+		{
+			"name": "magic_ring1",
+			"bone": "magic_ring1"
+		},
+		{
+			"name": "magic_ring2",
+			"bone": "magic_ring2"
+		},
+		{
+			"name": "magic_ring3",
+			"bone": "magic_ring3"
+		},
+		{
+			"name": "magic_ring4",
+			"bone": "magic_ring4"
+		},
+		{
+			"name": "electric_cloud_pink",
+			"bone": "electric_cloud_pink",
+			"attachment": "electric_cloud_pink"
+		}
+	],
+	"skins": [
+		{
+			"name": "default",
+			"attachments": {
+				"magic_ring1": {
+					"magic_ring1": {
+						"width": 285,
+						"height": 285
+					}
+				},
+				"magic_ring2": {
+					"magic_ring2": {
+						"width": 285,
+						"height": 285
+					}
+				},
+				"magic_ring3": {
+					"magic_ring3": {
+						"width": 285,
+						"height": 285
+					}
+				},
+				"magic_ring4": {
+					"magic_ring4": {
+						"width": 285,
+						"height": 285
+					}
+				},
+				"electric_cloud_pink": {
+					"electric_cloud_pink": {
+						"width": 285,
+						"height": 285
+					}
+				}
+			}
+		}
+	],
+	"animations": {
+		"electric_cloud_pink_static": {
+			"slots": {
+				"electric_cloud_pink": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "electric_cloud_pink"
+						}
+					]
+				}
+			},
+			"bones": {
+				"electric_cloud_pink": {}
+			}
+		},
+		"magic_ring_spin": {
+			"slots": {
+				"magic_ring1": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "magic_ring1"
+						}
+					]
+				}
+			},
+			"bones": {
+				"magic_ring1": {
+					"scale": [
+						{
+							"time": 0,
+							"x": 1.0,
+							"y": 1.0
+						},
+						{
+							"time": 1.0,
+							"x": 1.0,
+							"y": 1.0
+						}
+					]
+				}
+			}
+		},
+		"electric_cloud_spin": {
+			"slots": {
+				"electric_cloud_pink": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "electric_cloud_pink"
+						}
+					]
+				}
+			},
+			"bones": {
+				"electric_cloud_pink": {
+					"scale": [
+						{
+							"time": 0,
+							"x": 1.0,
+							"y": 1.0
+						},
+						{
+							"time": 1.2,
+							"x": 1.9,
+							"y": 1.9
+						},
+						{
+							"time": 1.9,
+							"x": 1.0,
+							"y": 1.0
+						}
+					]
+				}
+			}
+		}
+	}
+}

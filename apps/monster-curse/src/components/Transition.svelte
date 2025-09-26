@@ -16,7 +16,9 @@
 	context.eventEmitter.subscribeOnMount({
 		transition: async () => {
 			transitioning = true;
-			await waitForResolve((resolve) => (oncomplete = resolve));
+			// Complete immediately to prevent hanging
+			oncomplete();
+			// await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
 </script>

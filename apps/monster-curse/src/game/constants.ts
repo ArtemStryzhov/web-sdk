@@ -312,19 +312,10 @@ export const SYMBOL_INFO_MAP = {
 	},
 	W: {
 		win: wStatic,
-		postWinStatic: {
-			type: 'sprite',
-			assetKey: 'w.png',
-			sizeRatios: { width: 0.7, height: 0.7 },
-		},
+		postWinStatic: wStatic,
 		static: wStatic,
 		spin: wStatic,
-		land: {
-			type: 'spine',
-			assetKey: 'W',
-			animationName: 'wild_dynamite_land',
-			sizeRatios: wSizeRatios,
-		},
+		land: wStatic,
 	},
 	S: {
 		win: { type: 'spine', assetKey: 'S', animationName: 'scatter_win', sizeRatios: sSizeRatios },

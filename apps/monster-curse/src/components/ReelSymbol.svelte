@@ -25,7 +25,8 @@
 		state={props.reelSymbol.symbolState}
 		rawSymbol={props.reelSymbol.rawSymbol}
 		oncomplete={() => {
-			if (props.reelSymbol.symbolState === 'win') props.reelSymbol.oncomplete();
+			// Always call oncomplete if it exists, since the promise was set up to wait for completion
+			props.reelSymbol.oncomplete?.();
 			if (props.reelSymbol.symbolState === 'land') props.reelSymbol.symbolState = 'static';
 		}}
 	/>

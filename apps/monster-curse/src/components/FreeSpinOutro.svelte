@@ -38,7 +38,9 @@
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
-			await waitForResolve((resolve) => (oncomplete = resolve));
+			// Complete immediately to prevent hanging
+			oncomplete();
+			// await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
 </script>

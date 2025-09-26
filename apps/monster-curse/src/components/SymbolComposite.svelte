@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Sprite, Container, Graphics } from 'pixi-svelte';
+	import { Sprite, Container } from 'pixi-svelte';
 	import { SpineProvider, SpineTrack } from 'pixi-svelte';
 	import { onMount } from 'svelte';
 	import { stateBetDerived } from 'state-shared';
@@ -26,7 +26,20 @@
 	// Get symbol configuration
 	const symbolConfig = $derived(getSymbolConfig(props.rawSymbol.name));
 
+	// Track spine animation completion
+	let pendingCompletions = $state(0);
+	let hasCompleted = $state(false);
+
+	function handleSpineComplete() {
+		// Complete immediately for all symbols to prevent hanging
+		if (!hasCompleted) {
+			hasCompleted = true;
+			props.oncomplete?.();
+		}
+	}
+
 	onMount(() => {
+		// Complete immediately to prevent game from getting stuck - ALL symbols must complete
 		props.oncomplete?.();
 	});
 </script>
@@ -38,24 +51,27 @@
 			{#each [...symbolConfig.backgroundLayers].sort((a, b) => a.zIndex - b.zIndex) as layer, index (`${layer.spineKey || layer.key}_${index}`)}
 				{@const isVisible = layer.alwaysVisible || (layer.visibleInStates && layer.visibleInStates.includes(props.state))}
 				{#if isVisible}
-					{#if layer.spineKey}
-						<!-- Animated spine layer -->
-						<SpineProvider
-							key={layer.spineKey}
-							x={0}
-							y={0}
-							anchor={0.5}
-							height={SYMBOL_SIZE * layer.sizeMultiplier}
-							alpha={layer.alpha ?? 1}
-							zIndex={layer.zIndex}
-						>
+				{#if layer.spineKey}
+					<!-- Animated spine layer -->
+					<SpineProvider
+						key={layer.spineKey}
+						x={0}
+						y={0}
+						anchor={0.5}
+						height={SYMBOL_SIZE * layer.sizeMultiplier}
+						alpha={layer.alpha ?? 1}
+						zIndex={layer.zIndex}
+					>
 							<SpineTrack
 								trackIndex={0}
 								animationName={layer.animationName!}
 								loop={props.loop ?? layer.loop ?? false}
 								timeScale={stateBetDerived.timeScale()}
+								listener={{
+									complete: handleSpineComplete
+								}}
 							/>
-						</SpineProvider>
+					</SpineProvider>
 					{:else if layer.key}
 						<!-- Static sprite layer -->
 						<Sprite

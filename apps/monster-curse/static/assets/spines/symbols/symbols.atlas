@@ -1,0 +1,27 @@
+symbols.png
+size:1140,855
+filter:Linear,Linear
+bg_crystal_pivot
+  bounds:940,286,200,200
+magic_ring1
+  bounds:285,571,285,285
+magic_ring2
+  bounds:570,571,285,285
+magic_ring3
+  bounds:856,571,285,285
+magic_ring4
+  bounds:0,571,285,285
+tornado_blue
+  bounds:0,0,285,285
+electric_cloud_pink
+  bounds:285,0,285,285
+tornado_pink
+  bounds:570,0,285,285
+tornado_green
+  bounds:855,0,285,285
+electric_green
+  bounds:0,285,285,285
+electric_purple
+  bounds:285,285,285,285
+electric_blue
+  bounds:570,285,285,285

@@ -65,9 +65,11 @@
 
 			if (animationName !== 'static') {
 				multiplier = emitterEvent.multiplier;
-				await waitForResolve((resolve) => (oncomplete = resolve));
+				// Complete immediately to prevent hanging
+				oncomplete();
 				animationName = 'static';
 				previousMultiplier.set(multiplier, { duration: 0 });
+				// await waitForResolve((resolve) => (oncomplete = resolve));
 			}
 		},
 	});

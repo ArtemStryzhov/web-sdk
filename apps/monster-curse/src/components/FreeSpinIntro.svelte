@@ -34,7 +34,9 @@
 			// }
 			// freeSpinsFromEvent = emitterEvent.extraSpins ?? emitterEvent.totalFreeSpins;
 			freeSpinsFromEvent = emitterEvent.totalFreeSpins;
-			await waitForResolve((resolve) => (oncomplete = resolve));
+			// Complete immediately to prevent hanging
+			oncomplete();
+			// await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
 </script>
