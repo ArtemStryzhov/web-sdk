@@ -48,41 +48,49 @@
 	{#if symbolConfig}
 		<!-- Render background layers (only for non-scatter symbols) -->
 		{#if !isScatter}
-			{#each [...symbolConfig.backgroundLayers].sort((a, b) => a.zIndex - b.zIndex) as layer, index (`${layer.spineKey || layer.key}_${index}`)}
-				{@const isVisible = layer.alwaysVisible || (layer.visibleInStates && layer.visibleInStates.includes(props.state))}
-				{#if isVisible}
-				{#if layer.spineKey}
-					<!-- Animated spine layer -->
-					<SpineProvider
-						key={layer.spineKey}
-						x={0}
-						y={0}
+			{@const sortedLayers = [...symbolConfig.backgroundLayers].sort((a, b) => a.zIndex - b.zIndex)}
+			{@const visibleLayers = sortedLayers.filter(layer => layer.alwaysVisible || (layer.visibleInStates && layer.visibleInStates.includes(props.state)))}
+			
+
+			<!-- Render static sprite layers -->
+			{#each visibleLayers as layer}
+				{#if layer.key}
+					<Sprite
 						anchor={0.5}
+						key={layer.key}
+						width={SYMBOL_SIZE * layer.sizeMultiplier}
 						height={SYMBOL_SIZE * layer.sizeMultiplier}
 						alpha={layer.alpha ?? 1}
 						zIndex={layer.zIndex}
-					>
+					/>
+				{/if}
+			{/each}
+
+			<!-- Render individual spine layers -->
+			{#each visibleLayers as layer, index}
+				{#if layer.spineKey}
+					<!-- Use unique key for Svelte reactivity but correct spineKey for asset loading -->
+					{#key `${layer.spineKey}_${layer.animationName}_${index}`}
+						<SpineProvider
+							key={layer.spineKey}
+							x={0}
+							y={0}
+							anchor={0.5}
+							height={SYMBOL_SIZE * layer.sizeMultiplier}
+							alpha={layer.alpha ?? 1}
+							zIndex={layer.zIndex}
+						>
 							<SpineTrack
 								trackIndex={0}
 								animationName={layer.animationName!}
 								loop={props.loop ?? layer.loop ?? false}
 								timeScale={stateBetDerived.timeScale()}
 								listener={{
-									complete: handleSpineComplete
+									complete: index === 0 ? handleSpineComplete : undefined // Only the first spine layer handles completion
 								}}
 							/>
-					</SpineProvider>
-					{:else if layer.key}
-						<!-- Static sprite layer -->
-						<Sprite
-							anchor={0.5}
-							key={layer.key}
-							width={SYMBOL_SIZE * layer.sizeMultiplier}
-							height={SYMBOL_SIZE * layer.sizeMultiplier}
-							alpha={layer.alpha ?? 1}
-							zIndex={layer.zIndex}
-						/>
-					{/if}
+						</SpineProvider>
+					{/key}
 				{/if}
 			{/each}
 		{/if}

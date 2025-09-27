@@ -311,11 +311,11 @@ export const SYMBOL_INFO_MAP = {
 		},
 	},
 	W: {
-		win: wStatic,
-		postWinStatic: wStatic,
-		static: wStatic,
-		spin: wStatic,
-		land: wStatic,
+		win: { ...wStatic, composite: true },
+		postWinStatic: { ...wStatic, composite: true },
+		static: { ...wStatic, composite: true },
+		spin: { ...wStatic, composite: true },
+		land: { ...wStatic, composite: true },
 	},
 	S: {
 		win: { type: 'spine', assetKey: 'S', animationName: 'scatter_win', sizeRatios: sSizeRatios },

@@ -59,7 +59,7 @@
 						{@const x = (columnIndex + 1) * BASE}
 						{@const y = (rowIndex + 1) * BASE}
 						<Text {x} y={y - 100} anchor={{ x: 0.5, y: 0 }} text={`${symbol.name}: ${state}`} />
-						<Symbol {x} {y} rawSymbol={symbol} {state} loop />
+						<Symbol {x} {y} rawSymbol={symbol} {state} loop={state === 'win'} />
 					{/each}
 				{/each}
 			</Container>
@@ -70,7 +70,7 @@
 						{@const x = (columnIndex + 1) * BASE}
 						{@const y = (rowIndex + 1) * BASE}
 						<Text {x} y={y - 100} anchor={{ x: 0.5, y: 0 }} text={`${symbol.name}: ${state}`} />
-						<Symbol {x} {y} rawSymbol={symbol} {state} loop />
+						<Symbol {x} {y} rawSymbol={symbol} {state} loop={state === 'win'} />
 					{/each}
 				{/each}
 			</Container>

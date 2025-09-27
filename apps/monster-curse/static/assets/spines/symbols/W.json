@@ -51,7 +51,8 @@
 	"slots": [
 		{
 			"name": "magic_ring1",
-			"bone": "magic_ring1"
+			"bone": "magic_ring1",
+			"attachment": "magic_ring1"
 		},
 		{
 			"name": "magic_ring2",
@@ -67,8 +68,7 @@
 		},
 		{
 			"name": "electric_cloud_pink",
-			"bone": "electric_cloud_pink",
-			"attachment": "electric_cloud_pink"
+			"bone": "electric_cloud_pink"
 		}
 	],
 	"skins": [
@@ -131,26 +131,75 @@
 						{
 							"time": 0,
 							"name": "magic_ring1"
+						},
+						{
+							"time": 0.0125,
+							"name": null
+						},
+						{
+							"time": 0.05,
+							"name": null
+						}
+					]
+				},
+				"magic_ring2": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": null
+						},
+						{
+							"time": 0.0125,
+							"name": "magic_ring2"
+						},
+						{
+							"time": 0.025,
+							"name": null
+						},
+						{
+							"time": 0.05,
+							"name": null
+						}
+					]
+				},
+				"magic_ring3": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": null
+						},
+						{
+							"time": 0.025,
+							"name": "magic_ring3"
+						},
+						{
+							"time": 0.0375,
+							"name": null
+						},
+						{
+							"time": 0.05,
+							"name": null
+						}
+					]
+				},
+				"magic_ring4": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": null
+						},
+						{
+							"time": 0.0375,
+							"name": "magic_ring4"
+						},
+						{
+							"time": 0.05,
+							"name": null
 						}
 					]
 				}
 			},
-			"bones": {
-				"magic_ring1": {
-					"scale": [
-						{
-							"time": 0,
-							"x": 1.0,
-							"y": 1.0
-						},
-						{
-							"time": 1.0,
-							"x": 1.0,
-							"y": 1.0
-						}
-					]
-				}
-			}
+			"bones": {}
 		},
 		"electric_cloud_spin": {
 			"slots": {
