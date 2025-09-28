@@ -278,38 +278,6 @@ export const SYMBOL_INFO_MAP = {
 		spin: l5Static,
 		land: l5Static,
 	},
-	M: {
-		win: {
-			type: 'spine',
-			assetKey: 'M',
-			animationName: 'm',
-			sizeRatios: { width: 0.7, height: 0.7 },
-		},
-		postWinStatic: {
-			type: 'spine',
-			assetKey: 'M',
-			animationName: 'm_static',
-			sizeRatios: { width: 0.7, height: 0.7 },
-		},
-		static: {
-			type: 'spine',
-			assetKey: 'M',
-			animationName: 'm_static',
-			sizeRatios: { width: 0.7, height: 0.7 },
-		},
-		spin: {
-			type: 'spine',
-			assetKey: 'M',
-			animationName: 'm_static',
-			sizeRatios: { width: 0.7, height: 0.7 },
-		},
-		land: {
-			type: 'spine',
-			assetKey: 'M',
-			animationName: 'm_static',
-			sizeRatios: { width: 0.7, height: 0.7 },
-		},
-	},
 	W: {
 		win: { ...wStatic, composite: true },
 		postWinStatic: { ...wStatic, composite: true },

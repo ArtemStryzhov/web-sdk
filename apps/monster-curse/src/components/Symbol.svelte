@@ -6,7 +6,9 @@
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { getContext } from '../game/context';
 	import { getSymbolConfig } from '../config/symbolConfig';
-	import { BitmapText } from 'pixi-svelte';
+	import { BitmapText, Text, Graphics, Container } from 'pixi-svelte';
+	import '../utils/fontLoader';
+
 
 type Props = {
 	x?: number;
@@ -44,7 +46,7 @@ type Props = {
 		{symbolInfo}
 		x={props.x}
 		y={props.y}
-		showWinFrame={props.state === 'win' && !['S', 'M'].includes(props.rawSymbol.name)}
+		showWinFrame={props.state === 'win' && !['S'].includes(props.rawSymbol.name)}
 		listener={{
 			complete: props.oncomplete,
 			event: (_, event) => {
@@ -55,16 +57,58 @@ type Props = {
 		}}
 	/>
 {/if}
-
 {#if props.rawSymbol.multiplier}
-	<BitmapText
-		anchor={0.5}
-		x={props.x}
-		y={props.y}
-		text={`${props.rawSymbol.multiplier}X`}
-		style={{
-			fontFamily: 'gold',
-			fontSize: 50,
-		}}
-	/>
+	<Container x={props.x} y={props.y} anchor={0.5}>
+		<!-- Gradient border background -->
+		<Graphics
+			x={0}
+			y={0}
+			draw={(g) => {
+				g.clear();
+				// Create gradient border effect
+				const width = 80;
+				const height = 60;
+				
+				// Outer border with gradient colors
+				g.lineStyle(5, 0xFF70EA, 1);
+				g.drawRoundedRect(-width/2, -height/2, width, height, 8);
+				
+				// Inner area
+				g.lineStyle(0);
+				g.beginFill(0x000000, 0.3);
+				g.drawRoundedRect(-width/2 + 5, -height/2 + 5, width - 10, height - 10, 5);
+				g.endFill();
+			}}
+		/>
+		
+		<!-- Drop shadow -->
+		<Text
+			anchor={0.5}
+			x={3}
+			y={3}
+			text={`${props.rawSymbol.multiplier}x`}
+			style={{
+				fontFamily: 'Crom, Arial, sans-serif',
+				fontWeight: 'bold',
+				fill: 0xBF00B5,
+				fontSize: 50,
+			}}
+		/>
+		
+		<!-- Main text -->
+		<Text
+			anchor={0.5}
+			x={0}
+			y={0}
+			text={`${props.rawSymbol.multiplier}x`}
+			style={{
+				fontFamily: 'Crom, Arial, sans-serif',
+				fontWeight: 'bold',
+				fill: 0x61E5FF,
+				fontSize: 50,
+				stroke: 0x7B15FF,
+				strokeThickness: 3,
+			}}
+		/>
+	</Container>
 {/if}

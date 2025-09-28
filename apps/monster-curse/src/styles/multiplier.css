@@ -1,0 +1,23 @@
+@font-face {
+  font-family: 'Crom';
+  src: url('../static/assets/fonts/crom/Crom_v1.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.multiplier-text {
+  font-family: 'Crom', Arial, sans-serif;
+  color: #61E5FF;
+  font-size: 50px;
+  font-weight: normal;
+  text-shadow: 3px 6px 0px #BF00B5;
+  -webkit-text-stroke: 5px transparent;
+  background: linear-gradient(180deg, #FF70EA 0%, #7B15FF 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  border: 5px solid;
+  border-image-source: linear-gradient(180deg, #FF70EA 0%, #7B15FF 100%);
+  border-image-slice: 1;
+  padding: 2px 4px;
+  display: inline-block;
+}
