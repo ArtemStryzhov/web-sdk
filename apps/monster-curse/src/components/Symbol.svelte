@@ -73,11 +73,6 @@ type Props = {
 				g.lineStyle(5, 0xFF70EA, 1);
 				g.drawRoundedRect(-width/2, -height/2, width, height, 8);
 				
-				// Inner area
-				g.lineStyle(0);
-				g.beginFill(0x000000, 0.3);
-				g.drawRoundedRect(-width/2 + 5, -height/2 + 5, width - 10, height - 10, 5);
-				g.endFill();
 			}}
 		/>
 		
@@ -85,7 +80,7 @@ type Props = {
 		<Text
 			anchor={0.5}
 			x={3}
-			y={3}
+			y={6}
 			text={`${props.rawSymbol.multiplier}x`}
 			style={{
 				fontFamily: 'Crom, Arial, sans-serif',
