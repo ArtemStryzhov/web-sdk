@@ -9,6 +9,7 @@
 	import type { RawSymbol, SymbolState } from '../game/types';
 	import { getSymbolConfig } from '../config/symbolConfig';
 	import { getContext } from '../game/context';
+	import SymbolWAnimated from './SymbolWAnimated.svelte';
 
 	type Props = {
 		x?: number;
@@ -96,13 +97,25 @@
 		{/if}
 
 		<!-- Render main symbol using static sprite assets -->
-		<Sprite
-			anchor={0.5}
-			key={props.symbolInfo.assetKey}
-			width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
-			height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
-			zIndex={10}
-		/>
+		{#if props.rawSymbol.name === 'W' && props.state === 'win'}
+			<!-- W symbol with scaling animation in win state -->
+			<SymbolWAnimated
+				x={0}
+				y={0}
+				symbolInfo={props.symbolInfo}
+				rawSymbol={props.rawSymbol}
+				state={props.state}
+			/>
+		{:else}
+			<!-- Regular symbol rendering -->
+			<Sprite
+				anchor={0.5}
+				key={props.symbolInfo.assetKey}
+				width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
+				height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+				zIndex={10}
+			/>
+		{/if}
 	{:else}
 		<!-- Fallback for symbols without configuration -->
 		<Sprite

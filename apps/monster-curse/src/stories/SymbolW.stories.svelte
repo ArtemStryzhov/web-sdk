@@ -188,17 +188,28 @@
 					<Text
 						x={0}
 						y={65}
-						text="10. Main W Symbol"
+						text="10. Main W Symbol (SCALING!)"
 						style={{
 							fontFamily: 'Arial',
 							fontSize: 16,
-							fill: 0xffffff,
+							fill: 0x00ff00,
+							fontWeight: 'bold',
+						}}
+					/>
+					<Text
+						x={20}
+						y={90}
+						text="• Scales 1.0x → 1.5x → 1.0x over 1.9s"
+						style={{
+							fontFamily: 'Arial',
+							fontSize: 14,
+							fill: 0x00ff00,
 						}}
 					/>
 					
 					<Text
 						x={0}
-						y={90}
+						y={115}
 						text="3. Electric Cloud"
 						style={{
 							fontFamily: 'Arial',
@@ -209,7 +220,7 @@
 					
 					<Text
 						x={0}
-						y={115}
+						y={140}
 						text="1. Background Crystal"
 						style={{
 							fontFamily: 'Arial',
@@ -258,7 +269,7 @@
 					<Text
 						x={0}
 						y={0}
-						text="✨ Click the play button to watch the magic ring animation!"
+						text="✨ Click the play button to watch the W symbol animations!"
 						style={{
 							fontFamily: 'Arial',
 							fontSize: 16,
@@ -269,7 +280,18 @@
 					<Text
 						x={0}
 						y={25}
-						text="🎯 Animation plays once then stops - click again to replay"
+						text="🎯 Watch the main W symbol scale up and down during win state!"
+						style={{
+							fontFamily: 'Arial',
+							fontSize: 14,
+							fill: 0x00ff00,
+							fontStyle: 'italic',
+						}}
+					/>
+					<Text
+						x={0}
+						y={50}
+						text="🔄 Animation plays once then stops - click again to replay"
 						style={{
 							fontFamily: 'Arial',
 							fontSize: 14,
