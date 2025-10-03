@@ -14,11 +14,20 @@
 			"name": "root"
 		},
 		{
+			"name": "bg_bone",
+			"parent": "root"
+		},
+		{
 			"name": "sword_bone",
 			"parent": "root"
 		}
 	],
 	"slots": [
+		{
+			"name": "bg_slot",
+			"bone": "bg_bone",
+			"attachment": "bg_crystal_full"
+		},
 		{
 			"name": "sword_slot",
 			"bone": "sword_bone",
@@ -29,11 +38,22 @@
 		{
 			"name": "default",
 			"attachments": {
+				"bg_slot": {
+					"bg_crystal_full": {
+						"type": "region",
+						"width": 165,
+						"height": 965,
+						"x": 8,
+						"y": 125,
+						"scaleX": 1,
+						"scaleY": 1
+					}
+				},
 				"sword_slot": {
 					"sword": {
 						"type": "region",
-						"width": 200,
-						"height": 585
+						"width": 220,
+						"height": 605
 					}
 				}
 			}
@@ -42,10 +62,18 @@
 	"animations": {
 		"sword_expanding": {
 			"bones": {
-				"sword_bone": {
+				"bg_bone": {
 					"translate": [
 						{
 							"x": 0,
+							"y": 0
+						}
+					]
+				},
+				"sword_bone": {
+					"translate": [
+						{
+							"x": 15,
 							"y": 0
 						}
 					]
@@ -54,6 +82,14 @@
 		},
 		"sword_static": {
 			"bones": {
+				"bg_bone": {
+					"translate": [
+						{
+							"x": 0,
+							"y": 0
+						}
+					]
+				},
 				"sword_bone": {
 					"translate": [
 						{

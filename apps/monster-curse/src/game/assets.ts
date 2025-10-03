@@ -331,14 +331,6 @@ export default {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url).href,
 	},
-	transition: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/transition/transition.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/transition/transition.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
 	symbolsStatic: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.json', import.meta.url).href,

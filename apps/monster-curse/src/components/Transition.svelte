@@ -3,31 +3,13 @@
 </script>
 
 <script lang="ts">
-	import { waitForResolve } from 'utils-shared/wait';
-
-	import TransitionAnimation from './TransitionAnimation.svelte';
 	import { getContext } from '../game/context';
 
 	const context = getContext();
 
-	let transitioning = $state(false);
-	let oncomplete = $state(() => {});
-
 	context.eventEmitter.subscribeOnMount({
 		transition: async () => {
-			transitioning = true;
-			// Complete immediately to prevent hanging
-			oncomplete();
-			// await waitForResolve((resolve) => (oncomplete = resolve));
+			// No transition animation - complete immediately
 		},
 	});
 </script>
-
-{#if transitioning}
-	<TransitionAnimation
-		oncomplete={() => {
-			oncomplete();
-			transitioning = false;
-		}}
-	/>
-{/if}
