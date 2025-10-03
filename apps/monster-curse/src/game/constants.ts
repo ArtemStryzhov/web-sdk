@@ -207,12 +207,11 @@ const l5Static = {
 	sizeRatios: { width: 0.7, height: 0.7 }, composite: true
 };
 
-const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 0.7, height: 0.7 } };
+const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1, height: 1 } };
 const bStatic = { type: 'sprite', assetKey: 'b.png', sizeRatios: { width: 0.7, height: 0.7 } };
 const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 0.7, height: 0.7 } };
 
-const wSizeRatios = { width: 0.7, height: SPECIAL_SYMBOL_SIZE * 1 };
-const sSizeRatios = { width: 0.7, height: SPECIAL_SYMBOL_SIZE * 1};
+const sExpandSizeRatios = { width: 200*0.35, height: 585*0.35	 };
 
 export const SYMBOL_INFO_MAP = {
 	H1: {
@@ -286,27 +285,12 @@ export const SYMBOL_INFO_MAP = {
 		land: { ...wStatic, composite: true },
 	},
 	S: {
-		win: { type: 'spine', assetKey: 'S', animationName: 'scatter_win', sizeRatios: sSizeRatios },
+		win: { type: 'spine', assetKey: 'S', animationName: 'sword_expanding', sizeRatios: sExpandSizeRatios },
 		postWinStatic: sStatic,
 		static: sStatic,
-		spin: {
-			type: 'spine',
-			assetKey: 'S',
-			animationName: 'scatter_spin',
-			sizeRatios: sSizeRatios,
-		},
-		land: {
-			type: 'spine',
-			assetKey: 'S',
-			animationName: 'scatter_land',
-			sizeRatios: sSizeRatios,
-		},
-		expand: {
-			type: 'spine',
-			assetKey: 'S',
-			animationName: 'scatter_expand',
-			sizeRatios: sSizeRatios,
-		},
+		spin: sStatic,
+		land: sStatic,
+		expand: sStatic,
 	},
 	B: {
 		win: bStatic,

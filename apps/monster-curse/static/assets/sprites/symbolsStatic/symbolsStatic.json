@@ -110,10 +110,10 @@
 },
 "s.png":
 {
-	"frame": {"x":0,"y":0,"w":200,"h":200},
+	"frame": {"x":801,"y":401,"w":200,"h":200},
 	"rotated": false,
 	"trimmed": true,
-	"spriteSourceSize": {"x":5,"y":0,"w":200,"h":200},
+	"spriteSourceSize": {"x":0,"y":0,"w":200,"h":200},
 	"sourceSize": {"w":200,"h":200},
 	"pivot": {"x":0.5,"y":0.5}
 },

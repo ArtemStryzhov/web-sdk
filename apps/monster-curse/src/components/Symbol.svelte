@@ -23,8 +23,8 @@ type Props = {
 	const props: Props = $props();
 	const context = getContext();
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
-	const isSprite = $derived(symbolInfo.type === 'sprite');
-	const isComposite = $derived((symbolInfo as any).composite === true);
+	const isSprite = $derived(symbolInfo?.type === 'sprite');
+	const isComposite = $derived((symbolInfo as any)?.composite === true);
 
 	// Check if symbol has configuration (meaning it should use SymbolComposite)
 	const hasSymbolConfig = $derived(getSymbolConfig(props.rawSymbol.name) !== null);
@@ -57,8 +57,9 @@ type Props = {
 		}}
 	/>
 {/if}
-{#if props.rawSymbol.multiplier}
-	<Container x={props.x} y={props.y} anchor={0.5}>
+{#if props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier}
+	{@const displayMultiplier = props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier}
+	<Container x={props.x} y={props.y}>
 		<!-- Gradient border background -->
 		<Graphics
 			x={0}
@@ -81,7 +82,7 @@ type Props = {
 			anchor={0.5}
 			x={3}
 			y={6}
-			text={`${props.rawSymbol.multiplier}x`}
+			text={`${displayMultiplier}x`}
 			style={{
 				fontFamily: 'Crom, Arial, sans-serif',
 				fontWeight: 'bold',
@@ -95,14 +96,13 @@ type Props = {
 			anchor={0.5}
 			x={0}
 			y={0}
-			text={`${props.rawSymbol.multiplier}x`}
+			text={`${displayMultiplier}x`}
 			style={{
 				fontFamily: 'Crom, Arial, sans-serif',
 				fontWeight: 'bold',
 				fill: 0x61E5FF,
 				fontSize: 50,
-				stroke: 0x7B15FF,
-				strokeThickness: 3,
+				stroke: { color: 0x7B15FF, width: 3 },
 			}}
 		/>
 	</Container>

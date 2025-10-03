@@ -25,7 +25,19 @@
 		if (props.trackIndex !== track?.trackIndex || props.animationName !== track?.animation?.name) {
 			if (track) spine.state.setEmptyAnimation(track.trackIndex, 0);
 			try {
-				track = spine.state.setAnimation(props.trackIndex, props.animationName, props.loop);
+				// Check if animation exists, use fallback if not
+				const animations = spine?.state?.data?.skeletonData?.animations;
+				const animationExists = animations?.some(animation => animation.name === props.animationName);
+
+				if (!animationExists && props.animationName === 'scatter_win') {
+					// TODO: Add real scatter_win animation later
+					console.warn('scatter_win animation not found, using fallback');
+					// Use first available animation as fallback
+					const fallbackAnimation = animations?.[0]?.name || 'idle';
+					track = spine.state.setAnimation(props.trackIndex, fallbackAnimation, props.loop);
+				} else {
+					track = spine.state.setAnimation(props.trackIndex, props.animationName, props.loop);
+				}
 			} catch (error) {
 				console.error(error);
 				const animations = spine?.state?.data?.skeletonData?.animations;

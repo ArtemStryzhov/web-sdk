@@ -7,6 +7,7 @@ export type RawSymbol = {
 	multiplier?: number;
 	scatter?: boolean;
 	wild?: boolean;
+	collectedMultiplier?: number; // For S symbols that collect W multipliers
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;
@@ -17,6 +18,7 @@ export const SYMBOL_STATES = [
 	'land',
 	'win',
 	'postWinStatic',
+	'expand',
 ] as const;
 
 export type SymbolState = SpinningReelSymbolState | (typeof SYMBOL_STATES)[number];
