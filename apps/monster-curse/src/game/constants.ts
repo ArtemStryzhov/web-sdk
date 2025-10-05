@@ -281,7 +281,7 @@ export const SYMBOL_INFO_MAP = {
 		land: { ...wStatic, composite: true },
 	},
 	S: {
-		win: { type: 'spine', assetKey: 'S', animationName: 'sword_expanding', sizeRatios: sExpandSizeRatios },
+		win: { type: 'spine', assetKey: 'S', animationName: 'sword_expanding', sizeRatios: sExpandSizeRatios, loop: false },
 		postWinStatic: sStatic,
 		static: sStatic,
 		spin: sStatic,

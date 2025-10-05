@@ -18,6 +18,10 @@
 			"parent": "root"
 		},
 		{
+			"name": "pivot_bone",
+			"parent": "root"
+		},
+		{
 			"name": "sword_bone",
 			"parent": "root"
 		},
@@ -31,6 +35,11 @@
 			"name": "bg_slot",
 			"bone": "bg_bone",
 			"attachment": "bg_crystal_full"
+		},
+		{
+			"name": "pivot_slot",
+			"bone": "pivot_bone",
+			"attachment": "bg_crystal_pivot"
 		},
 		{
 			"name": "flame_slot",
@@ -50,11 +59,20 @@
 					"bg_crystal_full": {
 						"type": "region",
 						"width": 165,
-						"height": 965,
+						"height": 765,
 						"x": 8,
-						"y": 125,
+						"y": 25,
 						"scaleX": 1,
 						"scaleY": 1
+					}
+				},
+				"pivot_slot": {
+					"bg_crystal_pivot": {
+						"type": "region",
+						"width": 170,
+						"height": 200,
+						"x": 7,
+						"y": 0
 					}
 				},
 				"sword_slot": {
@@ -100,6 +118,35 @@
 						}
 					]
 				},
+				"pivot_bone": {
+					"translate": [
+						{
+							"time": 0,
+							"x": 0,
+							"y": -350
+						},
+						{
+							"time": 0.2,
+							"x": 0,
+							"y": -170
+						},
+						{
+							"time": 0.4,
+							"x": 0,
+							"y": -20
+						},
+						{
+							"time": 0.6,
+							"x": 0,
+							"y": 170
+						},
+						{
+							"time": 0.8,
+							"x": 0,
+							"y": 325
+						}
+					]
+				},
 				"sword_bone": {
 					"translate": [
 						{
@@ -117,6 +164,9 @@
 					]
 				}
 			},
+			"slots": {}
+		},
+		"flame_loop": {
 			"slots": {
 				"flame_slot": {
 					"attachment": [
@@ -139,50 +189,16 @@
 						{
 							"time": 0.4,
 							"name": "flame1"
-						},
+						}
+					]
+				}
+			},
+			"bones": {
+				"flame_bone": {
+					"translate": [
 						{
-							"time": 0.5,
-							"name": "flame2"
-						},
-						{
-							"time": 0.6,
-							"name": "flame3"
-						},
-						{
-							"time": 0.7,
-							"name": "flame4"
-						},
-						{
-							"time": 0.8,
-							"name": "flame1"
-						},
-						{
-							"time": 0.9,
-							"name": "flame2"
-						},
-						{
-							"time": 1.0,
-							"name": "flame3"
-						},
-						{
-							"time": 1.1,
-							"name": "flame4"
-						},
-						{
-							"time": 1.2,
-							"name": "flame1"
-						},
-						{
-							"time": 1.3,
-							"name": "flame2"
-						},
-						{
-							"time": 1.4,
-							"name": "flame3"
-						},
-						{
-							"time": 1.5,
-							"name": "flame4"
+							"x": -45,
+							"y": 0
 						}
 					]
 				}
@@ -191,6 +207,14 @@
 		"sword_static": {
 			"bones": {
 				"bg_bone": {
+					"translate": [
+						{
+							"x": 0,
+							"y": 0
+						}
+					]
+				},
+				"pivot_bone": {
 					"translate": [
 						{
 							"x": 0,

@@ -14,11 +14,12 @@
 </script>
 
 <script lang="ts">
-	import { Container, Text } from 'pixi-svelte';
+	import { Container, Text, SpineProvider, SpineTrack } from 'pixi-svelte';
 	import { StoryPixiApp } from 'components-storybook';
 
 	import Symbol from '../components/Symbol.svelte';
 	import { SYMBOL_STATES } from '../game/types';
+	import { SYMBOL_SIZE } from '../game/constants';
 	import assets from '../game/assets';
 
 	const BASE = 180;
@@ -59,7 +60,7 @@
 						{@const x = (columnIndex + 1) * BASE}
 						{@const y = (rowIndex + 1) * BASE}
 						<Text {x} y={y - 100} anchor={{ x: 0.5, y: 0 }} text={`${symbol.name}: ${state}`} />
-						<Symbol {x} {y} rawSymbol={symbol} {state} loop={state === 'win'} />
+						<Symbol {x} {y} rawSymbol={symbol} {state} loop={state === 'win' && (symbol as any).name !== 'S'} />
 					{/each}
 				{/each}
 			</Container>
@@ -70,8 +71,33 @@
 						{@const x = (columnIndex + 1) * BASE}
 						{@const y = (rowIndex + 1) * BASE}
 						<Text {x} y={y - 100} anchor={{ x: 0.5, y: 0 }} text={`${symbol.name}: ${state}`} />
-						<Symbol {x} {y} rawSymbol={symbol} {state} loop={state === 'win'} />
+						<Symbol {x} {y} rawSymbol={symbol} {state} loop={state === 'win' && (symbol as any).name !== 'S'} />
 					{/each}
+				{/each}
+			</Container>
+
+			<!-- Payframes for all win state symbols -->
+			<Container scale={0.5} zIndex={10000}>
+				{#each SYMBOLS_LEFT as symbol, rowIndex}
+					{@const winColumnIndex = SYMBOL_STATES.indexOf('win')}
+					{@const x = (winColumnIndex + 1) * BASE}
+					{@const y = (rowIndex + 1) * BASE}
+					<SpineProvider {x} {y} key="anticipation" width={SYMBOL_SIZE * 0.6}>
+						<SpineTrack trackIndex={0} animationName={'payframe'} loop />
+					</SpineProvider>
+				{/each}
+			</Container>
+
+			<Container scale={0.5} x={550} zIndex={10000}>
+				{#each SYMBOLS_RIGHT as symbol, rowIndex}
+					{#if symbol.name !== 'S'}
+						{@const winColumnIndex = SYMBOL_STATES.indexOf('win')}
+						{@const x = (winColumnIndex + 1) * BASE}
+						{@const y = (rowIndex + 1) * BASE}
+						<SpineProvider {x} {y} key="anticipation" width={SYMBOL_SIZE * 0.6}>
+							<SpineTrack trackIndex={0} animationName={'payframe'} loop />
+						</SpineProvider>
+					{/if}
 				{/each}
 			</Container>
 		</StoryPixiApp>

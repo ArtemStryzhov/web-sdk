@@ -10,7 +10,7 @@
 </script>
 
 <script lang="ts">
-	import { Container } from 'pixi-svelte';
+	import { Container, SpineProvider, SpineTrack } from 'pixi-svelte';
 	import {
 		StoryPixiApp,
 		StoryLocale,
@@ -27,6 +27,7 @@
 	import { eventEmitter } from '../game/eventEmitter';
 	import config from '../game/config';
 	import type { RawSymbol } from '../game/types';
+	import { SYMBOL_SIZE } from '../game/constants';
 
 	setContext();
 </script>
@@ -87,8 +88,27 @@
 					y={0}
 					rawSymbol={{ name: 'S', scatter: true }}
 					state="win"
-					loop={true}
+					loop={false}
 				/>
+			</Container>
+
+			<!-- Payframes for all win state symbols -->
+			<Container zIndex={10000}>
+				<SpineProvider x={250} y={85} key="anticipation" width={SYMBOL_SIZE * 0.6}>
+					<SpineTrack trackIndex={0} animationName={'payframe'} loop />
+				</SpineProvider>
+				<SpineProvider x={250} y={210} key="anticipation" width={SYMBOL_SIZE * 0.6}>
+					<SpineTrack trackIndex={0} animationName={'payframe'} loop />
+				</SpineProvider>
+				<SpineProvider x={250} y={335} key="anticipation" width={SYMBOL_SIZE * 0.6}>
+					<SpineTrack trackIndex={0} animationName={'payframe'} loop />
+				</SpineProvider>
+				<SpineProvider x={250} y={460} key="anticipation" width={SYMBOL_SIZE * 0.6}>
+					<SpineTrack trackIndex={0} animationName={'payframe'} loop />
+				</SpineProvider>
+				<SpineProvider x={250} y={585} key="anticipation" width={SYMBOL_SIZE * 0.6}>
+					<SpineTrack trackIndex={0} animationName={'payframe'} loop />
+				</SpineProvider>
 			</Container>
 		</Container>
 	</StoryPixiApp>

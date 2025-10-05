@@ -23,7 +23,7 @@
 
 	// Mask drawing function for S symbol
 	function drawMask(graphics: PIXI.Graphics) {
-		const spineHeight = 750;
+		const spineHeight = 770;
 		const initialVisibleHeight = 200;
 		
 		if (props.symbolInfo?.assetKey === 'S' && props.symbolInfo.animationName === 'sword_expanding') {
@@ -96,6 +96,15 @@
 					timeScale={stateBetDerived.timeScale()}
 					listener={props.listener}
 				/>
+				<!-- Always looped flame animation for S symbol -->
+				{#if props.symbolInfo.animationName === 'sword_expanding'}
+					<SpineTrack
+						loop={true}
+						trackIndex={1}
+						animationName="flame_loop"
+						timeScale={stateBetDerived.timeScale()}
+					/>
+				{/if}
 			</SpineProvider>
 		</Container>
 	{:else}
