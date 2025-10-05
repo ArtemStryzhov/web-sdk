@@ -32,9 +32,4 @@
 	loop={props.loop}
 />
 
-<!-- tumble frame -->
-{#if props.showWinFrame}
-	<SpineProvider x={props.x} y={props.y} key="anticipation" width={SYMBOL_SIZE * 0.19} zIndex={100}>
-		<SpineTrack trackIndex={0} animationName={'payframe'} loop />
-	</SpineProvider>
-{/if}
+<!-- tumble frame (payframe) - now rendered in Payframes.svelte component -->

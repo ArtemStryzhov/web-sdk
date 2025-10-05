@@ -41,21 +41,23 @@ type Props = {
 	{:else if isSprite}
 	<SymbolSprite {symbolInfo} x={props.x} y={props.y} oncomplete={props.oncomplete} />
 {:else}
-	<SymbolSpine
-		loop={props.loop}
-		{symbolInfo}
-		x={props.x}
-		y={props.y}
-		showWinFrame={props.state === 'win' && !['S'].includes(props.rawSymbol.name)}
-		listener={{
-			complete: props.oncomplete,
-			event: (_, event) => {
-				if (event.data?.name === 'wildExplode') {
-					context.eventEmitter?.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
-				}
-			},
-		}}
-	/>
+	<Container x={0} y={0} zIndex={props.state === 'win' ? 1000 : 0}>
+		<SymbolSpine
+			loop={props.loop}
+			{symbolInfo}
+			x={props.x}
+			y={props.y}
+			showWinFrame={props.state === 'win' && !['S'].includes(props.rawSymbol.name)}
+			listener={{
+				complete: props.oncomplete,
+				event: (_, event) => {
+					if (event.data?.name === 'wildExplode') {
+						context.eventEmitter?.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
+					}
+				},
+			}}
+		/>
+	</Container>
 {/if}
 {#if props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier}
 	{@const displayMultiplier = props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier}

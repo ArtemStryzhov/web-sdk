@@ -45,10 +45,10 @@
 	});
 </script>
 
-<Container x={props.x} y={props.y}>
+<Container x={props.x} y={props.y} zIndex={props.state === 'win' ? 1000 : 0}>
 	{#if symbolConfig}
-		<!-- Render background layers (only for non-scatter symbols) -->
-		{#if !isScatter}
+		<!-- Render background layers for all symbols -->
+		{#if true}
 			{@const sortedLayers = [...symbolConfig.backgroundLayers].sort((a, b) => a.zIndex - b.zIndex)}
 			{@const visibleLayers = sortedLayers.filter(layer => layer.alwaysVisible || (layer.visibleInStates && layer.visibleInStates.includes(props.state)))}
 			
@@ -125,4 +125,6 @@
 			height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
 		/>
 	{/if}
+
+	<!-- tumble frame (payframe) - now rendered in Payframes.svelte component -->
 </Container>

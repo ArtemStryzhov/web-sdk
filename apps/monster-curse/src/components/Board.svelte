@@ -19,6 +19,7 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
+	import Payframes from './Payframes.svelte';
 
 	const context = getContext();
 
@@ -96,6 +97,13 @@
 	<BoardContext animate={true}>
 		<BoardContainer>
 			<BoardBase />
+		</BoardContainer>
+	</BoardContext>
+
+	<!-- Payframes rendered separately at highest z-index -->
+	<BoardContext animate={true}>
+		<BoardContainer>
+			<Payframes />
 		</BoardContainer>
 	</BoardContext>
 {/if}

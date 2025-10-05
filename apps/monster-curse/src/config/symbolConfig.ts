@@ -310,7 +310,7 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 			{
 				key: 'bg_crystal.png',
 				sizeMultiplier: 1.0,
-				alwaysVisible: true,
+				visibleInStates: ['static', 'spin', 'land', 'postWinStatic'],
 				zIndex: 1,
 			},
 		],

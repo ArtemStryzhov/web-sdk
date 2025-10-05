@@ -155,10 +155,6 @@ export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4'];
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
-const HIGH_SYMBOL_SIZE = 0.9;
-const LOW_SYMBOL_SIZE = 0.9;
-const SPECIAL_SYMBOL_SIZE = 1;
-
 const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: 0.15,
 	reelSpinSpeedBeforeBounce: 4,
@@ -207,11 +203,11 @@ const l5Static = {
 	sizeRatios: { width: 0.7, height: 0.7 }, composite: true
 };
 
-const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1, height: 1 } };
+const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1, height: 1 }, composite: true };
 const bStatic = { type: 'sprite', assetKey: 'b.png', sizeRatios: { width: 0.7, height: 0.7 } };
 const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 0.7, height: 0.7 } };
 
-const sExpandSizeRatios = { width: 200*0.35, height: 585*0.35	 };
+const sExpandSizeRatios = { width: 200*0.4, height: 585*0.4	 };
 
 export const SYMBOL_INFO_MAP = {
 	H1: {

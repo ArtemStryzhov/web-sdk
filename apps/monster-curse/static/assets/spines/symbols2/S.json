@@ -20,6 +20,10 @@
 		{
 			"name": "sword_bone",
 			"parent": "root"
+		},
+		{
+			"name": "flame_bone",
+			"parent": "root"
 		}
 	],
 	"slots": [
@@ -27,6 +31,10 @@
 			"name": "bg_slot",
 			"bone": "bg_bone",
 			"attachment": "bg_crystal_full"
+		},
+		{
+			"name": "flame_slot",
+			"bone": "flame_bone"
 		},
 		{
 			"name": "sword_slot",
@@ -55,6 +63,28 @@
 						"width": 220,
 						"height": 605
 					}
+				},
+				"flame_slot": {
+					"flame1": {
+						"type": "region",
+						"width": 200,
+						"height": 585
+					},
+					"flame2": {
+						"type": "region",
+						"width": 200,
+						"height": 585
+					},
+					"flame3": {
+						"type": "region",
+						"width": 200,
+						"height": 585
+					},
+					"flame4": {
+						"type": "region",
+						"width": 200,
+						"height": 585
+					}
 				}
 			}
 		}
@@ -77,6 +107,84 @@
 							"y": 0
 						}
 					]
+				},
+				"flame_bone": {
+					"translate": [
+						{
+							"x": -45,
+							"y": 0
+						}
+					]
+				}
+			},
+			"slots": {
+				"flame_slot": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "flame1"
+						},
+						{
+							"time": 0.1,
+							"name": "flame2"
+						},
+						{
+							"time": 0.2,
+							"name": "flame3"
+						},
+						{
+							"time": 0.3,
+							"name": "flame4"
+						},
+						{
+							"time": 0.4,
+							"name": "flame1"
+						},
+						{
+							"time": 0.5,
+							"name": "flame2"
+						},
+						{
+							"time": 0.6,
+							"name": "flame3"
+						},
+						{
+							"time": 0.7,
+							"name": "flame4"
+						},
+						{
+							"time": 0.8,
+							"name": "flame1"
+						},
+						{
+							"time": 0.9,
+							"name": "flame2"
+						},
+						{
+							"time": 1.0,
+							"name": "flame3"
+						},
+						{
+							"time": 1.1,
+							"name": "flame4"
+						},
+						{
+							"time": 1.2,
+							"name": "flame1"
+						},
+						{
+							"time": 1.3,
+							"name": "flame2"
+						},
+						{
+							"time": 1.4,
+							"name": "flame3"
+						},
+						{
+							"time": 1.5,
+							"name": "flame4"
+						}
+					]
 				}
 			}
 		},
@@ -94,6 +202,14 @@
 					"translate": [
 						{
 							"x": 0,
+							"y": 0
+						}
+					]
+				},
+				"flame_bone": {
+					"translate": [
+						{
+							"x": -60,
 							"y": 0
 						}
 					]

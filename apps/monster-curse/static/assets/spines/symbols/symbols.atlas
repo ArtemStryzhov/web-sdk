@@ -1,8 +1,6 @@
 symbols.png
 size:1140,855
 filter:Linear,Linear
-bg_crystal_pivot
-  bounds:940,286,200,200
 magic_ring1
   bounds:285,571,285,285
 magic_ring2

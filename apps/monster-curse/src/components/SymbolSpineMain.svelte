@@ -17,12 +17,13 @@
 	let spineProvider = $state<SpineProvider>();
 	let revealProgress = $state(0);
 	let hasAnimated = $state(false);
+	let crystalScale = $state(1.0);
 
 	const props: Props = $props();
 
 	// Mask drawing function for S symbol
 	function drawMask(graphics: PIXI.Graphics) {
-		const spineHeight = 585;
+		const spineHeight = 750;
 		const initialVisibleHeight = 200;
 		
 		if (props.symbolInfo?.assetKey === 'S' && props.symbolInfo.animationName === 'sword_expanding') {
@@ -39,7 +40,6 @@
 	$effect(() => {
 		if (props.symbolInfo?.assetKey === 'S' && props.symbolInfo.animationName === 'sword_expanding' && !hasAnimated) {
 			hasAnimated = true;
-			revealProgress = 0;
 
 			const startTime = Date.now();
 			const duration = 800;
@@ -55,20 +55,15 @@
 			};
 
 			requestAnimationFrame(animate);
-
-			setTimeout(() => {
-				hasAnimated = false;
-				revealProgress = 0;
-			}, 1000);
 		}
 	});
-
 
 	// Reset animation flag when leaving win state
 	$effect(() => {
 		if (props.symbolInfo?.animationName !== 'sword_expanding') {
 			hasAnimated = false;
 			revealProgress = 0;
+			crystalScale = 1.0;
 		}
 	});
 </script>
@@ -77,16 +72,13 @@
 	{@const isS = props.symbolInfo.assetKey === 'S'}
 
 	{#if isS}
-		{@const isExpanding = props.symbolInfo.animationName === 'sword_expanding'}
 		{@const swordOffsetX = 10}
-		{@const swordOffsetY = -155}
+		{@const swordOffsetY = -180}
 
 		<!-- Container with mask for S symbol -->
 		<Container x={props.x} y={props.y}>
-			<!-- Mask that crops and grows -->
-			{#if isExpanding}
-				<Graphics draw={drawMask} isMask={true} x={swordOffsetX} y={swordOffsetY} />
-			{/if}
+			<!-- Mask that crops and grows - always present in expanding state -->
+			<Graphics draw={drawMask} isMask={true} x={swordOffsetX} y={swordOffsetY} />
 			
 			<SpineProvider
 				key={props.symbolInfo.assetKey}
@@ -103,7 +95,6 @@
 					animationName={props.symbolInfo.animationName}
 					timeScale={stateBetDerived.timeScale()}
 					listener={props.listener}
-					autoplay={true}
 				/>
 			</SpineProvider>
 		</Container>
@@ -122,7 +113,6 @@
 				animationName={props.symbolInfo.animationName}
 				timeScale={stateBetDerived.timeScale()}
 				listener={props.listener}
-				autoplay={true}
 			/>
 		</SpineProvider>
 	{/if}

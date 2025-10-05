@@ -1,8 +1,18 @@
 symbols2.png
-size:1000,786
+size:1202,786
 filter:Linear,Linear
 sword
   bounds:0,0,200,585
 bg_crystal_full
   bounds:0,586,200,1000
   rotate:90
+flame1
+  bounds:200,0,200,585
+flame2
+  bounds:400,0,200,585
+flame3
+  bounds:600,0,200,585
+flame4
+  bounds:800,0,200,585
+bg_crystal_pivot
+  bounds:1001,586,200,200

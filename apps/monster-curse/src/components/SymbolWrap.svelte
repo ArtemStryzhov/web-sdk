@@ -25,7 +25,7 @@
 </script>
 
 {#if props.debug || (show && inFrame)}
-	<Container x={props.x} y={props.y}>
+	<Container x={props.x} y={props.y} sortableChildren={true}>
 		{@render props.children()}
 	</Container>
 {/if}

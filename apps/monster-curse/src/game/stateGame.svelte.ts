@@ -79,13 +79,21 @@ export const stateGame = $state({
 	scatterCounter: 0,
 });
 
-const boardLayout = () => ({
-	x: stateLayoutDerived.mainLayout().width * 0.5,
-	y: stateLayoutDerived.mainLayout().height * 0.43,
-	anchor: { x: 0.5, y: 0.5 },
-	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
-	...BOARD_SIZES,
-});
+const boardLayout = () => {
+	const mainLayout = stateLayoutDerived.mainLayout();
+	// Scale down board by 5% on large screens (width > 1500 and height > 870)
+	const scaleFactor = mainLayout.width > 1480 && mainLayout.height < 900 ? 0.95 : 1.0;
+	
+	return {
+		x: mainLayout.width * 0.5,
+		y: mainLayout.height * 0.43,
+		anchor: { x: 0.5, y: 0.5 },
+		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
+		width: BOARD_SIZES.width * scaleFactor,
+		height: BOARD_SIZES.height * scaleFactor,
+		scale: scaleFactor,
+	};
+};
 
 const boardRaw = () =>
 	board.map((reel) => reel.reelState.symbols.map((reelSymbol) => reelSymbol.rawSymbol));
