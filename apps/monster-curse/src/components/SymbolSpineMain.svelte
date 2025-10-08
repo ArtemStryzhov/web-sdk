@@ -4,10 +4,12 @@
 	import { stateBetDerived } from 'state-shared';
 
 	import { getSymbolInfo } from '../game/utils';
+	import type { RawSymbol } from '../game/types';
 	import { SYMBOL_SIZE } from '../game/constants';
 
 	type Props = {
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
+		rawSymbol: RawSymbol;
 		x?: number;
 		y?: number;
 		listener: SpineTrackProps['listener'];
@@ -26,8 +28,26 @@
 		const spineHeight = 770;
 		const initialVisibleHeight = 200;
 		
-		if (props.symbolInfo?.assetKey === 'S' && props.symbolInfo.animationName === 'sword_expanding') {
-			const currentVisibleHeight = initialVisibleHeight + (spineHeight - initialVisibleHeight) * revealProgress;
+		if (props.symbolInfo?.assetKey === 'S' && props.symbolInfo.animationName?.startsWith('sword_expanding')) {
+			const reelPosition = props.rawSymbol.reelPosition ?? 4; // Default to bottom position
+			
+			// Base expansion fractions with adjustments
+			const expansionFractions = [0.12, 0.32, 0.55, 0.78, 1.0];
+			const expansionFraction = expansionFractions[reelPosition];
+			
+			// Calculate target height: base + (expansion space * fraction)
+			const expansionSpace = spineHeight - initialVisibleHeight; // 570px available for expansion
+			const targetHeight = initialVisibleHeight + (expansionSpace * expansionFraction);
+			
+			// Position 0: Show final height immediately (no animation)
+			// Other positions: Animate from initial to target height
+			let currentVisibleHeight;
+			if (reelPosition === 0) {
+				currentVisibleHeight = targetHeight; // Final height immediately
+			} else {
+				currentVisibleHeight = initialVisibleHeight + (targetHeight - initialVisibleHeight) * revealProgress;
+			}
+			
 			const maskBottom = spineHeight / 2;
 			const maskTop = maskBottom - currentVisibleHeight;
 			
@@ -38,9 +58,18 @@
 
 	// Animate reveal for S symbol
 	$effect(() => {
-		if (props.symbolInfo?.assetKey === 'S' && props.symbolInfo.animationName === 'sword_expanding' && !hasAnimated) {
+		if (props.symbolInfo?.assetKey === 'S' && props.symbolInfo.animationName?.startsWith('sword_expanding') && !hasAnimated) {
 			hasAnimated = true;
+			
+			const reelPosition = props.rawSymbol.reelPosition ?? 4;
+			
+			// Position 0: No animation needed, already at final height
+			if (reelPosition === 0) {
+				revealProgress = 1; // Set to final state immediately
+				return;
+			}
 
+			// Other positions: Animate the reveal
 			const startTime = Date.now();
 			const duration = 800;
 
@@ -60,7 +89,7 @@
 
 	// Reset animation flag when leaving win state
 	$effect(() => {
-		if (props.symbolInfo?.animationName !== 'sword_expanding') {
+		if (!props.symbolInfo?.animationName?.startsWith('sword_expanding')) {
 			hasAnimated = false;
 			revealProgress = 0;
 			crystalScale = 1.0;
@@ -97,7 +126,7 @@
 					listener={props.listener}
 				/>
 				<!-- Always looped flame animation for S symbol -->
-				{#if props.symbolInfo.animationName === 'sword_expanding'}
+				{#if props.symbolInfo.animationName?.startsWith('sword_expanding')}
 					<SpineTrack
 						loop={true}
 						trackIndex={1}

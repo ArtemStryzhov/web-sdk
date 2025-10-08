@@ -4,10 +4,12 @@
 
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { getSymbolInfo } from '../game/utils';
+	import type { RawSymbol } from '../game/types';
 	import SymbolSpineMain from './SymbolSpineMain.svelte';
 
 	type Props = {
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
+		rawSymbol: RawSymbol;
 		x?: number;
 		y?: number;
 		listener: SpineTrackProps['listener'];
@@ -28,6 +30,7 @@
 	x={props.x}
 	y={props.y}
 	symbolInfo={props.symbolInfo}
+	rawSymbol={props.rawSymbol}
 	listener={props.listener}
 	loop={props.loop}
 />

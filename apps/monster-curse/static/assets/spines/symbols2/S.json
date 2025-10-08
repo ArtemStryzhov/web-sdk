@@ -59,9 +59,9 @@
 					"bg_crystal_full": {
 						"type": "region",
 						"width": 165,
-						"height": 765,
+						"height": 960,
 						"x": 8,
-						"y": 25,
+						"y": 122,
 						"scaleX": 1,
 						"scaleY": 1
 					}
@@ -108,7 +108,45 @@
 		}
 	],
 	"animations": {
-		"sword_expanding": {
+
+		"sword_expanding_pos0": {
+			"bones": {
+				"bg_bone": {
+					"translate": [
+						{
+							"x": 0,
+							"y": 0
+						}
+					]
+				},
+				"pivot_bone": {
+					"translate": [
+						{
+							"x": 0,
+							"y": -300
+						}
+					]
+				},
+				"sword_bone": {
+					"translate": [
+						{
+							"x": 15,
+							"y": 0
+						}
+					]
+				},
+				"flame_bone": {
+					"translate": [
+						{
+							"x": -45,
+							"y": 0
+						}
+					]
+				}
+			},
+			"slots": {}
+		},
+		"sword_expanding_pos1": {
 			"bones": {
 				"bg_bone": {
 					"translate": [
@@ -123,27 +161,196 @@
 						{
 							"time": 0,
 							"x": 0,
-							"y": -350
+							"y": -280
 						},
 						{
 							"time": 0.2,
 							"x": 0,
-							"y": -170
+							"y": -260
 						},
 						{
 							"time": 0.4,
 							"x": 0,
-							"y": -20
+							"y": -220
 						},
 						{
 							"time": 0.6,
 							"x": 0,
-							"y": 170
+							"y": -158
+						}
+					]
+				},
+				"sword_bone": {
+					"translate": [
+						{
+							"x": 15,
+							"y": 0
+						}
+					]
+				},
+				"flame_bone": {
+					"translate": [
+						{
+							"x": -45,
+							"y": 0
+						}
+					]
+				}
+			},
+			"slots": {}
+		},
+		"sword_expanding_pos2": {
+			"bones": {
+				"bg_bone": {
+					"translate": [
+						{
+							"x": 0,
+							"y": 0
+						}
+					]
+				},
+				"pivot_bone": {
+					"translate": [
+						{
+							"time": 0,
+							"x": 0,
+							"y": -300
+						},
+						{
+							"time": 0.2,
+							"x": 0,
+							"y": -220
+						},
+						{
+							"time": 0.4,
+							"x": 0,
+							"y": -120
+						},
+						{
+							"time": 0.6,
+							"x": 0,
+							"y": -50
 						},
 						{
 							"time": 0.8,
 							"x": 0,
-							"y": 325
+							"y": 10
+						}
+					]
+				},
+				"sword_bone": {
+					"translate": [
+						{
+							"x": 15,
+							"y": 0
+						}
+					]
+				},
+				"flame_bone": {
+					"translate": [
+						{
+							"x": -45,
+							"y": 0
+						}
+					]
+				}
+			},
+			"slots": {}
+		},
+		"sword_expanding_pos3": {
+			"bones": {
+				"bg_bone": {
+					"translate": [
+						{
+							"x": 0,
+							"y": 0
+						}
+					]
+				},
+				"pivot_bone": {
+					"translate": [
+						{
+							"time": 0,
+							"x": 0,
+							"y": -300
+						},
+						{
+							"time": 0.2,
+							"x": 0,
+							"y": -200
+						},
+						{
+							"time": 0.4,
+							"x": 0,
+							"y": -100
+						},
+						{
+							"time": 0.6,
+							"x": 0,
+							"y": 120
+						},
+						{
+							"time": 0.8,
+							"x": 0,
+							"y": 170
+						}
+					]
+				},
+				"sword_bone": {
+					"translate": [
+						{
+							"x": 15,
+							"y": 0
+						}
+					]
+				},
+				"flame_bone": {
+					"translate": [
+						{
+							"x": -45,
+							"y": 0
+						}
+					]
+				}
+			},
+			"slots": {}
+		},
+		"sword_expanding_pos4": {
+			"bones": {
+				"bg_bone": {
+					"translate": [
+						{
+							"x": 0,
+							"y": 0
+						}
+					]
+				},
+				"pivot_bone": {
+					"translate": [
+						{
+							"time": 0,
+							"x": 0,
+							"y": -300
+						},
+						{
+							"time": 0.2,
+							"x": 0,
+							"y": -100
+						},
+						{
+							"time": 0.4,
+							"x": 0,
+							"y": 100
+						},
+						{
+							"time": 0.6,
+							"x": 0,
+							"y": 200
+						},
+						{
+							"time": 0.85,
+							"x": 0,
+							"y": 330
 						}
 					]
 				},

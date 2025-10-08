@@ -63,7 +63,17 @@ export const getSymbolInfo = ({
 	rawSymbol: RawSymbol;
 	state: SymbolState;
 }) => {
-	return SYMBOL_INFO_MAP[rawSymbol.name][state];
+	const symbolStateInfo = SYMBOL_INFO_MAP[rawSymbol.name] as any;
+	if (!symbolStateInfo) return undefined;
+	
+	const symbolInfo = symbolStateInfo[state];
+	
+	// Handle function-based symbol info (e.g., S symbol with position-based animations)
+	if (typeof symbolInfo === 'function') {
+		return symbolInfo(rawSymbol);
+	}
+	
+	return symbolInfo;
 };
 
 /**

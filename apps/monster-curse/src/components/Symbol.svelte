@@ -45,6 +45,7 @@ type Props = {
 		<SymbolSpine
 			loop={props.loop}
 			{symbolInfo}
+			rawSymbol={props.rawSymbol}
 			x={props.x}
 			y={props.y}
 			showWinFrame={props.state === 'win' && !['S'].includes(props.rawSymbol.name)}

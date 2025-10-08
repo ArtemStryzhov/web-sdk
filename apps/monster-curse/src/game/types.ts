@@ -8,6 +8,7 @@ export type RawSymbol = {
 	scatter?: boolean;
 	wild?: boolean;
 	collectedMultiplier?: number; // For S symbols that collect W multipliers
+	reelPosition?: number; // Position on reel (0-4) for S symbols to determine expansion height
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;
