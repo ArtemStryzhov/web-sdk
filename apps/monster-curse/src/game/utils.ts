@@ -15,9 +15,6 @@ export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEvent
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
 	
-	// Debug logging for event 
-		console.log(`   bet.state`, bet.state);
- 
 	await playBookEvents(bet.state);
 	eventEmitter.broadcast({ type: 'stopButtonEnable' });
 };

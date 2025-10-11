@@ -60,7 +60,7 @@
 
 <MainContainer>
 	<FadeContainer {show} {...position} {scale}>
-		<Sprite key={panelKey} {...panelSizes} />
+		<!-- <Sprite key={panelKey} {...panelSizes} /> -->
 		<Container
 			x={panelSizes.width * 0.5}
 			y={panelSizes.height * 0.48}

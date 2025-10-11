@@ -44,7 +44,6 @@
 		action: async () => {
 			const index = randomInteger({ min: 0, max: books.length - 1 });
 			const data = books[index];
-			console.log('Running a book at index', index);
 			await playBet({ ...data, state: data.events });
 		},
 	})}

@@ -78,6 +78,21 @@ type BookEventCreateBonusSnapshot = {
 	bookEvents: BookEvent[];
 };
 
+type BookEventSwordCollect = {
+	index: number;
+	type: 'swordCollectEvent';
+	reel: number;
+	swordMultiplier: number;
+	wildSum: number;
+	collectWin: number;
+};
+
+type BookEventStickySword = {
+	index: number;
+	type: 'stickySwordEvent';
+	stickyPositions: Array<{ reel: number; row: number }>;
+};
+
 export type BookEvent =
 	| BookEventReveal
 	| BookEventWinInfo
@@ -89,7 +104,9 @@ export type BookEvent =
 	| BookEventSetWin
 	| BookEventFreeSpinEnd
 	// customised
-	| BookEventCreateBonusSnapshot;
+	| BookEventCreateBonusSnapshot
+	| BookEventSwordCollect
+	| BookEventStickySword;
 
 export type Bet = BetType<BookEvent>;
 export type BookEventOfType<T> = Extract<BookEvent, { type: T }>;

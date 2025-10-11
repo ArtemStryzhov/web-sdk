@@ -46,7 +46,7 @@
 <Story name="component">
 	{#snippet template(args)}
 		<StoryPixiApp {assets}>
-			<Symbol {...args} oncomplete={() => console.log('complete')} />
+			<Symbol {...args} oncomplete={() => {}} />
 		</StoryPixiApp>
 	{/snippet}
 </Story>

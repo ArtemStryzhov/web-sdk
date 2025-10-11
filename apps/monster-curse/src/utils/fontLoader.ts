@@ -7,9 +7,8 @@ export async function loadCromFont(): Promise<void> {
       const font = new FontFace('Crom', `url(${fontUrl})`);
       await font.load();
       document.fonts.add(font);
-      console.log('Crom font loaded successfully');
     } catch (error) {
-      console.warn('Failed to load Crom font:', error);
+      // Silently fail if font can't be loaded
     }
   }
 }

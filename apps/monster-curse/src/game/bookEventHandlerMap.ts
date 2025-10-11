@@ -59,136 +59,43 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		// Debug logging: Show visible symbols that landed on this spin (middle 5 per reel)
-		const landedSymbols = bookEvent.board.map(reel => {
+		const landedSymbols = bookEvent.board.map((reel, reelIndex) => {
 			// Skip padding symbols, show only the visible middle symbols
-			const startIndex = Math.floor((reel.length - 5) / 2);
-			return reel.slice(startIndex, startIndex + 5).map(symbol => symbol.name).join('');
-		}).join(' ');
-		console.log(`🎰 Spin: ${landedSymbols}`);
-
-		// Enhanced debug logging for multipliers and special symbols
-		console.log(`📊 Event ${bookEvent.index} - Detailed Symbol Analysis:`);
-		bookEvent.board.forEach((reel, reelIndex) => {
 			const startIndex = Math.floor((reel.length - 5) / 2);
 			const visibleSymbols = reel.slice(startIndex, startIndex + 5);
 			
-			console.log(`  Reel ${reelIndex + 1}:`);
+			// Log multipliers if present
 			visibleSymbols.forEach((symbol, rowIndex) => {
-				let symbolInfo = `    Row ${rowIndex + 1}: ${symbol.name}`;
-				
-				// Add multiplier info
 				if (symbol.multiplier) {
-					symbolInfo += ` (×${symbol.multiplier})`;
+					console.log(`  Reel ${reelIndex}, Row ${rowIndex}: ${symbol.name} ×${symbol.multiplier}`);
 				}
-				
-				// Add special properties
-				const specialProps = [];
-				if (symbol.wild) specialProps.push('WILD');
-				if (symbol.scatter) specialProps.push('SCATTER');
-				if (specialProps.length > 0) {
-					symbolInfo += ` [${specialProps.join(', ')}]`;
-				}
-			
 			});
 			
-			// Check for W symbols and their multipliers in this reel
-			const wSymbols = visibleSymbols.filter(s => s.name === 'W' && s.multiplier);
-			if (wSymbols.length > 0) {
-				const wMultipliers = wSymbols.map(s => s.multiplier).join(' + ');
-				const wSum = wSymbols.reduce((sum, s) => sum + (s.multiplier || 0), 0);
-				console.log(`    🔥 W Multipliers: ${wMultipliers} = ${wSum}`);
-			}
-			
-			// Check for S symbols and calculate collected multipliers
-			const sSymbols = visibleSymbols.filter(s => s.name === 'S');
-			if (sSymbols.length > 0 && wSymbols.length > 0) {
-				sSymbols.forEach(sSymbol => {
-					const wSum = wSymbols.reduce((sum, s) => sum + (s.multiplier || 0), 0);
-					const sMultiplier = sSymbol.multiplier || 1;
-					const collectedMultiplier = wSum * sMultiplier;
-					console.log(`    ⚡ S Symbol Collection: (${wSum}) × ${sMultiplier} = ×${collectedMultiplier}`);
-				});
-			}
-		});
-		
-		// Summary of all multipliers on the board
-		const allWSymbols = bookEvent.board.flatMap(reel => {
-			const startIndex = Math.floor((reel.length - 5) / 2);
-			return reel.slice(startIndex, startIndex + 5).filter(s => s.name === 'W' && s.multiplier);
-		});
-		const allSSymbols = bookEvent.board.flatMap(reel => {
-			const startIndex = Math.floor((reel.length - 5) / 2);
-			return reel.slice(startIndex, startIndex + 5).filter(s => s.name === 'S');
-		});
-		
-		if (allWSymbols.length > 0 || allSSymbols.length > 0) {
-			console.log(`🎯 Multiplier Summary:`);
-			if (allWSymbols.length > 0) {
-				const totalWMultiplier = allWSymbols.reduce((sum, s) => sum + (s.multiplier || 0), 0);
-				console.log(`  W Symbols: ${allWSymbols.length} (Total: ×${totalWMultiplier})`);
-			}
-			if (allSSymbols.length > 0) {
-				console.log(`  S Symbols: ${allSSymbols.length} (Will collect W multipliers in same reels)`);
-			}
-		}
+			return visibleSymbols.map(symbol => symbol.name).join('');
+		}).join(' ');
+		console.log(`🎰 Spin: ${landedSymbols}`);
 
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
-		console.log(`💰 Event ${bookEvent.index} - Win Info Analysis:`);
-		console.log(`  Total Win: ${bookEvent.totalWin}`);
-		
 		// Get current board state for S symbol expansion logic
 		const currentBoard = stateGameDerived.boardRaw();
 		
 		// Import utility functions
-		const { checkSSymbolsInWins, generateSSymbolExpansionPositions, calculateCombinedMultipliers } = await import('./utils');
+		const { checkSSymbolsInWins, generateSSymbolExpansionPositions } = await import('./utils');
 		
 		// Check if any S symbols participate in wins
 		const sSymbolsInWins = checkSSymbolsInWins(bookEvent.wins, currentBoard);
 		
-		if (sSymbolsInWins.length > 0) {
-			console.log(`⚡ S Symbols in Wins: ${sSymbolsInWins.length}`);
-			sSymbolsInWins.forEach(pos => {
-				console.log(`    S Symbol at R${pos.reel + 1}:${pos.row + 1} will expand upwards`);
-			});
-			
-			// Generate expansion positions (upwards to top of grid)
-			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsInWins);
-			console.log(`📈 S Symbol Expansion: ${expansionPositions.length} positions will be filled`);
-		}
-		
-		bookEvent.wins.forEach((win, winIndex) => {
-			console.log(`  Win ${winIndex + 1}:`);
-			console.log(`    Symbol: ${win.symbol}`);
-			console.log(`    Win Amount: ${win.win}`);
-			console.log(`    Positions: ${win.positions.map(p => `R${p.reel + 1}:${p.row + 1}`).join(', ')}`);
-			
-			// Calculate combined multipliers for this win
-			const combinedMultiplier = calculateCombinedMultipliers(win.positions, currentBoard);
-			if (combinedMultiplier > 1) {
-				console.log(`    🔥 Combined S/W Multipliers: ×${combinedMultiplier}`);
-			}
-			
-			console.log(`    Multipliers:`);
-			console.log(`      Line Multiplier: ×${win.meta.multiplier}`);
-			console.log(`      Global Multiplier: ×${win.meta.globalMult}`);
-			console.log(`      Line-specific Multiplier: ×${win.meta.lineMultiplier}`);
-			console.log(`      Win without Multiplier: ${win.meta.winWithoutMult}`);
-			console.log(`      Final Win: ${win.meta.winWithoutMult} × ${win.meta.multiplier} = ${win.win}`);
-		});
-		
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		
-		// Animate regular win positions first
+		// Animate regular win positions (each line sequentially)
 		await sequence(bookEvent.wins, async (win) => {
 			await animateSymbols({ positions: win.positions });
 		});
 		
 		// If S symbols are in wins, animate their upward expansion
 		if (sSymbolsInWins.length > 0) {
-			console.log(`🎬 Animating S symbol upward expansion...`);
-			
 			// Set S symbols to expand state and animate upward expansion
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsInWins);
 			
@@ -245,7 +152,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			current: bookEvent.amount + 1,
 			total: bookEvent.total,
 		});
-		stateUi.freeSpinCounterTotal = bookEvent.amount + 1;
+		stateUi.freeSpinCounterCurrent = bookEvent.amount + 1;
 		stateUi.freeSpinCounterTotal = bookEvent.total;
 	},
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
@@ -306,5 +213,50 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (lastUpdateFreeSpinEvent) playBookEvent(lastUpdateFreeSpinEvent, { bookEvents });
 		if (lastSetTotalWinEvent) playBookEvent(lastSetTotalWinEvent, { bookEvents });
 		if (lastUpdateGlobalMultEvent) playBookEvent(lastUpdateGlobalMultEvent, { bookEvents });
+	},
+	swordCollectEvent: async (bookEvent: BookEventOfType<'swordCollectEvent'>) => {
+		// S symbol (Silver Sword) collects W symbol multipliers in the same reel
+		// Update the S symbol to show the collected multiplier (no expansion animation)
+		const currentBoard = stateGameDerived.boardRaw();
+		const startIndex = Math.floor((currentBoard[bookEvent.reel].length - 5) / 2);
+		const visibleSymbols = currentBoard[bookEvent.reel].slice(startIndex, startIndex + 5);
+		
+		// Find the S symbol in this reel and update its collected multiplier
+		visibleSymbols.forEach((symbol, rowIndex) => {
+			if (symbol.name === 'S') {
+				const reelSymbol = stateGame.board[bookEvent.reel].reelState.symbols[rowIndex];
+				// Set the collected multiplier (wildSum * swordMultiplier)
+				reelSymbol.rawSymbol.collectedMultiplier = bookEvent.collectWin / (bookEvent.wildSum || 1);
+			}
+		});
+	},
+	stickySwordEvent: async (bookEvent: BookEventOfType<'stickySwordEvent'>) => {
+		// Blades of Fate mode: Sticky swords expand sequentially based on their positions
+		// Each sword expands to its position height, then returns to static state
+		
+		// Import utility for waiting on promises
+		const { waitForResolve } = await import('utils-shared/wait');
+		
+		// Process each sticky sword position sequentially
+		await sequence(bookEvent.stickyPositions, async (position) => {
+			// Get the reel symbol at this position
+			const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+			
+			// Ensure it's an S symbol
+			if (reelSymbol.rawSymbol.name === 'S') {
+				// Set the reel position for animation selection (0-4 based on row)
+				reelSymbol.rawSymbol.reelPosition = position.row;
+				
+				// Trigger expansion animation
+				reelSymbol.symbolState = 'expand';
+				
+				// Wait for expansion animation to complete
+				const promise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));
+				await promise;
+				
+				// Return to static state after animation
+				reelSymbol.symbolState = 'static';
+			}
+		});
 	},
 };

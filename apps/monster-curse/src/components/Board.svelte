@@ -54,14 +54,22 @@
 					reelSymbol.rawSymbol.collectedMultiplier = collectedMultiplier;
 					reelSymbol.rawSymbol.reelPosition = position.row;
 					
-					// Set to expand state for S symbols
+					// Set to expand state for S symbols (reset even if already in postWinStatic)
 					reelSymbol.symbolState = 'expand';
 				} else if (reelSymbol.rawSymbol.name === 'W' || reelSymbol.rawSymbol.name === 'H1' || 
 							   reelSymbol.rawSymbol.name === 'H2' || reelSymbol.rawSymbol.name === 'H3' || 
 							   reelSymbol.rawSymbol.name === 'H4' || reelSymbol.rawSymbol.name === 'L1' || 
 							   reelSymbol.rawSymbol.name === 'L2' || reelSymbol.rawSymbol.name === 'L3' || 
-							   reelSymbol.rawSymbol.name === 'L4' || reelSymbol.rawSymbol.name === 'L5') {
-						// Regular win animation for other symbols
+							   reelSymbol.rawSymbol.name === 'L4' || reelSymbol.rawSymbol.name === 'L5' ||
+							   reelSymbol.rawSymbol.name === 'B') {
+						// Regular win animation for other symbols (including bonus B symbol)
+						// Reset to 'land' first if in 'postWinStatic' or 'win' to trigger re-animation
+						// Use 'land' instead of 'static' to avoid potential rendering issues
+						if (reelSymbol.symbolState === 'postWinStatic' || reelSymbol.symbolState === 'win') {
+							reelSymbol.symbolState = 'land';
+							// Small delay to ensure state change is registered
+							await new Promise(resolve => setTimeout(resolve, 50));
+						}
 						reelSymbol.symbolState = 'win';
 					} else {
 						// For expansion positions (empty positions that S symbols expand into)

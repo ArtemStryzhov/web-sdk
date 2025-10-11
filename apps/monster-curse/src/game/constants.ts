@@ -290,14 +290,25 @@ export const SYMBOL_INFO_MAP = {
 				'sword_expanding_pos3', // Position 3: pivot moves upward (75% expansion)
 				'sword_expanding_pos4'  // Position 4: pivot moves upward (100% expansion - full)
 			];
-			const animationName = animationNames[reelPosition] || 'sword_expanding_pos5';
+			const animationName = animationNames[reelPosition] || 'sword_expanding_pos4';
+			return { type: 'spine', assetKey: 'S', animationName, sizeRatios: sExpandSizeRatios, loop: false };
+		},
+		expand: (rawSymbol?: any) => {
+			const reelPosition = rawSymbol?.reelPosition ?? 4; // Default to position 4 (full expansion)
+			const animationNames = [
+				'sword_expanding_pos0', // Position 0: pivot at y=-280 (no movement, visible)
+				'sword_expanding_pos1', // Position 1: pivot moves upward (25% expansion)
+				'sword_expanding_pos2', // Position 2: pivot moves upward (50% expansion)
+				'sword_expanding_pos3', // Position 3: pivot moves upward (75% expansion)
+				'sword_expanding_pos4'  // Position 4: pivot moves upward (100% expansion - full)
+			];
+			const animationName = animationNames[reelPosition] || 'sword_expanding_pos4';
 			return { type: 'spine', assetKey: 'S', animationName, sizeRatios: sExpandSizeRatios, loop: false };
 		},
 		postWinStatic: sStatic,
 		static: sStatic,
 		spin: sStatic,
 		land: sStatic,
-		expand: sStatic,
 	},
 	B: {
 		win: bStatic,
