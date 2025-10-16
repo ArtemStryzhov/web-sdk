@@ -32,6 +32,7 @@
 <SymbolWrap
 	x={getSymbolX(props.reelIndex)}
 	y={props.reelSymbol.symbolY()}
+	symbolIndex={props.reelSymbol.symbolIndex}
 	animating={symbolInfo?.type === 'spine' &&
 		(props.reelSymbol.symbolState === 'land' || props.reelSymbol.symbolState === 'win')}
 >

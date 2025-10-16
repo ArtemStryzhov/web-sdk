@@ -7,6 +7,8 @@ export const SYMBOL_SIZE = 120;
 export const REEL_PADDING = 0.53;
 
 // initial board (padded top and bottom)
+// Initial board (7 symbols per reel: 0=padding, 1-5=visible, 6=padding)
+// Backend sends 7 symbols, frontend displays middle 5
 export const INITIAL_BOARD: RawSymbol[][] = [
 	[
 		{
@@ -204,7 +206,7 @@ const l5Static = {
 };
 
 const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1, height: 1 }, composite: true };
-const bStatic = { type: 'sprite', assetKey: 'b.png', sizeRatios: { width: 0.7, height: 0.7 } };
+const bStatic = { type: 'sprite', assetKey: 'b.png', sizeRatios: { width: 0.7, height: 0.7 }, composite: true };
 const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 0.7, height: 0.7 } };
 
 const sExpandSizeRatios = { width: 200*0.4, height: 585*0.4	 };
@@ -312,10 +314,10 @@ export const SYMBOL_INFO_MAP = {
 	},
 	B: {
 		win: bStatic,
+		land: bStatic,
 		postWinStatic: bStatic,
 		static: bStatic,
 		spin: bStatic,
-		land: bStatic,
 	},
 } as const;
 

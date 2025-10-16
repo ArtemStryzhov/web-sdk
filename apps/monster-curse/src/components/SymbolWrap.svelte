@@ -10,18 +10,25 @@
 		debug?: boolean;
 		x: number;
 		y: number;
+		symbolIndex: number;
 		animating: boolean;
 		children: Snippet;
 	};
 
 	const props: Props = $props();
 	const boardContext = getContextBoard();
-	const show = $derived(
-		(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
+	// Show symbols that are in frame, regardless of animation state
+	// The animating prop controls animation, not visibility
+	const show = $derived(true);
+
+	// During spinning: use Y position to allow smooth animation through visible area
+	// During static: use symbolIndex to only show indices 1-5
+	const isSpinning = $derived(boardContext.animate);
+	const inFrame = $derived(
+		isSpinning
+			? (props.y > 0 && props.y < SYMBOL_SIZE * 5.5) // During spin: tight bounds to exclude index 6
+			: (props.symbolIndex >= 1 && props.symbolIndex <= 5) // During static: only indices 1-5
 	);
-	const top = 0;
-	const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
-	const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 
 {#if props.debug || (show && inFrame)}

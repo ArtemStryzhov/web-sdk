@@ -63,13 +63,17 @@
 							   reelSymbol.rawSymbol.name === 'L4' || reelSymbol.rawSymbol.name === 'L5' ||
 							   reelSymbol.rawSymbol.name === 'B') {
 						// Regular win animation for other symbols (including bonus B symbol)
+						console.log(`🎬 Animating symbol at (${position.reel},${position.row}): ${reelSymbol.rawSymbol.name}, currentState: ${reelSymbol.symbolState}`);
+						
 						// Reset to 'land' first if in 'postWinStatic' or 'win' to trigger re-animation
 						// Use 'land' instead of 'static' to avoid potential rendering issues
 						if (reelSymbol.symbolState === 'postWinStatic' || reelSymbol.symbolState === 'win') {
+							console.log(`  ↪️ Resetting from ${reelSymbol.symbolState} → land`);
 							reelSymbol.symbolState = 'land';
 							// Small delay to ensure state change is registered
 							await new Promise(resolve => setTimeout(resolve, 50));
 						}
+						console.log(`  ▶️ Setting to win state`);
 						reelSymbol.symbolState = 'win';
 					} else {
 						// For expansion positions (empty positions that S symbols expand into)
@@ -83,10 +87,16 @@
 						reelSymbol.symbolState = 'expand';
 					}
 					
-					const promise = waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
-					await promise;
-					reelSymbol.symbolState = 'postWinStatic';
-				});
+				const promise = waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+				await promise;
+				console.log(`  ✅ Animation complete at (${position.reel},${position.row}), setting to postWinStatic`);
+				reelSymbol.symbolState = 'postWinStatic';
+				
+				// Debug: Check symbol visibility after state change
+				setTimeout(() => {
+					console.log(`  🔍 Post-animation check (${position.reel},${position.row}): state=${reelSymbol.symbolState}, symbol=${reelSymbol.rawSymbol.name}`);
+				}, 100);
+			});
 
 			await Promise.all(getPromises());
 		},
@@ -105,6 +115,7 @@
 
 	<BoardContext animate={true}>
 		<BoardContainer>
+			<BoardMask />
 			<BoardBase />
 		</BoardContainer>
 	</BoardContext>

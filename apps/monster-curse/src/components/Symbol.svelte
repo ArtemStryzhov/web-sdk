@@ -37,8 +37,8 @@ type Props = {
 </script>
 
 		{#if isSprite && (isComposite || hasSymbolConfig)}
-			<SymbolComposite {symbolInfo} rawSymbol={props.rawSymbol} x={props.x} y={props.y} state={props.state} loop={props.loop} oncomplete={props.oncomplete} />
-	{:else if isSprite}
+	<SymbolComposite {symbolInfo} rawSymbol={props.rawSymbol} x={props.x} y={props.y} state={props.state} loop={props.loop} oncomplete={props.oncomplete} />
+{:else if isSprite}
 	<SymbolSprite {symbolInfo} x={props.x} y={props.y} oncomplete={props.oncomplete} />
 {:else}
 	<Container x={0} y={0} zIndex={props.state === 'win' ? 1000 : 0}>

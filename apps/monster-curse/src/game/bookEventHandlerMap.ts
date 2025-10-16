@@ -8,6 +8,7 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
+import type { RawSymbol } from './types';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
@@ -55,25 +56,33 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.gameType = bookEvent.gameType;
 		await stateGameDerived.enhancedBoard.spin({
 			revealEvent: bookEvent,
-			paddingBoard: config.paddingReels[bookEvent.gameType],
+			paddingBoard: config.paddingReels[bookEvent.gameType] as any,
 		});
 
-		// Debug logging: Show visible symbols that landed on this spin (middle 5 per reel)
-		const landedSymbols = bookEvent.board.map((reel, reelIndex) => {
+		// Count B symbols for bonus trigger animation
+		let bSymbolCount = 0;
+		const landedSymbols = (bookEvent.board as RawSymbol[][]).map((reel, reelIndex) => {
 			// Skip padding symbols, show only the visible middle symbols
 			const startIndex = Math.floor((reel.length - 5) / 2);
 			const visibleSymbols = reel.slice(startIndex, startIndex + 5);
 			
-			// Log multipliers if present
+			// Count B symbols and log multipliers
 			visibleSymbols.forEach((symbol, rowIndex) => {
+				if (symbol.name === 'B') bSymbolCount++;
 				if (symbol.multiplier) {
-					console.log(`  Reel ${reelIndex}, Row ${rowIndex}: ${symbol.name} ×${symbol.multiplier}`);
+					// Multiplier symbol landed
 				}
 			});
 			
 			return visibleSymbols.map(symbol => symbol.name).join('');
 		}).join(' ');
-		console.log(`🎰 Spin: ${landedSymbols}`);
+
+		// Check if 3+ B symbols landed for bonus trigger animation
+		if (bSymbolCount >= 3) {
+			stateGame.pendingBonusTriggerAnimation = true;
+		} else {
+			stateGame.pendingBonusTriggerAnimation = false;
+		}
 
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
@@ -83,21 +92,33 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		
 		// Import utility functions
 		const { checkSSymbolsInWins, generateSSymbolExpansionPositions } = await import('./utils');
+		const { waitForResolve } = await import('utils-shared/wait');
 		
 		// Check if any S symbols participate in wins
 		const sSymbolsInWins = checkSSymbolsInWins(bookEvent.wins, currentBoard);
 		
+		// Store win data for potential looping
+		stateGame.winAnimationData = {
+			wins: bookEvent.wins,
+			sSymbols: sSymbolsInWins,
+		};
+		
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		
 		// Animate regular win positions (each line sequentially)
-		await sequence(bookEvent.wins, async (win) => {
+		console.log(`🎯 winInfo: Animating ${bookEvent.wins.length} win lines`);
+		await sequence(bookEvent.wins, async (win, index) => {
+			console.log(`  📍 Win line ${index + 1}/${bookEvent.wins.length}: positions =`, win.positions);
 			await animateSymbols({ positions: win.positions });
+			console.log(`  ✅ Win line ${index + 1} animation complete`);
 		});
 		
 		// If S symbols are in wins, animate their upward expansion
 		if (sSymbolsInWins.length > 0) {
+			console.log(`⚔️ S symbols in wins: ${sSymbolsInWins.length}`, sSymbolsInWins);
 			// Set S symbols to expand state and animate upward expansion
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsInWins);
+			console.log(`📏 Expansion positions generated:`, expansionPositions);
 			
 			// First, set the original S symbols to expand state
 			sSymbolsInWins.forEach(position => {
@@ -107,8 +128,41 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			
 			// Then animate the expansion positions
 			if (expansionPositions.length > 0) {
+				console.log(`🎬 Animating S symbol expansion positions`);
 				await animateSymbols({ positions: expansionPositions });
+				console.log(`✅ S symbol expansion animation complete`);
 			}
+		}
+		
+		// After all win animations, check if bonus trigger animation should play
+		if (stateGame.pendingBonusTriggerAnimation) {
+			// Find all B symbol positions on the board
+			const bSymbolPositions: Position[] = [];
+			stateGame.board.forEach((reel, reelIndex) => {
+				reel.reelState.symbols.forEach((reelSymbol, rowIndex) => {
+					if (reelSymbol.rawSymbol.name === 'B') {
+						bSymbolPositions.push({ reel: reelIndex, row: rowIndex });
+					}
+				});
+			});
+			
+			// Set all B symbols to 'win' state (triggers looping video animation)
+			bSymbolPositions.forEach(position => {
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+				reelSymbol.symbolState = 'win';
+			});
+			
+			// Wait for 2 animation cycles (assuming ~1 second per cycle)
+			await new Promise(resolve => setTimeout(resolve, 2000));
+			
+			// Return B symbols to static state
+			bSymbolPositions.forEach(position => {
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+				reelSymbol.symbolState = 'static';
+			});
+			
+			// Clear the flag
+			stateGame.pendingBonusTriggerAnimation = false;
 		}
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
@@ -233,12 +287,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	stickySwordEvent: async (bookEvent: BookEventOfType<'stickySwordEvent'>) => {
 		// Blades of Fate mode: Sticky swords expand sequentially based on their positions
 		// Each sword expands to its position height, then returns to static state
+		console.log(`🗡️ stickySwordEvent: ${bookEvent.stickyPositions.length} sticky swords`, bookEvent.stickyPositions);
 		
 		// Import utility for waiting on promises
 		const { waitForResolve } = await import('utils-shared/wait');
 		
 		// Process each sticky sword position sequentially
-		await sequence(bookEvent.stickyPositions, async (position) => {
+		await sequence(bookEvent.stickyPositions, async (position, index) => {
+			console.log(`  ⚔️ Expanding sticky sword ${index + 1}/${bookEvent.stickyPositions.length} at (${position.reel},${position.row})`);
+
 			// Get the reel symbol at this position
 			const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
 			

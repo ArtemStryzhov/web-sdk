@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Sprite, Container } from 'pixi-svelte';
+	import { Sprite, Container, getContextApp } from 'pixi-svelte';
 	import { SpineProvider, SpineTrack } from 'pixi-svelte';
 	import { onMount } from 'svelte';
 	import { stateBetDerived } from 'state-shared';
@@ -71,32 +71,38 @@
 			{#each visibleLayers as layer, index}
 				{#if layer.spineKey}
 					<!-- Use unique key for Svelte reactivity but correct spineKey for asset loading -->
-					{#key `${layer.spineKey}_${layer.animationName}_${index}`}
-						<SpineProvider
-							key={layer.spineKey}
-							x={0}
-							y={0}
-							anchor={0.5}
-							height={SYMBOL_SIZE * layer.sizeMultiplier}
-							alpha={layer.alpha ?? 1}
-							zIndex={layer.zIndex}
-						>
-							<SpineTrack
-								trackIndex={0}
-								animationName={layer.animationName!}
-								loop={props.loop ?? layer.loop ?? false}
-								timeScale={stateBetDerived.timeScale()}
-								listener={{
-									complete: index === 0 ? handleSpineComplete : undefined // Only the first spine layer handles completion
-								}}
-							/>
-						</SpineProvider>
-					{/key}
+					{@const context = getContextApp()}
+					{@const spineData = context.stateApp.loadedAssets?.[layer.spineKey]}
+					{#if spineData}
+						{#key `${layer.spineKey}_${layer.animationName}_${index}`}
+							<SpineProvider
+								key={layer.spineKey}
+								x={0}
+								y={0}
+								anchor={0.5}
+								height={SYMBOL_SIZE * layer.sizeMultiplier}
+								alpha={layer.alpha ?? 1}
+								zIndex={layer.zIndex}
+							>
+								<SpineTrack
+									trackIndex={0}
+									animationName={layer.animationName!}
+									loop={props.loop ?? layer.loop ?? false}
+									timeScale={stateBetDerived.timeScale()}
+									listener={{
+										complete: index === 0 ? handleSpineComplete : undefined // Only the first spine layer handles completion
+									}}
+								/>
+							</SpineProvider>
+						{/key}
+					{:else}
+						<!-- Spine asset not loaded, skip this layer -->
+					{/if}
 				{/if}
 			{/each}
 		{/if}
 
-		<!-- Render main symbol using static sprite assets -->
+		<!-- Render main symbol -->
 		{#if props.rawSymbol.name === 'W' && props.state === 'win'}
 			<!-- W symbol with scaling animation in win state -->
 			<SymbolWAnimated
@@ -111,8 +117,8 @@
 			<Sprite
 				anchor={0.5}
 				key={props.symbolInfo.assetKey}
-				width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
-				height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+				width={SYMBOL_SIZE * (props.symbolInfo.sizeRatios?.width ?? 1)}
+				height={SYMBOL_SIZE * (props.symbolInfo.sizeRatios?.height ?? 1)}
 				zIndex={10}
 			/>
 		{/if}

@@ -22,6 +22,7 @@
 <Rectangle
 	isMask
 	x={-SYMBOL_SIZE}
+	y={0}
 	width={context.stateGameDerived.boardLayout().width + SYMBOL_SIZE * 2}
 	height={context.stateGameDerived.boardLayout().height}
 />

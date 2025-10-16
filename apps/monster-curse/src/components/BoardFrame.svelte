@@ -66,7 +66,7 @@
 {#if true}
 	{@const boardLayout = context.stateGameDerived.boardLayout()}
 	{@const frameWidth = boardLayout.width * SPRITE_SCALE.width}
-	{@const frameHeight = boardLayout.width * SPRITE_SCALE.height}
+	{@const frameHeight = boardLayout.height * SPRITE_SCALE.height}
 	{@const bgWidth = frameWidth * 0.95}
 	{@const bgHeight = frameHeight * 0.95}
 	{@const centerX = boardLayout.x * POSITION_ADJUSTMENT}
