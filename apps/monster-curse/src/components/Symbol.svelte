@@ -60,7 +60,7 @@ type Props = {
 		/>
 	</Container>
 {/if}
-{#if props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier}
+{#if (props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier) && !props.rawSymbol.isCollected}
 	{@const displayMultiplier = props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier}
 	<Container x={props.x} y={props.y} zIndex={2000}>
 		<!-- Gradient border background -->

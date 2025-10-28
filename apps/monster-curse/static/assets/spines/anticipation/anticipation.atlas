@@ -1,5 +1,7 @@
 anticipation.png
-size:441,1024
+size:657,1024
 filter:Linear,Linear
 payframe
 bounds:0,0,220,220
+payframe3
+bounds:441,0,216,1024

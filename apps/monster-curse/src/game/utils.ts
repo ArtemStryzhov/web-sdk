@@ -31,11 +31,10 @@ export const playBet = async (bet: Bet) => {
 	});
 	
 	// Start win animation looping if there are wins
-	// TEMPORARILY DISABLED to debug the initial animation issue
-	// if (stateGame.winAnimationData) {
-	// 	stateGame.shouldLoopWinAnimations = true;
-	// 	loopWinAnimations();
-	// }
+	if (stateGame.winAnimationData) {
+		stateGame.shouldLoopWinAnimations = true;
+		loopWinAnimations();
+	}
 };
 
 // Loop win animations until user presses spin
@@ -47,6 +46,18 @@ const loopWinAnimations = async () => {
 		loopCount++;
 		console.log(`🔄 Loop iteration ${loopCount}`);
 		const { wins, sSymbols } = stateGame.winAnimationData;
+		
+		// Clear isCollected flags and collectedMultiplier before each loop iteration
+		stateGame.board.forEach(reel => {
+			reel.reelState.symbols.forEach(symbol => {
+				if (symbol.rawSymbol.isCollected) {
+					symbol.rawSymbol.isCollected = false;
+				}
+				if (symbol.rawSymbol.collectedMultiplier) {
+					symbol.rawSymbol.collectedMultiplier = undefined;
+				}
+			});
+		});
 		
 		// Animate regular win positions (each line sequentially)
 		for (const win of wins) {
@@ -163,26 +174,37 @@ export const getSymbolInfo = ({
 
 /**
  * Calculate the collected multiplier for an S symbol during expansion.
- * Collects all W symbol multipliers in the same reel and multiplies by S symbol's own multiplier.
- * Formula: (sum of W multipliers in reel) × S multiplier
+ * Collects only W symbol multipliers ABOVE the S symbol in the same reel and multiplies by S symbol's own multiplier.
+ * Formula: (sum of W multipliers above S) × S multiplier
  */
 export const calculateSSymbolCollectedMultiplier = (
 	board: RawSymbol[][],
 	sSymbolReelIndex: number,
+	sSymbolRowIndex: number,
 	sSymbolMultiplier: number = 1
 ): number => {
 	const reelSymbols = board[sSymbolReelIndex];
 	if (!reelSymbols) return sSymbolMultiplier;
 
-	// Find all W symbols in the same reel and sum their multipliers
+	// Calculate the starting index for visible symbols (middle 5 symbols)
+	const startIndex = Math.floor((reelSymbols.length - 5) / 2);
+	const sSymbolAbsoluteIndex = startIndex + sSymbolRowIndex;
+
+	// Find all W symbols ABOVE the S symbol in the same reel and sum their multipliers
 	const wMultipliersSum = reelSymbols
-		.filter(symbol => symbol.name === 'W' && symbol.multiplier)
-		.reduce((sum, wSymbol) => sum + (wSymbol.multiplier || 0), 0);
+		.map((symbol, index) => ({ symbol, index }))
+		.filter(({ symbol, index }) => 
+			index >= startIndex && // Within visible area
+			index < sSymbolAbsoluteIndex && // Above S symbol
+			symbol.name === 'W' && 
+			symbol.multiplier
+		)
+		.reduce((sum, { symbol }) => sum + (symbol.multiplier || 0), 0);
 
 	// If no W multipliers found, return the S symbol's own multiplier
 	if (wMultipliersSum === 0) return sSymbolMultiplier;
 
-	// Calculate: (sum of W multipliers) × S multiplier
+	// Calculate: (sum of W multipliers above) × S multiplier
 	return wMultipliersSum * sSymbolMultiplier;
 };
 

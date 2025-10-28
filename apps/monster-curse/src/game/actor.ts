@@ -25,6 +25,15 @@ const primaryMachines = createPrimaryMachines<Bet>({
 		stateGame.shouldLoopWinAnimations = false;
 		stateGame.winAnimationData = null;
 		
+		// Clear isCollected flags from previous spin
+		stateGame.board.forEach(reel => {
+			reel.reelState.symbols.forEach(symbol => {
+				if (symbol.rawSymbol.isCollected) {
+					symbol.rawSymbol.isCollected = false;
+				}
+			});
+		});
+		
 		if ((stateBet.isTurbo && stateXstateDerived.isAutoBetting()) || stateBet.isSpaceHold) return;
 		stateBet.winBookEventAmount = 0;
 		await stateGameDerived.enhancedBoard.preSpin({

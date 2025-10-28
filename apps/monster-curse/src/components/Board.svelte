@@ -47,8 +47,16 @@
 					const collectedMultiplier = calculateSSymbolCollectedMultiplier(
 						currentBoard,
 						position.reel,
+						position.row,
 						reelSymbol.rawSymbol.multiplier || 1
 					);
+					
+					// Mark W symbols above S as collected (hide their multipliers)
+					context.stateGame.board[position.reel].reelState.symbols.forEach((symbol, rowIndex) => {
+						if (rowIndex < position.row && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
+							symbol.rawSymbol.isCollected = true;
+						}
+					});
 					
 					// Set the collected multiplier and position on the symbol
 					reelSymbol.rawSymbol.collectedMultiplier = collectedMultiplier;
@@ -75,22 +83,33 @@
 						}
 						console.log(`  ▶️ Setting to win state`);
 						reelSymbol.symbolState = 'win';
-					} else {
-						// For expansion positions (empty positions that S symbols expand into)
-						// Create a new S symbol at this position
-						reelSymbol.rawSymbol = {
-							name: 'S',
-							scatter: true,
-							// Copy multiplier from the original S symbol if available
-							// This will be handled by the expansion logic
-						};
-						reelSymbol.symbolState = 'expand';
-					}
+				} else {
+					// For expansion positions (empty positions that S symbols expand into)
+					// Save the original symbol so we can restore it after animation
+					const originalSymbol = { ...reelSymbol.rawSymbol };
 					
-				const promise = waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
-				await promise;
-				console.log(`  ✅ Animation complete at (${position.reel},${position.row}), setting to postWinStatic`);
-				reelSymbol.symbolState = 'postWinStatic';
+					// Temporarily replace with S symbol for expansion animation
+					reelSymbol.rawSymbol = {
+						name: 'S',
+						scatter: true,
+					};
+					reelSymbol.symbolState = 'expand';
+					
+					// Wait for animation to complete
+					const promise = waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+					await promise;
+					
+					// Restore the original symbol
+					reelSymbol.rawSymbol = originalSymbol;
+					reelSymbol.symbolState = 'postWinStatic';
+					console.log(`  ✅ Expansion animation complete at (${position.reel},${position.row}), restored original symbol: ${originalSymbol.name}`);
+					return; // Exit early since we've already handled the completion
+				}
+				
+			const promise = waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+			await promise;
+			console.log(`  ✅ Animation complete at (${position.reel},${position.row}), setting to postWinStatic`);
+			reelSymbol.symbolState = 'postWinStatic';
 				
 				// Debug: Check symbol visibility after state change
 				setTimeout(() => {
