@@ -65,7 +65,7 @@
 
 		<MainContainer>
 			<Board />
-			<!-- <Anticipations /> Disabled: anticipation animations removed, only payframe remains -->
+			<Anticipations />
 		</MainContainer>
 
 				<!-- Bottom gradient background - renders behind UI buttons -->

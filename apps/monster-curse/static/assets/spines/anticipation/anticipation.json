@@ -21,13 +21,23 @@
 			"length": 100,
 			"x": 110,
 			"y": 110
+		},
+		{
+			"name": "payframe3_bone",
+			"parent": "root",
+			"length": 500,
+			"x": 108,
+			"y": 300
 		}
 	],
 	"slots": [
 		{
 			"name": "payframe",
-			"bone": "payframe_bone",
-			"attachment": "payframe"
+			"bone": "payframe_bone"
+		},
+		{
+			"name": "payframe3",
+			"bone": "payframe3_bone"
 		}
 	],
 	"skins": [
@@ -39,6 +49,13 @@
 						"type": "region",
 						"width": 220,
 						"height": 220
+					}
+				},
+				"payframe3": {
+					"payframe3": {
+						"type": "region",
+						"width": 216,
+						"height": 1024
 					}
 				}
 			}
@@ -103,6 +120,18 @@
 							"time": 2,
 							"x": 1,
 							"y": 1
+						}
+					]
+				}
+			}
+		},
+		"payframe3": {
+			"slots": {
+				"payframe3": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "payframe3"
 						}
 					]
 				}
