@@ -15,39 +15,21 @@ export const { getEmptyBoard } = createGetEmptyPaddedBoard({ reelsDimensions: BO
 export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEventHandlerMap });
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
-	
-	// Stop any ongoing win animation looping
 	stateGame.shouldLoopWinAnimations = false;
 	
 	await playBookEvents(bet.state);
 	eventEmitter.broadcast({ type: 'stopButtonEnable' });
 	
-	// Debug: Log all symbol states after spin completes
-	console.log('📊 Board state after spin:');
-	stateGame.board.forEach((reel, reelIndex) => {
-		reel.reelState.symbols.forEach((symbol, rowIndex) => {
-			console.log(`  (${reelIndex},${rowIndex}): ${symbol.rawSymbol.name} - state: ${symbol.symbolState}`);
-		});
-	});
-	
-	// Start win animation looping if there are wins
 	if (stateGame.winAnimationData) {
 		stateGame.shouldLoopWinAnimations = true;
 		loopWinAnimations();
 	}
 };
 
-// Loop win animations until user presses spin
 const loopWinAnimations = async () => {
-	console.log('🔄 Starting win animation loop');
-	let loopCount = 0;
-	
 	while (stateGame.shouldLoopWinAnimations && stateGame.winAnimationData) {
-		loopCount++;
-		console.log(`🔄 Loop iteration ${loopCount}`);
 		const { wins, sSymbols } = stateGame.winAnimationData;
 		
-		// Clear isCollected flags and collectedMultiplier before each loop iteration
 		stateGame.board.forEach(reel => {
 			reel.reelState.symbols.forEach(symbol => {
 				if (symbol.rawSymbol.isCollected) {
@@ -59,35 +41,27 @@ const loopWinAnimations = async () => {
 			});
 		});
 		
-		// Animate regular win positions (each line sequentially)
 		for (const win of wins) {
 			if (!stateGame.shouldLoopWinAnimations) break;
 			
-			// Reset symbols to 'land' before animating to 'win' for proper re-triggering
-			console.log(`  Resetting symbols to 'land' for win line:`, win.positions.map(p => `(${p.reel},${p.row})`).join(', '));
 			for (const pos of win.positions) {
 				const reelSymbol = stateGame.board[pos.reel].reelState.symbols[pos.row];
-				console.log(`    Symbol at (${pos.reel},${pos.row}): ${reelSymbol.rawSymbol.name}, currentState: ${reelSymbol.symbolState} → land`);
 				if (reelSymbol.rawSymbol.name !== 'S') {
 					reelSymbol.symbolState = 'land';
 				}
 			}
 			
-			// Small delay for state reset
 			await new Promise(resolve => setTimeout(resolve, 50));
 			
-			// Animate to win state
 			await eventEmitter.broadcastAsync({
 				type: 'boardWithAnimateSymbols',
 				symbolPositions: win.positions,
 			});
 		}
 		
-		// If S symbols are in wins, animate their upward expansion
 		if (stateGame.shouldLoopWinAnimations && sSymbols.length > 0) {
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbols);
 			
-			// Reset S symbols to 'land' state
 			sSymbols.forEach((position: any) => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
 				reelSymbol.symbolState = 'land';
@@ -95,13 +69,11 @@ const loopWinAnimations = async () => {
 			
 			await new Promise(resolve => setTimeout(resolve, 50));
 			
-			// Set the original S symbols to expand state
 			sSymbols.forEach((position: any) => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
 				reelSymbol.symbolState = 'expand';
 			});
 			
-			// Then animate the expansion positions
 			if (expansionPositions.length > 0) {
 				await eventEmitter.broadcastAsync({
 					type: 'boardWithAnimateSymbols',
@@ -110,7 +82,6 @@ const loopWinAnimations = async () => {
 			}
 		}
 		
-		// Small delay before next loop
 		if (stateGame.shouldLoopWinAnimations) {
 			await new Promise(resolve => setTimeout(resolve, 500));
 		}
