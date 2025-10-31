@@ -44,14 +44,15 @@ const loopWinAnimations = async () => {
 		for (const win of wins) {
 			if (!stateGame.shouldLoopWinAnimations) break;
 			
-			for (const pos of win.positions) {
-				const reelSymbol = stateGame.board[pos.reel].reelState.symbols[pos.row];
-				if (reelSymbol.rawSymbol.name !== 'S') {
-					reelSymbol.symbolState = 'land';
-				}
-			}
-			
-			await new Promise(resolve => setTimeout(resolve, 50));
+			// Set all winning symbols to postWinStatic first to hide their payframes
+			wins.forEach(w => {
+				w.positions.forEach((pos: Position) => {
+					const reelSymbol = stateGame.board[pos.reel].reelState.symbols[pos.row];
+					if (reelSymbol.rawSymbol.name !== 'S') {
+						reelSymbol.symbolState = 'postWinStatic';
+					}
+				});
+			});
 			
 			await eventEmitter.broadcastAsync({
 				type: 'boardWithAnimateSymbols',
@@ -61,13 +62,6 @@ const loopWinAnimations = async () => {
 		
 		if (stateGame.shouldLoopWinAnimations && sSymbols.length > 0) {
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbols);
-			
-			sSymbols.forEach((position: any) => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
-				reelSymbol.symbolState = 'land';
-			});
-			
-			await new Promise(resolve => setTimeout(resolve, 50));
 			
 			sSymbols.forEach((position: any) => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];

@@ -19,8 +19,7 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
-import Payframes from './Payframes.svelte';
-import Anticipations from './Anticipations.svelte';
+	import Payframes from './Payframes.svelte';
 
 	const context = getContext();
 
@@ -125,7 +124,6 @@ import Anticipations from './Anticipations.svelte';
 	<BoardContext animate={true}>
 		<BoardContainer>
 			<Payframes />
-			<Anticipations />
 		</BoardContainer>
 	</BoardContext>
 {/if}

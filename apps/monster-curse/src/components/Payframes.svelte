@@ -11,12 +11,13 @@
 	const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
 </script>
 
-<!-- Render payframes for all win state symbols at the highest z-index -->
+<!-- Render payframes only for symbols actively in 'win' state -->
 {#each context.stateGame.board as reel, reelIndex}
 	{#each reel.reelState.symbols as reelSymbol}
 		{@const symbolY = reelSymbol.symbolY()}
 		{@const inFrame = symbolY >= top && symbolY <= bottom}
-		{#if inFrame && reelSymbol.symbolState === 'win' && !['S'].includes(reelSymbol.rawSymbol.name)}
+		{@const shouldShowPayframe = reelSymbol.symbolState === 'win' && !['S'].includes(reelSymbol.rawSymbol.name)}
+		{#if inFrame && shouldShowPayframe}
 			<SpineProvider
 				x={getSymbolX(reelIndex)}
 				y={symbolY}

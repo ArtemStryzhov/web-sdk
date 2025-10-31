@@ -53,6 +53,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			recordBookEvent({ bookEvent });
 		}
 
+		// Clear anticipating flags from previous spin
+		stateGame.board.forEach(reel => {
+			reel.reelState.anticipating = false;
+		});
+
 		stateGame.gameType = bookEvent.gameType;
 		await stateGameDerived.enhancedBoard.spin({
 			revealEvent: bookEvent,
