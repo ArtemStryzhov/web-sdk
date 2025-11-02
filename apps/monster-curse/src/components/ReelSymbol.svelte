@@ -14,6 +14,13 @@
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
 
+	// Calculate z-index for S symbols in expand state to render above all other symbols
+	const symbolZIndex = $derived(
+		props.reelSymbol.rawSymbol.name === 'S' && props.reelSymbol.symbolState === 'expand' 
+			? 10001 
+			: 0
+	);
+
 	// Force reactivity when symbol state changes
 	$effect(() => {
 		const currentState = props.reelSymbol.symbolState;
@@ -33,6 +40,7 @@
 	x={getSymbolX(props.reelIndex)}
 	y={props.reelSymbol.symbolY()}
 	symbolIndex={props.reelSymbol.symbolIndex}
+	zIndex={symbolZIndex}
 	animating={symbolInfo?.type === 'spine' &&
 		(props.reelSymbol.symbolState === 'land' || props.reelSymbol.symbolState === 'win')}
 >
@@ -40,6 +48,7 @@
 		key={`${props.reelSymbol.rawSymbol.name}-${props.reelSymbol.symbolState}`}
 		state={props.reelSymbol.symbolState}
 		rawSymbol={props.reelSymbol.rawSymbol}
+		loop={props.reelSymbol.symbolState === 'expand' && props.reelSymbol.rawSymbol.name === 'S' ? false : undefined}
 		oncomplete={() => {
 			// Always call oncomplete if it exists, since the promise was set up to wait for completion
 			props.reelSymbol.oncomplete?.();

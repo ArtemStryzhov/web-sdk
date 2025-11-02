@@ -10,6 +10,7 @@ export type RawSymbol = {
 	collectedMultiplier?: number; // For S symbols that collect W multipliers
 	reelPosition?: number; // Position on reel (0-4) for S symbols to determine expansion height
 	isCollected?: boolean; // For W symbols that have been collected by S symbols
+	expandAnimation?: string; // Custom animation name for S symbol expansion (e.g., 'sword_expanding_pos2')
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;

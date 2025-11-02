@@ -32,7 +32,7 @@
 			const reelPosition = props.rawSymbol.reelPosition ?? 4; // Default to bottom position
 			
 			// Base expansion fractions with adjustments
-			const expansionFractions = [0.12, 0.32, 0.55, 0.78, 1.0];
+			const expansionFractions = [0.1423, 0.3560, 0.5662, 0.777, 0.988];
 			const expansionFraction = expansionFractions[reelPosition];
 			
 			// Calculate target height: base + (expansion space * fraction)

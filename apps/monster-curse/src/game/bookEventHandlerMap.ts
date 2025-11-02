@@ -2,7 +2,6 @@ import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateUi } from 'state-shared';
-import { sequence } from 'utils-shared/sequence';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
@@ -103,13 +102,32 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		
-		await sequence(bookEvent.wins, async (win) => {
-			await animateSymbols({ positions: win.positions });
+	// Animate each win line sequentially
+	for (const win of bookEvent.wins) {
+		// Set only the current win's symbols to postWinStatic first to reset them before animation
+		win.positions.forEach((pos: Position) => {
+			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[pos.row];
+			if (reelSymbol.rawSymbol.name !== 'S') {
+				reelSymbol.symbolState = 'postWinStatic';
+			}
 		});
+		
+		// Then animate current win line
+		await animateSymbols({ positions: win.positions });
+	}
 		
 		// If S symbols are in wins, animate their upward expansion
 		if (sSymbolsInWins.length > 0) {
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsInWins);
+			
+			// Reset S symbols first to force animation to replay (in case they're already in 'expand' state)
+			sSymbolsInWins.forEach(position => {
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+				reelSymbol.symbolState = 'postWinStatic';
+			});
+			
+			// Small delay to ensure state change is registered
+			await new Promise(resolve => setTimeout(resolve, 50));
 			
 			sSymbolsInWins.forEach(position => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
@@ -270,11 +288,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	stickySwordEvent: async (bookEvent: BookEventOfType<'stickySwordEvent'>) => {
 		const { waitForResolve } = await import('utils-shared/wait');
 		
-		await sequence(bookEvent.stickyPositions, async (position) => {
+		for (const position of bookEvent.stickyPositions) {
 			const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
 			
 			if (reelSymbol.rawSymbol.name === 'S') {
-				reelSymbol.rawSymbol.reelPosition = position.row;
+				// reelPosition represents expansion level (0-4) based on which visible row (1-5)
+				reelSymbol.rawSymbol.reelPosition = position.row - 1;
 				reelSymbol.symbolState = 'expand';
 				
 				const promise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));
@@ -282,6 +301,55 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				
 				reelSymbol.symbolState = 'static';
 			}
+		}
+	},
+	swordExpandEvent: async (bookEvent: BookEventOfType<'swordExpandEvent'>) => {
+		const { reel, swordRow, expandedRows, multiplier } = bookEvent;
+		const reelSymbol = stateGame.board[reel].reelState.symbols[swordRow];
+		
+		// Import utility functions
+		const { calculateSSymbolCollectedMultiplier } = await import('./utils');
+		const currentBoard = stateGameDerived.boardRaw();
+		
+		// Calculate animation name based on expandedRows length
+		const animationName = expandedRows.length === 0 
+			? 'sword_expanding_pos0'
+			: `sword_expanding_pos${expandedRows.length}`;
+		
+		// Store the custom animation name on the symbol
+		reelSymbol.rawSymbol.expandAnimation = animationName;
+		
+		// Calculate collected multiplier from W symbols above (for display before backend value)
+		const frontendCollectedMultiplier = calculateSSymbolCollectedMultiplier(
+			currentBoard,
+			reel,
+			swordRow,
+			reelSymbol.rawSymbol.multiplier || 1
+		);
+		
+		// Show collected multipliers from W symbols above S (visual collection animation)
+		// Mark W symbols above S as collected to hide their multipliers
+		stateGame.board[reel].reelState.symbols.forEach((symbol, rowIndex) => {
+			if (rowIndex < swordRow && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
+				symbol.rawSymbol.isCollected = true;
+			}
+		});
+		
+		// Set the frontend calculated multiplier temporarily
+		reelSymbol.rawSymbol.collectedMultiplier = frontendCollectedMultiplier;
+		// reelPosition represents expansion level (0-4) based on which visible row (1-5)
+		reelSymbol.rawSymbol.reelPosition = swordRow - 1;
+		
+		// Wait a moment for multiplier collection animation
+		await new Promise(resolve => setTimeout(resolve, 300));
+		
+		// Update to backend multiplier value (the authoritative value)
+		reelSymbol.rawSymbol.collectedMultiplier = multiplier;
+		
+		// Wait for expansion animation to complete (Board.svelte will set the state)
+		await eventEmitter.broadcastAsync({
+			type: 'boardWithAnimateSymbols',
+			symbolPositions: [{ reel, row: swordRow }]
 		});
 	},
 };

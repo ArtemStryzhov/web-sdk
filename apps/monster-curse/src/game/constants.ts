@@ -155,6 +155,8 @@ export const PORTRAIT_MAIN_SIZES = {
 
 export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4'];
 
+export const WIN_ANIMATION_SYMBOLS = ['W', 'H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4', 'L5', 'B'];
+
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
 const SPIN_OPTIONS_SHARED = {
@@ -209,7 +211,7 @@ const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1, hei
 const bStatic = { type: 'sprite', assetKey: 'b.png', sizeRatios: { width: 0.7, height: 0.7 }, composite: true };
 const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 0.7, height: 0.7 } };
 
-const sExpandSizeRatios = { width: 200*0.4, height: 585*0.4	 };
+const sExpandSizeRatios = { width: 200*0.4*0.9, height: 585*0.4*0.9 };
 
 export const SYMBOL_INFO_MAP = {
 	H1: {
@@ -284,6 +286,11 @@ export const SYMBOL_INFO_MAP = {
 	},
 	S: {
 		win: (rawSymbol?: any) => {
+			// Use custom animation from backend if available, otherwise fallback to reelPosition logic
+			if (rawSymbol?.expandAnimation) {
+				return { type: 'spine', assetKey: 'S', animationName: rawSymbol.expandAnimation, sizeRatios: sExpandSizeRatios, loop: false };
+			}
+			
 			const reelPosition = rawSymbol?.reelPosition ?? 4; // Default to position 4 (full expansion)
 			const animationNames = [
 				'sword_expanding_pos0', // Position 0: pivot at y=-280 (no movement, visible)
@@ -296,6 +303,11 @@ export const SYMBOL_INFO_MAP = {
 			return { type: 'spine', assetKey: 'S', animationName, sizeRatios: sExpandSizeRatios, loop: false };
 		},
 		expand: (rawSymbol?: any) => {
+			// Use custom animation from backend if available, otherwise fallback to reelPosition logic
+			if (rawSymbol?.expandAnimation) {
+				return { type: 'spine', assetKey: 'S', animationName: rawSymbol.expandAnimation, sizeRatios: sExpandSizeRatios, loop: false };
+			}
+			
 			const reelPosition = rawSymbol?.reelPosition ?? 4; // Default to position 4 (full expansion)
 			const animationNames = [
 				'sword_expanding_pos0', // Position 0: pivot at y=-280 (no movement, visible)

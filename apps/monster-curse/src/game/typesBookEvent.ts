@@ -93,6 +93,16 @@ type BookEventStickySword = {
 	stickyPositions: Array<{ reel: number; row: number }>;
 };
 
+type BookEventSwordExpand = {
+	index: number;
+	type: 'swordExpandEvent';
+	reel: number;
+	swordRow: number;
+	expandedRows: number[];
+	multiplier: number;
+	isSticky: boolean;
+};
+
 export type BookEvent =
 	| BookEventReveal
 	| BookEventWinInfo
@@ -106,7 +116,8 @@ export type BookEvent =
 	// customised
 	| BookEventCreateBonusSnapshot
 	| BookEventSwordCollect
-	| BookEventStickySword;
+	| BookEventStickySword
+	| BookEventSwordExpand;
 
 export type Bet = BetType<BookEvent>;
 export type BookEventOfType<T> = Extract<BookEvent, { type: T }>;

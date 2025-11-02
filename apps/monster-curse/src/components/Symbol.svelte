@@ -47,7 +47,7 @@ type Props = {
 			{symbolInfo}
 			rawSymbol={props.rawSymbol}
 			x={props.x}
-			y={props.y}
+			y={(props.y ?? 0) + (props.rawSymbol.name === 'S' && props.state === 'expand' ? 20 : 0)}
 			showWinFrame={props.state === 'win' && !['S'].includes(props.rawSymbol.name)}
 			listener={{
 				complete: props.oncomplete,
@@ -62,7 +62,7 @@ type Props = {
 {/if}
 {#if (props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier) && !props.rawSymbol.isCollected}
 	{@const displayMultiplier = props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier}
-	<Container x={props.x} y={props.y} zIndex={2000}>
+	<Container x={props.x} y={(props.y ?? 0) + (props.rawSymbol.name === 'S' && props.state === 'expand' ? 20 : 0)} zIndex={props.rawSymbol.name === 'S' ? 100 : 50}>
 		<!-- Gradient border background -->
 		<Graphics
 			x={0}

@@ -12,6 +12,7 @@
 		y: number;
 		symbolIndex: number;
 		animating: boolean;
+		zIndex?: number;
 		children: Snippet;
 	};
 
@@ -32,7 +33,7 @@
 </script>
 
 {#if props.debug || (show && inFrame)}
-	<Container x={props.x} y={props.y} sortableChildren={true}>
+	<Container x={props.x} y={props.y} zIndex={props.zIndex ?? 0} sortableChildren={true}>
 		{@render props.children()}
 	</Container>
 {/if}

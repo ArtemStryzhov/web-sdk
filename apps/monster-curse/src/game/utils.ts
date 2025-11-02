@@ -41,24 +41,22 @@ const loopWinAnimations = async () => {
 			});
 		});
 		
-		for (const win of wins) {
-			if (!stateGame.shouldLoopWinAnimations) break;
-			
-			// Set all winning symbols to postWinStatic first to hide their payframes
-			wins.forEach(w => {
-				w.positions.forEach((pos: Position) => {
-					const reelSymbol = stateGame.board[pos.reel].reelState.symbols[pos.row];
-					if (reelSymbol.rawSymbol.name !== 'S') {
-						reelSymbol.symbolState = 'postWinStatic';
-					}
-				});
-			});
-			
-			await eventEmitter.broadcastAsync({
-				type: 'boardWithAnimateSymbols',
-				symbolPositions: win.positions,
-			});
-		}
+	for (const win of wins) {
+		if (!stateGame.shouldLoopWinAnimations) break;
+		
+		// Set only the current win's symbols to postWinStatic first to reset them before animation
+		win.positions.forEach((pos: Position) => {
+			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[pos.row];
+			if (reelSymbol.rawSymbol.name !== 'S') {
+				reelSymbol.symbolState = 'postWinStatic';
+			}
+		});
+		
+		await eventEmitter.broadcastAsync({
+			type: 'boardWithAnimateSymbols',
+			symbolPositions: win.positions,
+		});
+	}
 		
 		if (stateGame.shouldLoopWinAnimations && sSymbols.length > 0) {
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbols);
