@@ -43,7 +43,7 @@
 			{@render props.amountWin({ stacked: false })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 100} x={20}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 300} x={1560 + 90}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 

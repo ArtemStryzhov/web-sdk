@@ -14,6 +14,15 @@
 	const getResponsiveDimensions = () => {
 		if (typeof window === 'undefined') return { width: props.width || 'auto', height: props.height || 'auto' };
 		
+		// For maxWidth: 100%, make the modal full size
+		if (props.maxWidth === '100%') {
+			return {
+				width: '100vw',
+				height: '100vh',
+				maxHeight: '100vh'
+			};
+		}
+		
 		const vw = window.innerWidth;
 		const vh = window.innerHeight;
 		
@@ -72,7 +81,7 @@
 	.ui-popup-standard-content-wrap {
 		display: flex;
 		flex-direction: column;
-		justify-content: flex-start;
+		justify-content: center;
 		align-items: center;
 		z-index: var(--zIndex);
 		max-width: var(--maxWidth);
@@ -80,7 +89,7 @@
 		height: var(--height);
 		max-height: var(--maxHeight);
 		gap: 1rem;
-		background-color: #141417;
+		background-color: transparent;
 		opacity: 0.95;
 		border-radius: 12px;
 		padding: 2rem;

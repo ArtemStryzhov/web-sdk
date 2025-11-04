@@ -5,10 +5,10 @@
 	import { stateModal, stateMetaDerived } from 'state-shared';
 
 	import BonusCards from './BonusCards.svelte';
-	import BetMenuAmountToggle from './BetMenuAmountToggle.svelte';
 	import BonusContentWrapLarge from './BonusContentWrapLarge.svelte';
 	import BonusContentWrapPortrait from './BonusContentWrapPortrait.svelte';
 	import BonusContentWrapLandscape from './BonusContentWrapLandscape.svelte';
+	import BuyBonusDustBackground from './BuyBonusDustBackground.svelte';
 
 	const { stateLayoutDerived } = getContextLayout();
 
@@ -32,36 +32,32 @@
 
 {#if stateModal.modal?.name === 'buyBonus'}
 	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
-		<BonusContentWrap maxListLength={Math.max(activateList.length, buyList.length)}>
-			{#snippet betAmount()}
-				<BetMenuAmountToggle />
-			{/snippet}
+		<div class="buy-bonus-modal-container">
+			<BuyBonusDustBackground />
+			<BonusContentWrap maxListLength={Math.max(activateList.length, buyList.length)}>
+				{#snippet bonusCardsActivate()}
+					<BonusCards list={activateList} />
+				{/snippet}
 
-			{#snippet bonusCardsActivate()}
-				<BonusCards list={activateList} />
-			{/snippet}
-
-			{#snippet bonusCardsBuy()}
-				<BonusCards list={buyList} />
-			{/snippet}
-		</BonusContentWrap>
+				{#snippet bonusCardsBuy()}
+					<BonusCards list={buyList} />
+				{/snippet}
+			</BonusContentWrap>
+		</div>
 	</Popup>
 {/if}
 
 <style lang="scss">
-	// Ensure close button is visible and properly positioned on portrait layout
-	// Only apply to full-screen modals (not ones with noFullScreenOverlay)
-	:global(.pop-up-wrap:not(.no-fullscreen) .close-button-wrap) {
-		position: fixed !important;
-		top: 20px !important;
-		right: 20px !important;
-		z-index: 999999 !important;
+	.buy-bonus-modal-container {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
 	}
 
-	// Ensure close button is always on top and visible for full-screen modals
+	// Close button styling - no background
 	:global(.pop-up-wrap:not(.no-fullscreen) .close-button) {
-		background-color: rgba(0, 0, 0, 0.5) !important;
-		border-radius: 50% !important;
-		z-index: 999999 !important;
+		background-color: transparent !important;
 	}
 </style>

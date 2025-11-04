@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { stateBet, stateModal, type BetModeData } from 'state-shared';
+	import { stateBet, stateModal, stateUi, INFINITY_MARK, type BetModeData } from 'state-shared';
 	import { Button } from 'components-shared';
 	import { getContextEventEmitter } from 'utils-event-emitter';
 	import { numberToCurrencyString } from 'utils-shared/amount';
@@ -44,8 +44,28 @@
 			{#snippet button()}
 				<Button
 					onclick={() => {
-						stateBonus.selectedBetModeKey = betModeData.mode;
-						eventEmitter.broadcast({ type: 'buyBonusConfirm' });
+						// Set active bet mode for the initial purchase
+						stateBet.activeBetModeKey = betModeData.mode;
+						
+						// Close the buy bonus modal
+						stateModal.modal = null;
+						
+						// For 'buy' type, immediately place the bet
+						if (betModeData.type === 'buy') {
+							eventEmitter.broadcast({ type: 'bet' });
+							// Reset to BASE immediately after placing the buy bet
+							// This ensures subsequent spins during freespins use BASE mode
+							setTimeout(() => {
+								stateBet.activeBetModeKey = 'BASE';
+							}, 100);
+						}
+						
+						// For 'activate' type, set infinity limits (same as confirmation logic)
+						if (betModeData.type === 'activate') {
+							stateUi.autoSpinsLossLimitText = INFINITY_MARK;
+							stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
+						}
+						
 						eventEmitter.broadcast({ type: 'soundPressGeneral' });
 					}}
 					disabled={stateBet.betAmount <= 0 ||

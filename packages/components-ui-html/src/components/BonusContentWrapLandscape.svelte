@@ -9,7 +9,6 @@
 
 	type Props = {
 		maxListLength: number;
-		betAmount: Snippet;
 		bonusCardsActivate: Snippet;
 		bonusCardsBuy: Snippet;
 	};
@@ -27,44 +26,44 @@
 	const scale = $derived(Math.min(verticalScale, horizontalScale));
 </script>
 
-<BaseContent maxWidth="100%">
-	<div class="bonuses-wrap" use:resizeObserver={(value) => (contentRect = value)}>
-		<div class="bonuses" style="transform: scale({Math.min(scale, 1)});">
-			<BaseScrollable type="row" noScroll>
-				{@render props.bonusCardsActivate()}
-			</BaseScrollable>
+<div class="container">
+	<BaseContent maxWidth="100%">
+		<div class="bonuses-wrap" use:resizeObserver={(value) => (contentRect = value)} style="position: relative; z-index: 10;">
+			<div class="bonuses" style="transform: scale({Math.min(scale, 1)});">
+				<BaseScrollable type="row" noScroll>
+					{@render props.bonusCardsActivate()}
+				</BaseScrollable>
 
-			<BaseScrollable type="row" noScroll>
-				{@render props.bonusCardsBuy()}
-			</BaseScrollable>
+				<BaseScrollable type="row" noScroll>
+					{@render props.bonusCardsBuy()}
+				</BaseScrollable>
+			</div>
 		</div>
-	</div>
-
-	<div class="badge-amount-wrap">
-		{@render props.betAmount()}
-	</div>
-</BaseContent>
+	</BaseContent>
+</div>
 
 <style lang="scss">
+	.container {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
 	.bonuses-wrap {
-		position: absolute;
-		left: 50%;
-		top: 50%;
-		transform: translate(calc(-50% - 7rem), -50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.bonuses {
 		display: flex;
 		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		gap: 1rem;
 
 		transform-origin: center center;
-	}
-
-	.badge-amount-wrap {
-		position: fixed;
-		top: calc(50% + 1.2rem);
-		right: 1rem;
-		transform: translateY(-50%);
 	}
 </style>

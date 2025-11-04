@@ -5,7 +5,7 @@
 	import BaseScrollable from './BaseScrollable.svelte';
 
 	type Props = {
-		betAmount: Snippet;
+		maxListLength?: number; // Optional for compatibility with other wrap components
 		bonusCardsActivate: Snippet;
 		bonusCardsBuy: Snippet;
 	};
@@ -13,23 +13,30 @@
 	const props: Props = $props();
 </script>
 
-<BaseContent maxWidth="100%">
-	{@render props.betAmount()}
-
-	<BaseScrollable type="column">
-		<div class="bonuses-wrap">
+<div class="container">
+	<BaseContent maxWidth="100%">
+		<div class="bonuses-wrap" style="position: relative; z-index: 10;">
 			{@render props.bonusCardsActivate()}
 			{@render props.bonusCardsBuy()}
 		</div>
-	</BaseScrollable>
-</BaseContent>
+	</BaseContent>
+</div>
 
 <style lang="scss">
+	.container {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
 	.bonuses-wrap {
 		display: flex;
 		flex-direction: row;
 		gap: 1rem;
 		flex-wrap: wrap;
 		justify-content: center;
+		align-items: center;
 	}
 </style>
