@@ -82,6 +82,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
+		
+		// Add minimum delay to ensure each spin is visible (especially spins without wins)
+		// This prevents spins from being "skipped" visually when they process too quickly
+		if (isBonusGame) {
+			await new Promise(resolve => setTimeout(resolve, 500));
+		}
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		// Get current board state for S symbol expansion logic
@@ -296,6 +302,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			if (reelSymbol.rawSymbol.name === 'S') {
 				// reelPosition represents expansion level (0-4) based on which visible row (1-5)
 				reelSymbol.rawSymbol.reelPosition = position.row - 1;
+				
+				// Reset symbol state first to ensure animation re-triggers even if already in 'expand' state
+				reelSymbol.symbolState = 'postWinStatic';
+				
+				// Small delay to ensure state change is registered
+				await new Promise(resolve => setTimeout(resolve, 50));
+				
 				reelSymbol.symbolState = 'expand';
 				
 				const promise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));

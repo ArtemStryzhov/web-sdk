@@ -53,11 +53,10 @@
 						// For 'buy' type, immediately place the bet
 						if (betModeData.type === 'buy') {
 							eventEmitter.broadcast({ type: 'bet' });
-							// Reset to BASE immediately after placing the buy bet
-							// This ensures subsequent spins during freespins use BASE mode
-							setTimeout(() => {
-								stateBet.activeBetModeKey = 'BASE';
-							}, 100);
+							// Note: Don't reset to BASE here - let the bet request use the buy mode
+							// The mode will be automatically handled:
+							// - During resume: ResumeBet.svelte converts buy modes to BASE
+							// - After freespins end: freeSpinEnd handler resets to BASE
 						}
 						
 						// For 'activate' type, set infinity limits (same as confirmation logic)
