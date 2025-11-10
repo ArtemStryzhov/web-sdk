@@ -42,7 +42,7 @@
 			{@render props.amountWin({ stacked: true })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 300} x={1500} scale={0.8}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 300 - 140 - 15} x={1500 - 10} scale={0.8}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 

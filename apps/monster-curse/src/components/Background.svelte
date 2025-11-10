@@ -14,17 +14,20 @@
 	const isPortrait = $derived(layoutType === 'portrait');
 	
 	// Background layout props - show as much of the image as possible
-	// Desktop image: 4000x2880, Portrait: similar dimensions
-	// Strategy: Use "contain" fit to show full image, then scale up slightly to minimize letterboxing
+	// Desktop image: 3840x2160, Portrait: 750x1280
+	// Strategy: Use "contain" fit to show full image, then scale up slightly (5%) to minimize letterboxing
 	const canvasSize = $derived(context.stateLayoutDerived.canvasSizes());
 	
-	// Image dimensions
+	// Image dimensions - layout-specific
 	const imageDimensions = $derived(() => {
-		return { width: 4000, height: 2880 }; // Both desktop and portrait same size
+		if (isPortrait) {
+			return { width: 750, height: 1280 }; // Portrait dimensions
+		}
+		return { width: 3840, height: 2160 }; // Desktop dimensions
 	});
 	
-	// Calculate scale to fill entire screen (cover fit)
-	// This will crop/cut the image to fill all screen space
+	// Calculate scale to fill canvas width completely (no side letterboxes)
+	// This may crop top/bottom but ensures full width coverage
 	const backgroundScale = $derived(() => {
 		const img = imageDimensions();
 		const canvas = canvasSize;
@@ -33,14 +36,14 @@
 		const scaleWidth = canvas.width / img.width;
 		const scaleHeight = canvas.height / img.height;
 		
-		// Use the LARGER scale to ensure image covers entire screen (cover fit)
-		// This will crop parts of the image but fills the screen
-		const scale = Math.max(scaleWidth, scaleHeight);
+		// Use width scale to fill canvas width completely (no side letterboxes)
+		// Scale up by 5% to ensure full coverage and minimize any gaps
+		const scale = scaleWidth * 1.05;
 		return scale;
 	});
 	
-	// Apply scale directly to image dimensions for proper contain fit
-	// This ensures the entire background image is visible without cropping
+	// Apply scale directly to image dimensions to fill canvas width
+	// This ensures no side letterboxes, may crop top/bottom if aspect ratios differ
 	const backgroundProps = $derived(() => {
 		const scale = backgroundScale();
 		return {

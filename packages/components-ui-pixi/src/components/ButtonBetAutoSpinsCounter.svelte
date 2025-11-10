@@ -36,7 +36,7 @@
 		text={stateBet.autoSpinsCounter === Infinity ? '∞' : stateBet.autoSpinsCounter}
 		style={{
 			fontFamily: 'Kanit',
-			fill: 0xD8ECA6,
+			fill: 0xC53C3C,
 			fontWeight: 'bold',
 			fontSize: fontSizeMultiplier * UI_BASE_SIZE * 0.15,
 		}}

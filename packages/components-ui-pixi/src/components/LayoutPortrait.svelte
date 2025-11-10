@@ -79,8 +79,9 @@
 	<!-- drawer container -->
 	<Container y={drawerTween.current}>
 		<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.99 - 60}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 590}
+		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.99 - 100}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 390}
+			scale={0.8}
 		>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>

@@ -4,7 +4,7 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Text, REM, Container } from 'pixi-svelte';
+	import { App, Text, REM, Container, Sprite } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UI } from 'components-ui-pixi';
@@ -87,16 +87,29 @@
 {/snippet}
 
 {#snippet logoSnippet()}
-	<Text
-		anchor={{ x: 1, y: 0 }}
-		text="ADD YOUR LOGO"
-		style={{
-			fontFamily: 'Kanit',
-			fontSize: REM * 1.5,
-			fontWeight: '600',
-			lineHeight: REM * 2,
-			fill: 0xffffff,
-		}}
+	{@const boardLayout = context.stateGameDerived.boardLayout()}
+	{@const mainLayout = context.stateLayoutDerived.mainLayout()}
+	{@const canvasSizes = context.stateLayoutDerived.canvasSizes()}
+	{@const SPRITE_SCALE = { width: 1.18, height: 1.18 }}
+	{@const POSITION_ADJUSTMENT = 1.01 }
+	{@const frameWidth = boardLayout.width * SPRITE_SCALE.width}
+	{@const frameHeight = boardLayout.height * SPRITE_SCALE.height}
+	{@const centerX = boardLayout.x * POSITION_ADJUSTMENT}
+	{@const centerY = boardLayout.y * POSITION_ADJUSTMENT}
+	{@const frameRightMainX = centerX + frameWidth / 2}
+	{@const frameTopMainY = centerY - frameHeight / 2}
+	{@const frameRightCanvasX = mainLayout.x + (frameRightMainX - mainLayout.width / 2) * mainLayout.scale}
+	{@const frameTopCanvasY = mainLayout.y + (frameTopMainY - mainLayout.height / 2) * mainLayout.scale}
+	{@const containerX = canvasSizes.width - 20}
+	{@const logoX = frameRightCanvasX - containerX + 20}
+	{@const logoY = frameTopCanvasY}
+	<Sprite
+		x={logoX}
+		y={logoY}
+		anchor={{ x: 0, y: 0 }}
+		key="logo_s.png"
+		width={250}
+		height={129}
 	/>
 {/snippet}
 

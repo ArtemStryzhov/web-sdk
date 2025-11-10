@@ -18,21 +18,69 @@
 
 {#if stateModal.modal?.name === 'autoSpin'}
 	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)} noFullScreenOverlay allowClickOutsideToClose>
-		<BaseContent width="720px" height="420px">
-			<BaseTitle>
-				<div class="autoplay-title">{i18nDerived.autoSpins()}</div>
-			</BaseTitle>
-			<BaseScrollable type="column">
-				<AutoSpinsOptions />
-			</BaseScrollable>
-			<BaseButtonWrap type="full-width">
-				<AutoSpinsStartButton />
-			</BaseButtonWrap>
-		</BaseContent>
+		<div class="autoplay-modal-container">
+			<div class="autoplay-background"></div>
+			<BaseContent width="720px" height="420px">
+				<BaseTitle>
+					<div class="autoplay-title">{i18nDerived.autoSpins()}</div>
+				</BaseTitle>
+				<BaseScrollable type="column">
+					<AutoSpinsOptions />
+				</BaseScrollable>
+				<BaseButtonWrap type="full-width">
+					<AutoSpinsStartButton />
+				</BaseButtonWrap>
+			</BaseContent>
+		</div>
 	</Popup>
 {/if}
 
 <style lang="scss">
+	.autoplay-modal-container {
+		position: relative;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 100%;
+		height: 100%;
+
+		:global(.ui-popup-standard-content-wrap) {
+			position: relative;
+			z-index: 1;
+		}
+	}
+
+	.autoplay-background {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 720px;
+		height: 420px;
+		background-color: rgba(20, 20, 23, 0.95);
+		border-radius: 12px;
+		z-index: 0;
+
+		// Responsive sizing to match BaseContent
+		@media (max-width: 480px) {
+			width: 95vw;
+			height: auto;
+			min-height: auto;
+		}
+
+		@media (max-width: 768px) {
+			width: 90vw;
+			height: auto;
+			min-height: auto;
+		}
+
+		@media (max-width: 1024px) {
+			width: 80vw;
+			height: auto;
+			min-height: auto;
+		}
+	}
+
 	.autoplay-title {
 		font-family: 'Kanit', Arial, sans-serif !important;
 		font-size: 55px !important;
