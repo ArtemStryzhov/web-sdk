@@ -1,28 +1,29 @@
 <script lang="ts">
 	import { Text, Sprite } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
-	import { stateModal, stateBet, stateBetDerived } from 'state-shared';
+	import { stateModal, stateBet, stateBetDerived, stateUi } from 'state-shared';
 
-	import { UI_BASE_SIZE, UI_BASE_FONT_SIZE } from '../constants';
-	import { getContext } from '../context';
-	import { i18nDerived } from '../i18n/i18nDerived';
+	import { getContext } from '../game/context';
+	import { SYMBOL_SIZE } from '../game/constants';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
-	const { stateXstateDerived, eventEmitter } = context;
+	const { stateXstateDerived, eventEmitter, stateGame, i18nDerived } = context;
 	
-	// Button sizing - increased by 2x
+	console.log('[ButtonBuyBonus] CUSTOM COMPONENT LOADED!');
+	
+	// Button sizing - increased by 2x (base size is SYMBOL_SIZE)
+	const UI_BASE_SIZE = SYMBOL_SIZE;
+	const UI_BASE_FONT_SIZE = SYMBOL_SIZE * 0.2;
 	const sizes = { width: UI_BASE_SIZE * 2, height: UI_BASE_SIZE * 2 };
 	const disabled = $derived(!stateXstateDerived.isIdle());
 	const active = $derived(stateBetDerived.activeBetMode()?.type === 'activate');
 
-	// Check if we're in a free spin game (only if stateGameDerived exists)
-	// @ts-ignore - stateGameDerived may not exist in shared context
-	const stateGameDerived = context.stateGameDerived;
-	const isFreeSpinGame = $derived(stateGameDerived?.gameType?.() === 'freegame');
+	// Check if we're in a free spin game
+	const isFreeSpinGame = $derived(stateGame.gameType === 'freegame');
 	const freeSpinsLeft = $derived(
-		isFreeSpinGame && stateGameDerived?.freeSpin?.()
-			? stateGameDerived.freeSpin().total - stateGameDerived.freeSpin().amount
+		isFreeSpinGame && stateUi.freeSpinCounterTotal && stateUi.freeSpinCounterCurrent
+			? stateUi.freeSpinCounterTotal - stateUi.freeSpinCounterCurrent + 1
 			: 0
 	);
 
@@ -57,6 +58,18 @@
 		if (state === 'active') return i18nDerived.disable();
 		if (isFreeSpinGame) return `FREE SPINS ${freeSpinsLeft}`;
 		return i18nDerived.buyBonus();
+	});
+	
+	// Debug logging
+	$effect(() => {
+		console.log('[ButtonBuyBonus] State:', {
+			gameType: stateGame.gameType,
+			isFreeSpinGame,
+			freeSpinCounterTotal: stateUi.freeSpinCounterTotal,
+			freeSpinCounterCurrent: stateUi.freeSpinCounterCurrent,
+			freeSpinsLeft,
+			buttonText
+		});
 	});
 </script>
 
@@ -93,9 +106,10 @@
 				wordWrapWidth: sizes.width * 0.8,
 				fontFamily: 'Kanit, Arial, sans-serif',
 				fontWeight: '600',
-				fontSize: UI_BASE_FONT_SIZE * 1,
+				fontSize: UI_BASE_FONT_SIZE * 0.9,
 				fill: 0x61E5FF,
 			}}
 		/>
 	{/snippet}
 </Button>
+

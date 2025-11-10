@@ -25,13 +25,17 @@
 	$effect(() => {
 		const currentState = props.reelSymbol.symbolState;
 		// Force the symbol to complete after a delay if it doesn't complete normally
-		if (currentState === 'win' && props.reelSymbol.oncomplete) {
+		// This prevents infinite hangs for both 'win' and 'expand' states
+		if ((currentState === 'win' || currentState === 'expand') && props.reelSymbol.oncomplete) {
 			// Give normal completion 3 seconds to work, then force complete
-			setTimeout(() => {
-				if (props.reelSymbol.symbolState === 'win' && props.reelSymbol.oncomplete) {
+			const timeoutId = setTimeout(() => {
+				if ((props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'expand') && props.reelSymbol.oncomplete) {
 					props.reelSymbol.oncomplete();
 				}
 			}, 3000);
+			
+			// Cleanup timeout if component unmounts or state changes
+			return () => clearTimeout(timeoutId);
 		}
 	});
 </script>

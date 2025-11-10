@@ -13,18 +13,56 @@
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
 	
-	// Background layout props - use appropriate layout for device orientation
-	const backgroundProps = $derived(() => {
-		return isPortrait 
-			? context.stateLayoutDerived.portraitBackgroundLayout({ scale: 0.5 })
-			: context.stateLayoutDerived.normalBackgroundLayout({ scale: 0.5 });
+	// Background layout props - show as much of the image as possible
+	// Desktop image: 4000x2880, Portrait: similar dimensions
+	// Strategy: Use "contain" fit to show full image, then scale up slightly to minimize letterboxing
+	const canvasSize = $derived(context.stateLayoutDerived.canvasSizes());
+	
+	// Image dimensions
+	const imageDimensions = $derived(() => {
+		return { width: 4000, height: 2880 }; // Both desktop and portrait same size
 	});
 	
-	// Background asset keys based on layout (base game only)
+	// Calculate scale to fill entire screen (cover fit)
+	// This will crop/cut the image to fill all screen space
+	const backgroundScale = $derived(() => {
+		const img = imageDimensions();
+		const canvas = canvasSize;
+		
+		// Calculate scale for width and height separately
+		const scaleWidth = canvas.width / img.width;
+		const scaleHeight = canvas.height / img.height;
+		
+		// Use the LARGER scale to ensure image covers entire screen (cover fit)
+		// This will crop parts of the image but fills the screen
+		const scale = Math.max(scaleWidth, scaleHeight);
+		return scale;
+	});
+	
+	// Apply scale directly to image dimensions for proper contain fit
+	// This ensures the entire background image is visible without cropping
+	const backgroundProps = $derived(() => {
+		const scale = backgroundScale();
+		return {
+			x: canvasSize.width / 2,
+			y: canvasSize.height / 2,
+			width: imageDimensions().width * scale,
+			height: imageDimensions().height * scale,
+			anchor: { x: 0.5, y: 0.5 },
+		};
+	});
+	// Track game type for background switching
+	const isFeatureGame = $derived(context.stateGame.gameType === 'freegame');
+	// Background asset keys - switch between base and feature backgrounds
 	const backgroundKey = $derived(() => {
 		const layoutSuffix = isPortrait ? 'Portrait' : 'Desktop';
-		return `background${layoutSuffix}`;
+		const prefix = isFeatureGame ? 'backgroundFeature' : 'background';
+		return `${prefix}${layoutSuffix}`;
 	});
+	
+	// Foreground animation key - switch between base and feature animations
+	const foregroundKey = $derived(isFeatureGame ? 'foregroundFeatureAnimation' : 'foregroundAnimation');
+
 
 	// Random rune positions - generate on mount
 	let runePositions = $state<Array<{x: number, y: number, delay: number}>>([]);
@@ -48,11 +86,11 @@
 <!-- Base Game Background -->
 <FadeContainer show={true} duration={SECOND} zIndex={-2}>
 	<!-- Static Background Layer (responsive) -->
-	<Sprite key={backgroundKey()} {...backgroundProps} zIndex={-2} />
+	<Sprite key={backgroundKey()} {...backgroundProps()} zIndex={-2} />
 	
 	<!-- Dust Effects Layer -->
 	<SpineProvider 
-		key="foregroundAnimation" 
+		key={foregroundKey} 
 		x={400}
 		y={300}
 		width={800}
@@ -66,7 +104,7 @@
 	<!-- Random Runes Layers - Multiple instances at random positions -->
 	{#each runePositions as position, i}
 		<SpineProvider 
-			key="foregroundAnimation" 
+			key={foregroundKey} 
 			x={position.x}
 			y={position.y}
 			width={600}

@@ -69,10 +69,10 @@ export default {
 		src: new URL('../../assets/sprites/vector-gray.png', import.meta.url).href,
 		preload: true,
 	},
-	// TODO: Replace with proper buy-bonus.png asset when available
-	buyBonus: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/play.png', import.meta.url).href, // Temporary placeholder
+	// Common spritesheet sprites
+	common: {
+		type: 'sprites',
+		src: new URL('../../assets/sprites/common/spritesheet.json', import.meta.url).href,
 		preload: true,
 	},
 	loader: {
@@ -256,7 +256,7 @@ export default {
 	// Static backgrounds for responsive layouts
 	backgroundDesktop: {
 		type: 'sprite',
-		src: new URL('../../assets/spines/foregroundAnimation/background/desktop/background_desktop.png', import.meta.url).href,
+		src: new URL('../../assets/spines/foregroundAnimation/background/desktop/background_desktop.jpg', import.meta.url).href,
 		preload: true,
 	},
 	backgroundPortrait: {
@@ -266,7 +266,7 @@ export default {
 	},
 	backgroundFeatureDesktop: {
 		type: 'sprite', 
-		src: new URL('../../assets/spines/foregroundFeatureAnimation/background/desktop/background_desktop.png', import.meta.url).href,
+		src: new URL('../../assets/spines/foregroundFeatureAnimation/background/desktop/background_desktop.jpg', import.meta.url).href,
 		preload: true,
 	},
 	backgroundFeaturePortrait: {
@@ -307,14 +307,6 @@ export default {
 		src: {
 			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/tumbleWin/tumble_win.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	reelhouse: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/reelhouse/reelhouse_glow.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/reelhouse/reelhouse_glow.json', import.meta.url).href,
 			scale: 2,
 		},
 	},

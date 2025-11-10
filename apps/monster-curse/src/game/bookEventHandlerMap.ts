@@ -196,7 +196,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		stateGame.gameType = 'freegame';
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		eventEmitter.broadcast({ type: 'boardFrameGlowShow' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
 		eventEmitter.broadcast({
@@ -227,7 +226,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.gameType = 'basegame';
 		// Reset bet mode to BASE after freespins complete
 		stateBet.activeBetModeKey = 'BASE';
-		eventEmitter.broadcast({ type: 'boardFrameGlowHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
 		winLevelSoundsPlay({ winLevelData });
@@ -297,7 +295,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const { waitForResolve } = await import('utils-shared/wait');
 		
 		for (const position of bookEvent.stickyPositions) {
-			const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+			const reelSymbol = stateGame.board[position.reel]?.reelState?.symbols?.[position.row];
+			
+			if (!reelSymbol) {
+				continue;
+			}
 			
 			if (reelSymbol.rawSymbol.name === 'S') {
 				// reelPosition represents expansion level (0-4) based on which visible row (1-5)
@@ -311,8 +313,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				
 				reelSymbol.symbolState = 'expand';
 				
-				const promise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));
-				await promise;
+				// Wait for animation with timeout protection (5 seconds max)
+				const animationPromise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));
+				const timeoutPromise = new Promise<void>(resolve => {
+					setTimeout(() => resolve(), 5000);
+				});
+				await Promise.race([animationPromise, timeoutPromise]);
 				
 				reelSymbol.symbolState = 'static';
 			}
@@ -320,7 +326,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	swordExpandEvent: async (bookEvent: BookEventOfType<'swordExpandEvent'>) => {
 		const { reel, swordRow, expandedRows, multiplier } = bookEvent;
-		const reelSymbol = stateGame.board[reel].reelState.symbols[swordRow];
+		
+		const reelSymbol = stateGame.board[reel]?.reelState?.symbols?.[swordRow];
+		
+		// Safety check - ensure symbol exists
+		if (!reelSymbol) {
+			return;
+		}
 		
 		// Import utility functions
 		const { calculateSSymbolCollectedMultiplier } = await import('./utils');
@@ -361,10 +373,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Update to backend multiplier value (the authoritative value)
 		reelSymbol.rawSymbol.collectedMultiplier = multiplier;
 		
-		// Wait for expansion animation to complete (Board.svelte will set the state)
-		await eventEmitter.broadcastAsync({
+		// Set symbol to expand state to trigger animation
+		reelSymbol.symbolState = 'expand';
+		
+		// Wait for expansion animation to complete with timeout protection
+		// Use a race between animation complete and timeout to prevent infinite hangs
+		const animationPromise = eventEmitter.broadcastAsync({
 			type: 'boardWithAnimateSymbols',
 			symbolPositions: [{ reel, row: swordRow }]
 		});
+		const timeoutPromise = new Promise(resolve => {
+			setTimeout(() => resolve(undefined), 5000);
+		});
+		
+		await Promise.race([animationPromise, timeoutPromise]);
 	},
 };

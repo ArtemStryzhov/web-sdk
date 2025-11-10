@@ -7,7 +7,7 @@
 	import { App, Text, REM, Container } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
-	import { UI, UiGameName } from 'components-ui-pixi';
+	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -28,6 +28,8 @@
 	import Transition from './Transition.svelte';
 	import I18nTest from './I18nTest.svelte';
 	import BottomGradient from './BottomGradient.svelte';
+	import LabelBet from './LabelBet.svelte';
+	import ButtonBuyBonus from './ButtonBuyBonus.svelte';
 
 	const context = getContext();
 
@@ -40,7 +42,7 @@
 	});
 </script>
 
-<App assets={assets}>
+<App>
 	<EnableSound />
 	<EnableHotkey />
 	<EnableGameActor />
@@ -72,9 +74,9 @@
 				<BottomGradient />
 
 				<Container zIndex={10}>
-		<UI>
+		<UI {...({} as any)}>
 			{#snippet gameName()}
-				<UiGameName name="MONSTER CURSE" />
+				<!-- Removed: Time and game name display -->
 			{/snippet}
 			{#snippet logo()}
 				<Text
@@ -89,14 +91,18 @@
 					}}
 				/>
 			{/snippet}
+			{#snippet amountBet(labelProps: any)}
+				<LabelBet {...labelProps} />
+			{/snippet}
+			{#snippet buttonBuyBonus(buttonProps: any)}
+				<ButtonBuyBonus {...buttonProps} />
+			{/snippet}
 		</UI>
 	</Container>
 
 		<Win />
 		<FreeSpinIntro />
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-			<FreeSpinCounter />
-		{/if}
+		<!-- Removed FreeSpinCounter - freespin count now shown on buy bonus button -->
 		<FreeSpinOutro />
 		<Transition />
 		{#if false}

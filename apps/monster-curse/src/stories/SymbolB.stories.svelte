@@ -17,7 +17,6 @@
 	import { SYMBOL_STATES } from '../game/types';
 	import assets from '../game/assets';
 
-	// Use default assets (B_animation loaded manually in component)
 	const bAssets = assets;
 
 	const SYMBOL_SIZE = 150;

@@ -72,7 +72,7 @@ export const createLayout = (layoutOptions: {
 			// console.log(`   📱 Size Type: largeTablet (≤${CANVAS_SIZE_TYPE_BREAK_POINTS.largeTablet}px)`);
 			return 'largeTablet' as const;
 		}
-		console.log(`   📱 Size Type: desktop (>${CANVAS_SIZE_TYPE_BREAK_POINTS.largeTablet}px)`);
+		// console.log(`   📱 Size Type: desktop (>${CANVAS_SIZE_TYPE_BREAK_POINTS.largeTablet}px)`);
 		return 'desktop' as const;
 	};
 	const layoutType = () => {

@@ -42,39 +42,41 @@
 			{/snippet}
 
 			{#snippet button()}
-				<Button
-					onclick={() => {
-						// Set active bet mode for the initial purchase
-						stateBet.activeBetModeKey = betModeData.mode;
-						
-						// Close the buy bonus modal
-						stateModal.modal = null;
-						
-						// For 'buy' type, immediately place the bet
-						if (betModeData.type === 'buy') {
-							eventEmitter.broadcast({ type: 'bet' });
-							// Note: Don't reset to BASE here - let the bet request use the buy mode
-							// The mode will be automatically handled:
-							// - During resume: ResumeBet.svelte converts buy modes to BASE
-							// - After freespins end: freeSpinEnd handler resets to BASE
-						}
-						
-						// For 'activate' type, set infinity limits (same as confirmation logic)
-						if (betModeData.type === 'activate') {
-							stateUi.autoSpinsLossLimitText = INFINITY_MARK;
-							stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
-						}
-						
-						eventEmitter.broadcast({ type: 'soundPressGeneral' });
-					}}
-					disabled={stateBet.betAmount <= 0 ||
-						stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
-				>
-					<BaseIcon width="100%" height="2rem" border="2px solid white;" />
-					<BaseButtonContent>
-						<span style="font-size: 1rem;">{betModeData.text.button}</span>
-					</BaseButtonContent>
-				</Button>
+				<div class="button-container">
+					<Button
+						onclick={() => {
+							// Set active bet mode for the initial purchase
+							stateBet.activeBetModeKey = betModeData.mode;
+							
+							// Close the buy bonus modal
+							stateModal.modal = null;
+							
+							// For 'buy' type, immediately place the bet
+							if (betModeData.type === 'buy') {
+								eventEmitter.broadcast({ type: 'bet' });
+								// Note: Don't reset to BASE here - let the bet request use the buy mode
+								// The mode will be automatically handled:
+								// - During resume: ResumeBet.svelte converts buy modes to BASE
+								// - After freespins end: freeSpinEnd handler resets to BASE
+							}
+							
+							// For 'activate' type, set infinity limits (same as confirmation logic)
+							if (betModeData.type === 'activate') {
+								stateUi.autoSpinsLossLimitText = INFINITY_MARK;
+								stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
+							}
+							
+							eventEmitter.broadcast({ type: 'soundPressGeneral' });
+						}}
+						disabled={stateBet.betAmount <= 0 ||
+							stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
+					>
+						<div class="button-background"></div>
+						<BaseButtonContent>
+							<span class="button-text">{betModeData.text.button}</span>
+						</BaseButtonContent>
+					</Button>
+				</div>
 			{/snippet}
 		</BonusCard>
 	{/if}
@@ -105,5 +107,36 @@
 		line-height: 1rem;
 		text-align: center;
 		white-space: nowrap;
+	}
+
+	.button-container {
+		position: relative;
+		width: 100%;
+	}
+
+	.button-background {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-image: url('/assets/sprites/common/buy_button_active.png');
+		background-size: contain;
+		background-position: center;
+		background-repeat: no-repeat;
+		z-index: 0;
+		pointer-events: none;
+	}
+
+	.button-text {
+		position: relative;
+		z-index: 1;
+		font-family: 'Lalezar', sans-serif;
+		font-weight: 400;
+		font-style: normal;
+		font-size: 47px;
+		line-height: 100%;
+		text-align: center;
+		color: #61E5FF;
 	}
 </style>

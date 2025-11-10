@@ -28,6 +28,8 @@
 	type Props = {
 		gameName: Snippet;
 		logo: Snippet;
+		gameType?: 'basegame' | 'freegame';
+		freeSpinsLeft?: number;
 	};
 
 	const props: Props = $props();
@@ -69,7 +71,7 @@
 		{/snippet}
 
 		{#snippet buttonBuyBonus(buttonProps)}
-			<ButtonBuyBonus {...buttonProps} />
+			<ButtonBuyBonus {...buttonProps} gameType={props.gameType} freeSpinsLeft={props.freeSpinsLeft} />
 		{/snippet}
 
 		{#snippet buttonBet(buttonProps)}

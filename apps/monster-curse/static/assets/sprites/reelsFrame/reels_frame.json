@@ -2,18 +2,27 @@
 
 "frame_edge.png":
 {
-	"frame": {"x":0,"y":0,"w":968,"h":833},
+	"frame": {"x":971,"y":1,"w":968,"h":833},
 	"rotated": false,
 	"trimmed": false,
-	"spriteSourceSize": {"x":968,"y":833,"w":968,"h":833},
+	"spriteSourceSize": {"x":0,"y":0,"w":968,"h":833},
 	"sourceSize": {"w":968,"h":833}
-}},
+},
+"frame_bg.png":
+{
+	"frame": {"x":1,"y":1,"w":968,"h":833},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":968,"h":833},
+	"sourceSize": {"w":968,"h":833}
+}
+},
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
 	"image": "reels_frame.png",
 	"format": "RGBA8888",
-	"size": {"w":968,"h":833},
+	"size": {"w":1940,"h":835},
 	"scale": "1",
 	"smartupdate": "$TexturePacker:SmartUpdate:ccba473d33b64dbf3093bde48c9d4388:6eeb6e6aa1d7364c1c9642975131a6ef:15f17eecb1594ebad2c1064eb9be837b$"
 }
