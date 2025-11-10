@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Text, Sprite } from 'pixi-svelte';
+	import { Text, Sprite, Container } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateModal, stateBet, stateBetDerived, stateUi } from 'state-shared';
 
@@ -10,12 +10,9 @@
 	const context = getContext();
 	const { stateXstateDerived, eventEmitter, stateGame, i18nDerived } = context;
 	
-	console.log('[ButtonBuyBonus] CUSTOM COMPONENT LOADED!');
-	
-	// Button sizing - increased by 2x (base size is SYMBOL_SIZE)
+	// Button sizing
 	const UI_BASE_SIZE = SYMBOL_SIZE;
-	const UI_BASE_FONT_SIZE = SYMBOL_SIZE * 0.2;
-	const sizes = { width: UI_BASE_SIZE * 2, height: UI_BASE_SIZE * 2 };
+	const sizes = { width: UI_BASE_SIZE * 3, height: UI_BASE_SIZE * 3 };
 	const disabled = $derived(!stateXstateDerived.isIdle());
 	const active = $derived(stateBetDerived.activeBetMode()?.type === 'activate');
 
@@ -51,26 +48,6 @@
 		if (value.active) return 'active' as const;
 		return 'default' as const;
 	};
-	
-	// Get button text based on state
-	const buttonText = $derived.by(() => {
-		const state = getState({ active, disabled, hovered: false, pressed: false });
-		if (state === 'active') return i18nDerived.disable();
-		if (isFreeSpinGame) return `FREE SPINS ${freeSpinsLeft}`;
-		return i18nDerived.buyBonus();
-	});
-	
-	// Debug logging
-	$effect(() => {
-		console.log('[ButtonBuyBonus] State:', {
-			gameType: stateGame.gameType,
-			isFreeSpinGame,
-			freeSpinCounterTotal: stateUi.freeSpinCounterTotal,
-			freeSpinCounterCurrent: stateUi.freeSpinCounterCurrent,
-			freeSpinsLeft,
-			buttonText
-		});
-	});
 </script>
 
 <Button {...props} {sizes} {disabled} {onpress}>
@@ -95,21 +72,79 @@
 			height={sizes.height}
 		/>
 
-		<!-- Button text with #61E5FF color -->
-		<Text
-			{...center}
-			anchor={0.5}
-			text={buttonText}
-			style={{
-				align: 'center',
-				wordWrap: true,
-				wordWrapWidth: sizes.width * 0.8,
-				fontFamily: 'Kanit, Arial, sans-serif',
-				fontWeight: '600',
-				fontSize: UI_BASE_FONT_SIZE * 0.9,
-				fill: 0x61E5FF,
-			}}
-		/>
+		<!-- Button text - split styling for FREE SPINS vs number -->
+		{#if isFreeSpinGame}
+			<!-- FREE SPINS text (top) -->
+			<Text
+				x={center.x}
+				y={center.y - 36}
+				anchor={0.5}
+				text="FREE SPINS"
+				style={{
+					align: 'center',
+					fontFamily: 'Kanit, Arial, sans-serif',
+					fontWeight: '600',
+					fontSize: 32,
+					fill: 0xB5D36B,
+				}}
+			/>
+			<!-- Number (bottom) -->
+			<Text
+				x={center.x}
+				y={center.y + 36}
+				anchor={0.5}
+				text={String(freeSpinsLeft)}
+				style={{
+					align: 'center',
+					fontFamily: 'Kanit, Arial, sans-serif',
+					fontWeight: '600',
+					fontSize: 100,
+					fill: 0xD9D9D9,
+				}}
+			/>
+		{:else if state === 'active'}
+			<!-- DISABLE text -->
+			<Text
+				{...center}
+				anchor={0.5}
+				text={i18nDerived.disable()}
+				style={{
+					align: 'center',
+					fontFamily: 'Kanit, Arial, sans-serif',
+					fontWeight: '600',
+					fontSize: 46,
+					fill: 0x61E5FF,
+				}}
+			/>
+		{:else}
+			<!-- BUY BONUS text - stacked on two lines -->
+			<Text
+				x={center.x}
+				y={center.y - 23}
+				anchor={0.5}
+				text="BUY"
+				style={{
+					align: 'center',
+					fontFamily: 'Kanit, Arial, sans-serif',
+					fontWeight: '600',
+					fontSize: 46,
+					fill: 0x61E5FF,
+				}}
+			/>
+			<Text
+				x={center.x}
+				y={center.y + 23}
+				anchor={0.5}
+				text="BONUS"
+				style={{
+					align: 'center',
+					fontFamily: 'Kanit, Arial, sans-serif',
+					fontWeight: '600',
+					fontSize: 46,
+					fill: 0x61E5FF,
+				}}
+			/>
+		{/if}
 	{/snippet}
 </Button>
 

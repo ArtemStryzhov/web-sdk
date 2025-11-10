@@ -28,8 +28,9 @@
 	type Props = {
 		gameName: Snippet;
 		logo: Snippet;
-		gameType?: 'basegame' | 'freegame';
-		freeSpinsLeft?: number;
+		// Optional snippet overrides
+		amountBet?: Snippet<[any]>;
+		buttonBuyBonus?: Snippet<[any]>;
 	};
 
 	const props: Props = $props();
@@ -67,11 +68,19 @@
 		{/snippet}
 
 		{#snippet amountBet(labelProps)}
-			<LabelBet {...labelProps} />
+			{#if props.amountBet}
+				{@render props.amountBet(labelProps)}
+			{:else}
+				<LabelBet {...labelProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet buttonBuyBonus(buttonProps)}
-			<ButtonBuyBonus {...buttonProps} gameType={props.gameType} freeSpinsLeft={props.freeSpinsLeft} />
+			{#if props.buttonBuyBonus}
+				{@render props.buttonBuyBonus(buttonProps)}
+			{:else}
+				<ButtonBuyBonus {...buttonProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet buttonBet(buttonProps)}

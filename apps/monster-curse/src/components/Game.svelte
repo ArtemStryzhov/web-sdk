@@ -70,35 +70,43 @@
 			<Anticipations />
 		</MainContainer>
 
-				<!-- Bottom gradient background - renders behind UI buttons -->
-				<BottomGradient />
+		<!-- Bottom gradient background - renders behind UI buttons -->
+		<BottomGradient />
 
-				<Container zIndex={10}>
-		<UI {...({} as any)}>
-			{#snippet gameName()}
-				<!-- Removed: Time and game name display -->
-			{/snippet}
-			{#snippet logo()}
-				<Text
-					anchor={{ x: 1, y: 0 }}
-					text="ADD YOUR LOGO"
-					style={{
-						fontFamily: 'Kanit',
-						fontSize: REM * 1.5,
-						fontWeight: '600',
-						lineHeight: REM * 2,
-						fill: 0xffffff,
-					}}
-				/>
-			{/snippet}
-			{#snippet amountBet(labelProps: any)}
-				<LabelBet {...labelProps} />
-			{/snippet}
-			{#snippet buttonBuyBonus(buttonProps: any)}
-				<ButtonBuyBonus {...buttonProps} />
-			{/snippet}
-		</UI>
+		<Container zIndex={10}>
+		<UI
+			gameName={gameNameSnippet}
+			logo={logoSnippet}
+			amountBet={amountBetSnippet}
+			buttonBuyBonus={buttonBuyBonusSnippet}
+		/>
 	</Container>
+
+{#snippet gameNameSnippet()}
+	<!-- Removed: Time and game name display -->
+{/snippet}
+
+{#snippet logoSnippet()}
+	<Text
+		anchor={{ x: 1, y: 0 }}
+		text="ADD YOUR LOGO"
+		style={{
+			fontFamily: 'Kanit',
+			fontSize: REM * 1.5,
+			fontWeight: '600',
+			lineHeight: REM * 2,
+			fill: 0xffffff,
+		}}
+	/>
+{/snippet}
+
+{#snippet amountBetSnippet(labelProps: any)}
+	<LabelBet {...labelProps} />
+{/snippet}
+
+{#snippet buttonBuyBonusSnippet(buttonProps: any)}
+	<ButtonBuyBonus {...buttonProps} />
+{/snippet}
 
 		<Win />
 		<FreeSpinIntro />
