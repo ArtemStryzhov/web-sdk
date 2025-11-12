@@ -75,18 +75,13 @@ export default {
 		src: new URL('../../assets/sprites/common/spritesheet.json', import.meta.url).href,
 		preload: true,
 	},
-	loader: {
+	stones: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/loader/loader.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/loader/loader.json', import.meta.url).href,
+			atlas: new URL('../../assets/spines/stones/stones.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/stones/stones.json', import.meta.url).href,
 			scale: 2,
 		},
-		preload: true,
-	},
-	pressToContinueText: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url).href,
 		preload: true,
 	},
 	H1: {
@@ -221,38 +216,6 @@ export default {
 			scale: 2,
 		},
 	},
-	globalMultiplier: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/globalMultiplier/multiframe.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/globalMultiplier/multiframe.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsIntro: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsIntroNumber: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen_number.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	fsOutroNumber: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_total_number.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
 	// Static backgrounds for responsive layouts
 	backgroundDesktop: {
 		type: 'sprite',
@@ -293,22 +256,6 @@ export default {
 			scale: 2,
 		},
 		preload: true,
-	},
-	tumble_multiplier: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/tumbleWin/tumble_multiplier.json', import.meta.url).href,
-			scale: 2,
-		},
-	},
-	tumble_win: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/tumbleWin/tumble_win.json', import.meta.url).href,
-			scale: 2,
-		},
 	},
 	progressBar: {
 		type: 'sprites',

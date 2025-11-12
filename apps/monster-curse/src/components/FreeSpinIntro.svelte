@@ -53,7 +53,8 @@
 				key="freespins_{stateUrlDerived.lang()}.png"
 			/>
 
-			<SpineProvider key="fsIntroNumber" width={sizes.width * 0.3}>
+			<!-- SpineProvider disabled - fsIntroNumber assets deleted -->
+			<!-- <SpineProvider key="fsIntroNumber" width={sizes.width * 0.3}>
 				<SpineTrack
 					trackIndex={0}
 					{animationName}
@@ -73,7 +74,7 @@
 						}}
 					/>
 				</SpineSlot>
-			</SpineProvider>
+			</SpineProvider> -->
 
 			<Sprite anchor={{ x: 0.5, y: -3 }} width={183 * 2.2} height={42 * 2.2} key="freespins.png" />
 		{/snippet}

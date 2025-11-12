@@ -47,71 +47,47 @@
 	let previousMultiplier = new Tween(1);
 	let oncomplete = $state(() => {});
 
-	context.eventEmitter.subscribeOnMount({
-		globalMultiplierShow: () => (show = true),
-		globalMultiplierHide: () => (show = false),
-		globalMultiplierUpdate: async (emitterEvent) => {
-			if (emitterEvent.multiplier === 1 && multiplier !== 1) {
-				animationName = 'reset';
-				await waitForTimeout(300);
-				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_reset' });
-				previousMultiplier.set(emitterEvent.multiplier);
-			}
-
-			if (emitterEvent.multiplier > multiplier) {
-				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_update' });
-				animationName = 'increment';
-			}
-
-			if (animationName !== 'static') {
-				multiplier = emitterEvent.multiplier;
-				// Complete immediately to prevent hanging
-				oncomplete();
-				animationName = 'static';
-				previousMultiplier.set(multiplier, { duration: 0 });
-				// await waitForResolve((resolve) => (oncomplete = resolve));
-			}
-		},
-	});
+	// Event handlers disabled - globalMultiplier assets deleted
+	// context.eventEmitter.subscribeOnMount({
+	// 	globalMultiplierShow: () => (show = true),
+	// 	globalMultiplierHide: () => (show = false),
+	// 	globalMultiplierUpdate: async (emitterEvent) => {
+	// 		if (emitterEvent.multiplier === 1 && multiplier !== 1) {
+	// 			animationName = 'reset';
+	// 			await waitForTimeout(300);
+	// 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_reset' });
+	// 			previousMultiplier.set(emitterEvent.multiplier);
+	// 		}
+	// 		if (emitterEvent.multiplier > multiplier) {
+	// 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_update' });
+	// 			animationName = 'increment';
+	// 		}
+	//
+	// 		if (animationName !== 'static') {
+	// 			multiplier = emitterEvent.multiplier;
+	// 			// Complete immediately to prevent hanging
+	// 			oncomplete();
+	// 			animationName = 'static';
+	// 			previousMultiplier.set(multiplier, { duration: 0 });
+	// 			// await waitForResolve((resolve) => (oncomplete = resolve));
+	// 		}
+	// 	},
+	// });
 </script>
 
 <FadeContainer {show}>
 	<BoardContainer>
 		<Container {...position} {scale}>
-			<SpineProvider key="globalMultiplier" width={PANEL_WIDTH}>
-				<SpineTrack
-					trackIndex={0}
-					{animationName}
-					timeScale={stateBetDerived.timeScale()}
-					listener={{
-						complete: () => {
-							oncomplete();
-						},
-					}}
-				/>
-				<SpineEventEmitterProvider>
-					<SpineSlot slotName="slot_multi">
-						<BitmapText
-							anchor={0.5}
-							text={`${Math.round(previousMultiplier.current)}×`}
-							style={{
-								fontFamily: 'gold',
-								fontSize: SYMBOL_SIZE * 5.2,
-							}}
-						/>
-					</SpineSlot>
-					<SpineSlot slotName="slot_multi_next">
-						<BitmapText
-							anchor={0.5}
-							text={`${multiplier}×`}
-							style={{
-								fontFamily: 'gold',
-								fontSize: SYMBOL_SIZE * 5.2,
-							}}
-						/>
-					</SpineSlot>
-				</SpineEventEmitterProvider>
-			</SpineProvider>
+			<!-- SpineProvider disabled - globalMultiplier assets deleted -->
+			<!-- Display multiplier text directly since SpineProvider is disabled -->
+			<BitmapText
+				anchor={0.5}
+				text={`${multiplier}×`}
+				style={{
+					fontFamily: 'gold',
+					fontSize: SYMBOL_SIZE * 5.2,
+				}}
+			/>
 		</Container>
 	</BoardContainer>
 </FadeContainer>

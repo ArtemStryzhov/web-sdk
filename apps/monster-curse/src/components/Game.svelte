@@ -30,6 +30,7 @@
 	import BottomGradient from './BottomGradient.svelte';
 	import LabelBet from './LabelBet.svelte';
 	import ButtonBuyBonus from './ButtonBuyBonus.svelte';
+	import StoneFXOverlay from './StoneFXOverlay.svelte';
 
 	const context = getContext();
 
@@ -81,6 +82,8 @@
 			buttonBuyBonus={buttonBuyBonusSnippet}
 		/>
 	</Container>
+
+	<StoneFXOverlay zIndex={100000} />
 
 {#snippet gameNameSnippet()}
 	<!-- Removed: Time and game name display -->

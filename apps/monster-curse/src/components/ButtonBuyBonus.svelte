@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Text, Sprite, Container } from 'pixi-svelte';
+	import { Text, Sprite } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateModal, stateBet, stateBetDerived, stateUi } from 'state-shared';
 

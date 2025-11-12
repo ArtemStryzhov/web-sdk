@@ -1,0 +1,77 @@
+{
+	"skeleton": {
+		"hash": "stones",
+		"spine": "4.1.23",
+		"x": -778.5,
+		"y": -467,
+		"width": 1557,
+		"height": 934,
+		"images": "",
+		"audio": ""
+	},
+	"bones": [
+		{
+			"name": "root",
+			"x": -778.5,
+			"y": -467
+		},
+		{
+			"name": "stones_bone",
+			"parent": "root",
+			"length": 100,
+			"x": 778.5,
+			"y": 467
+		}
+	],
+	"slots": [
+		{
+			"name": "stones",
+			"bone": "stones_bone"
+		}
+	],
+	"skins": [
+		{
+			"name": "default",
+			"attachments": {
+				"stones": {
+					"stones": {
+						"type": "region",
+						"width": 1557,
+						"height": 934
+					}
+				}
+			}
+		}
+	],
+	"animations": {
+		"idle": {
+			"slots": {
+				"stones": {
+					"attachment": [
+						{
+							"time": 0,
+							"name": "stones"
+						}
+					]
+				}
+			},
+			"bones": {
+				"stones_bone": {
+					"scale": [
+						{
+							"time": 0,
+							"x": 1,
+							"y": 1
+						},
+						{
+							"time": 1,
+							"x": 1,
+							"y": 1
+						}
+					]
+				}
+			}
+		}
+	}
+}
+
