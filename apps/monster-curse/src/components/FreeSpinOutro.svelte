@@ -73,27 +73,15 @@
 							/>
 						{/if}
 
-						<SpineProvider key="fsOutroNumber" width={sizes.width * 0.4}>
-							<SpineTrack
-								trackIndex={0}
-								{animationName}
-								loop={animationName === 'idle'}
-								listener={{
-									complete: () => (animationName = 'idle'),
-								}}
-							/>
-							<SpineSlot slotName="slot_number">
-								<ResponsiveBitmapText
-									anchor={0.5}
-									style={{
-										fontFamily: 'gold',
-										fontSize: sizes.width * 0.08,
-									}}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
-									maxWidth={sizes.width}
-								/>
-							</SpineSlot>
-						</SpineProvider>
+						<ResponsiveBitmapText
+							anchor={0.5}
+							style={{
+								fontFamily: 'gold',
+								fontSize: sizes.width * 0.08,
+							}}
+							text={bookEventAmountToCurrencyString(countUpAmount)}
+							maxWidth={sizes.width}
+						/>
 
 						<Sprite
 							anchor={{ x: 0.5, y: isBigWin ? -3.2 : -2 }}

@@ -75,6 +75,8 @@ export type MultiplierSymbol = {
 export const stateGame = $state({
 	board,
 	gameType: 'basegame' as GameType,
+	round: 0,
+	skipNextWinHighlight: false,
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
 	pendingBonusTriggerAnimation: false, // Flag for B symbol bonus trigger (3+ B symbols)

@@ -12,6 +12,18 @@ import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEv
 import type { Position } from './types';
 import config from './config';
 
+// Convert payload row (1..5, top-based visible rows) to board array index.
+// The board contains 7 symbols; visible window is the middle 5 with startIndex = floor((len-5)/2).
+// Mapping: boardIndex = startIndex + (row - 1). If row not in 1..5, pass through.
+const normalizeRowIndex = (row: number, reel: number) => {
+	if (row >= 1 && row <= 5) {
+		const len = stateGame.board[reel]?.reelState?.symbols?.length ?? 7;
+		const startIndex = Math.floor((len - 5) / 2);
+		return startIndex + (row - 1);
+	}
+	return row;
+};
+
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	if (winLevelData?.alias === 'max') eventEmitter.broadcastAsync({ type: 'uiHide' });
 	if (winLevelData?.sound?.sfx) {
@@ -90,6 +102,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
+		// Skip stale highlights right after freegame → basegame transition
+		if (stateGame.skipNextWinHighlight && stateGame.gameType === 'basegame') {
+			stateGame.skipNextWinHighlight = false;
+			stateGame.round += 1;
+			const { logSpin } = await import('./debugSpins');
+			logSpin(stateGame.round, { wins: bookEvent.wins });
+			// Do not animate; just exit
+			return;
+		}
 		// Get current board state for S symbol expansion logic
 		const currentBoard = stateGameDerived.boardRaw();
 		
@@ -100,19 +121,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Check if any S symbols participate in wins
 		const sSymbolsInWins = checkSSymbolsInWins(bookEvent.wins, currentBoard);
 		
-		// Store win data for potential looping
-		stateGame.winAnimationData = {
-			wins: bookEvent.wins,
-			sSymbols: sSymbolsInWins,
-		};
+		// Store win data for potential looping with logging and round increment
+		stateGame.round += 1;
+		const { logSpin, logHighlight } = await import('./debugSpins');
+		logSpin(stateGame.round, { wins: bookEvent.wins });
+		stateGame.winAnimationData = { wins: bookEvent.wins, sSymbols: sSymbolsInWins };
 		
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		
 	// Animate each win line sequentially
-	for (const win of bookEvent.wins) {
+	for (let i = 0; i < bookEvent.wins.length; i++) {
+		const win = bookEvent.wins[i];
+		logHighlight(stateGame.round, win, i + 1, bookEvent.wins.length);
 		// Set only the current win's symbols to postWinStatic first to reset them before animation
 		win.positions.forEach((pos: Position) => {
-			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[pos.row];
+			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
 			if (reelSymbol.rawSymbol.name !== 'S') {
 				reelSymbol.symbolState = 'postWinStatic';
 			}
@@ -184,6 +207,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		await animateSymbols({ positions: bookEvent.positions });
 		// show free spin intro
+		// Ensure we don't continue in a buy_ mode during freespins (prevents re-purchase loops)
+		try {
+			const { stateBet } = await import('state-shared');
+			stateBet.activeBetModeKey = 'BASE';
+			if (stateBet.lastBet) stateBet.lastBet.mode = 'BASE' as any;
+		} catch {}
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
@@ -224,6 +253,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		stateGame.gameType = 'basegame';
+		// Clear any looping/stale win data and reset symbols before returning to basegame
+		stateGame.shouldLoopWinAnimations = false;
+		stateGame.winAnimationData = null;
+		stateGame.board.forEach((reel) => {
+			reel.reelState.symbols.forEach((symbol) => {
+				symbol.symbolState = 'static';
+				symbol.oncomplete = () => {};
+			});
+		});
+		// Skip the first basegame win highlight after FS to avoid leftover animations
+		stateGame.skipNextWinHighlight = true;
 		// Reset bet mode to BASE after freespins complete
 		stateBet.activeBetModeKey = 'BASE';
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });

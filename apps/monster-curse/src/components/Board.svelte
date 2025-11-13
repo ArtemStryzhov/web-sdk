@@ -21,6 +21,17 @@
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
 	import Payframes from './Payframes.svelte';
+	
+	// Normalize payload row (1..5, top-based visible rows) to board array index.
+	// Board has 7 symbols; visible window is middle 5 with startIndex = floor((len-5)/2).
+	const normalize = (row: number, reel: number) => {
+		if (row >= 1 && row <= 5) {
+			const len = context.stateGame.board[reel]?.reelState?.symbols?.length ?? 7;
+			const startIndex = Math.floor((len - 5) / 2);
+			return startIndex + (row - 1);
+		}
+		return row;
+	};
 
 	const context = getContext();
 
@@ -34,7 +45,7 @@
 		boardWithAnimateSymbols: async ({ symbolPositions }) => {
 			// Step 1: Reset symbols if needed to force animation replay
 			const needsReset = symbolPositions.some((position) => {
-				const reelSymbol = context.stateGame.board[position.reel]?.reelState.symbols[position.row];
+				const reelSymbol = context.stateGame.board[position.reel]?.reelState.symbols[normalize(position.row, position.reel)];
 				if (!reelSymbol) return false;
 				
 				// Reset non-S symbols in 'win' state, or S symbols in 'expand' state
@@ -44,7 +55,7 @@
 			
 			if (needsReset) {
 				symbolPositions.forEach((position) => {
-					const reelSymbol = context.stateGame.board[position.reel]?.reelState.symbols[position.row];
+					const reelSymbol = context.stateGame.board[position.reel]?.reelState.symbols[normalize(position.row, position.reel)];
 					if (!reelSymbol) return;
 					
 					// Reset non-S symbols in 'win' state
@@ -64,7 +75,7 @@
 		const symbolsToTransition: { reelSymbol: any; originalSymbol?: any }[] = [];
 		
 		for (const position of symbolPositions) {
-			const reelSymbol = context.stateGame.board[position.reel]?.reelState.symbols[position.row];
+			const reelSymbol = context.stateGame.board[position.reel]?.reelState.symbols[normalize(position.row, position.reel)];
 			
 			// Safety check - skip if symbol not found
 			if (!reelSymbol) {
@@ -90,7 +101,7 @@
 				
 				// Mark W symbols above S as collected (hide their multipliers)
 				context.stateGame.board[position.reel].reelState.symbols.forEach((symbol, rowIndex) => {
-					if (rowIndex < position.row && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
+					if (rowIndex < normalize(position.row, position.reel) && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
 						symbol.rawSymbol.isCollected = true;
 					}
 				});
