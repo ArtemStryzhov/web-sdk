@@ -14,6 +14,31 @@
 	const props: Props = $props();
 	const context = getContext();
 
+	// Calculate logo scale based on layout and screen height
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+const logoScale = $derived(
+	(() => {
+		if (layoutType === 'desktop' && canvasSizes.height < 800) {
+			return 0.3;
+		}
+
+		if (layoutType === 'tablet') {
+			return 0.4 / 2; // 2 times smaller on tablet
+		}
+
+		if (layoutType === 'portrait') {
+			return (0.4 / 3) * 1.3; // 30% larger on portrait
+		}
+
+		if (layoutType === 'landscape') {
+			return 0.4 / 3; // 3 times smaller on landscape
+		}
+
+		return 0.4;
+	})()
+);
+
 	let stonesFalling = $state(false);
 
 	const onPressToContinue = () => {
@@ -31,10 +56,10 @@
 	<Sprite
 		key="logo_v.png"
 		anchor={{ x: 0.5, y: 0 }}
-		x={context.stateLayoutDerived.canvasSizes().width * 0.5}
+		x={canvasSizes.width * 0.5}
 		y={20}
-		width={719*0.4}
-		height={628*0.4}
+		width={719 * logoScale}
+		height={628 * logoScale}
 	/>
 	<MainContainer>
 		<Container
@@ -63,10 +88,10 @@
 	<Sprite
 		key="logo_v.png"
 		anchor={{ x: 0.5, y: 0 }}
-		x={context.stateLayoutDerived.canvasSizes().width * 0.5}
+		x={canvasSizes.width * 0.5}
 		y={20}
-		width={719*0.4}
-		height={628*0.4}
+		width={719 * logoScale}
+		height={628 * logoScale}
 		zIndex={10002}
 	/>
 	<!-- Stone animation layer -->

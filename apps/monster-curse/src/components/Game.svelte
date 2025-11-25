@@ -34,7 +34,60 @@
 
 	const context = getContext();
 
-	onMount(() => (context.stateLayout.showLoadingScreen = true));
+	// Layout type for logging
+const layoutType = $derived(context.stateLayoutDerived.layoutType());
+const isPortraitLayout = $derived(layoutType === 'portrait');
+const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
+const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+
+	// Throttle function for resize logging
+	const throttle = (func: () => void, delay: number) => {
+		let timeoutId: ReturnType<typeof setTimeout> | null = null;
+		let lastExecTime = 0;
+		return () => {
+			const currentTime = Date.now();
+			if (currentTime - lastExecTime > delay) {
+				func();
+				lastExecTime = currentTime;
+			} else {
+				if (timeoutId) clearTimeout(timeoutId);
+				timeoutId = setTimeout(() => {
+					func();
+					lastExecTime = Date.now();
+				}, delay - (currentTime - lastExecTime));
+			}
+		};
+	};
+
+	// Log layout type
+	const logLayoutType = () => {
+		const size = canvasSizes;
+		console.log(`[Layout] Type: ${layoutType}, Size: ${size.width}x${size.height}`);
+	};
+
+	onMount(() => {
+		context.stateLayout.showLoadingScreen = true;
+
+		// Log layout type on load
+		logLayoutType();
+
+		// Throttled resize handler (300ms throttle)
+		const throttledResizeLog = throttle(() => {
+			logLayoutType();
+		}, 300);
+
+		// Add resize listener
+		if (typeof window !== 'undefined') {
+			window.addEventListener('resize', throttledResizeLog);
+		}
+
+		// Cleanup resize listener
+		return () => {
+			if (typeof window !== 'undefined') {
+				window.removeEventListener('resize', throttledResizeLog);
+			}
+		};
+	});
 
 	context.eventEmitter.subscribeOnMount({
 		buyBonusConfirm: () => {
@@ -54,6 +107,21 @@
 	{#if context.stateLayout.showLoadingScreen}
 		<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
 	{:else}
+		{#if isPortraitLayout}
+			<MainContainer alignVertical="center" zIndex={10003}>
+				<Container x={0} y={-mainLayout.height * 0.5 + 40} eventMode="none">
+					<Sprite
+						key="logo_s.png"
+						anchor={{ x: 0.5, y: 0 }}
+						x={0}
+						y={0}
+						width={250}
+						height={129}
+					/>
+				</Container>
+			</MainContainer>
+		{/if}
+
 		<ResumeBet />
 		<!--
 			The reason why <Sound /> is rendered after clicking the loading screen:
@@ -106,14 +174,17 @@
 	{@const containerX = canvasSizes.width - 20}
 	{@const logoX = frameRightCanvasX - containerX + 20}
 	{@const logoY = frameTopCanvasY}
-	<Sprite
-		x={logoX}
-		y={logoY}
-		anchor={{ x: 0, y: 0 }}
-		key="logo_s.png"
-		width={250}
-		height={129}
-	/>
+
+	{#if !isPortraitLayout}
+		<Sprite
+			x={logoX}
+			y={logoY}
+			anchor={{ x: 0, y: 0 }}
+			key="logo_s.png"
+			width={250}
+			height={129}
+		/>
+	{/if}
 {/snippet}
 
 {#snippet amountBetSnippet(labelProps: any)}

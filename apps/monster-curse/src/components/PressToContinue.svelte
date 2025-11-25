@@ -20,27 +20,62 @@
 	// Font loading state
 	let fontLoaded = $state(false);
 
-	onMount(async () => {
+	onMount(() => {
 		// Wait for fonts to be loaded before rendering text
-		if (typeof document !== 'undefined' && 'fonts' in document) {
-			try {
-				// Wait for all fonts to be ready
-				await document.fonts.ready;
-				// Small delay to ensure PIXI can access the font
+		(async () => {
+			if (typeof document !== 'undefined' && 'fonts' in document) {
+				try {
+					// Wait for all fonts to be ready
+					await document.fonts.ready;
+					// Small delay to ensure PIXI can access the font
+					setTimeout(() => {
+						fontLoaded = true;
+					}, 50);
+				} catch (error) {
+					// Fallback: proceed after a short delay
+					setTimeout(() => {
+						fontLoaded = true;
+					}, 500);
+				}
+			} else {
+				// Fallback for browsers without Font Loading API
 				setTimeout(() => {
 					fontLoaded = true;
-				}, 50);
-			} catch (error) {
-				// Fallback: proceed after a short delay
-				setTimeout(() => {
-					fontLoaded = true;
-				}, 500);
+				}, 300);
 			}
-		} else {
-			// Fallback for browsers without Font Loading API
-			setTimeout(() => {
-				fontLoaded = true;
-			}, 300);
+		})();
+
+		// Add global pointer event listeners for slider dragging
+		if (typeof window !== 'undefined') {
+			const handleGlobalPointerMove = (e: PointerEvent) => {
+				if (isDragging && isSliderMode) {
+					const pixiEvent = {
+						globalX: e.clientX,
+						clientX: e.clientX,
+						stopPropagation: () => {},
+					};
+					handlePointerMove(pixiEvent);
+				}
+			};
+
+			const handleGlobalPointerUp = (e: PointerEvent) => {
+				if (isDragging && isSliderMode) {
+					const pixiEvent = {
+						globalX: e.clientX,
+						clientX: e.clientX,
+						stopPropagation: () => {},
+					};
+					handlePointerUp(pixiEvent);
+				}
+			};
+
+			window.addEventListener('pointermove', handleGlobalPointerMove);
+			window.addEventListener('pointerup', handleGlobalPointerUp);
+
+			return () => {
+				window.removeEventListener('pointermove', handleGlobalPointerMove);
+				window.removeEventListener('pointerup', handleGlobalPointerUp);
+			};
 		}
 	});
 
@@ -51,6 +86,12 @@
 	let isHovered = $state(false);
 
 	const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const isPortrait = $derived(layoutType === 'portrait');
+	const isTablet = $derived(layoutType === 'tablet');
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isSliderMode = $derived(canvasSizes.width <= 450);
+	const isSmallScreen = $derived(canvasSizes.width < 380);
 
 	const buttonX = $derived(mainLayout.width * 0.5);
 	const buttonY = $derived(mainLayout.height - 80);
@@ -65,22 +106,122 @@
 	const horizontalPadding = 80; // Padding on left and right sides
 
 	// Calculate scale to fit available width, then reduce by 2x, then increase by 15%
+	// On portrait, multiply by 3 to make blocks 3 times larger
 	const availableWidth = $derived(mainLayout.width - horizontalPadding * 2);
 	const totalFramesWidth = $derived(frameOriginalWidth * numFrames);
 	const totalGapsWidth = $derived(frameGap * (numFrames - 1));
 	const totalWidthNeeded = $derived(totalFramesWidth + totalGapsWidth);
-	const frameScale = $derived(Math.min(1, availableWidth / totalWidthNeeded) * 0.5 * 1.15); // Scale down by 2x, then increase by 15%
+	const baseFrameScale = $derived(Math.min(1, availableWidth / totalWidthNeeded) * 0.5 * 1.15); // Scale down by 2x, then increase by 15%
+	const frameScale = $derived(
+		(() => {
+			const base = isPortrait
+				? baseFrameScale * 3 // 3 times larger on portrait
+				: isTablet
+					? baseFrameScale * 2 // 2 times larger on tablet
+					: baseFrameScale;
+			return base * (isSmallScreen ? 0.7 : 1); // 30% smaller on screens < 380
+		})()
+	);
 
 	// Calculate scaled dimensions
 	const frameWidth = $derived(frameOriginalWidth * frameScale);
 	const frameHeight = $derived(frameOriginalHeight * frameScale);
 
-	// Calculate horizontal positions for 3 frames (centered)
-	const framesGroupWidth = $derived(frameWidth * numFrames + frameGap * (numFrames - 1));
-	const framesGroupStartX = $derived((mainLayout.width - framesGroupWidth) * 0.5);
-	const framePositions = $derived(
-		Array.from({ length: numFrames }, (_, i) => framesGroupStartX + i * (frameWidth + frameGap) + frameWidth * 0.5)
+	// Slider state for drag/swipe functionality
+	let sliderDragOffset = $state(0); // Drag offset relative to current slide
+	let currentSlideIndex = $state(1); // Focus second slide by default
+	let isDragging = $state(false);
+	let dragStartX = $state(0);
+
+	const frameSpacing = $derived(frameWidth + frameGap);
+	const sliderFrameOffsets = $derived(
+		Array.from({ length: numFrames }, (_, i) => i * frameSpacing)
 	);
+	const sliderCenterX = $derived(mainLayout.width * 0.5);
+	const sliderGroupX = $derived(
+		isSliderMode ? sliderCenterX - currentSlideIndex * frameSpacing + sliderDragOffset : 0
+	);
+
+	// Normal mode positions (non-slider)
+	const normalFramePositions = $derived(
+		(() => {
+			const framesGroupWidth = frameWidth * numFrames + frameGap * (numFrames - 1);
+			const framesGroupStartX = (mainLayout.width - framesGroupWidth) * 0.5;
+			return Array.from(
+				{ length: numFrames },
+				(_, i) => framesGroupStartX + i * (frameWidth + frameGap) + frameWidth * 0.5
+			);
+		})()
+	);
+
+	// Reset slider state when leaving slider mode
+	$effect(() => {
+		if (!isSliderMode) {
+			currentSlideIndex = 1;
+			sliderDragOffset = 0;
+			isDragging = false;
+		}
+	});
+
+	// Slider drag handlers - using PIXI event coordinates
+	const handlePointerDown = (e: any) => {
+		if (!isSliderMode) return;
+		isDragging = true;
+		// Use globalX from PIXI event or fallback to clientX
+		dragStartX = e.globalX ?? e.clientX ?? 0;
+		sliderDragOffset = 0;
+		e.stopPropagation();
+	};
+
+	const handlePointerMove = (e: any) => {
+		if (!isDragging || !isSliderMode) return;
+		// Use globalX from PIXI event or fallback to clientX
+		const currentX = e.globalX ?? e.clientX ?? 0;
+		const deltaX = currentX - dragStartX;
+		// Allow dragging with some resistance at boundaries
+		const maxDrag = frameSpacing * 1.2;
+		sliderDragOffset = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
+		e.stopPropagation?.();
+	};
+
+	const handlePointerUp = (e: any) => {
+		if (!isDragging || !isSliderMode) return;
+		isDragging = false;
+		const endX = e.globalX ?? e.clientX ?? 0;
+		const deltaX = endX - dragStartX;
+		const swipeThreshold = frameSpacing * 0.2;
+		let finalOffset = deltaX;
+
+		if (deltaX < -swipeThreshold && currentSlideIndex < numFrames - 1) {
+			currentSlideIndex += 1;
+			finalOffset = deltaX + frameSpacing;
+		} else if (deltaX > swipeThreshold && currentSlideIndex > 0) {
+			currentSlideIndex -= 1;
+			finalOffset = deltaX - frameSpacing;
+		}
+
+		const startOffset = finalOffset;
+		sliderDragOffset = startOffset;
+		const duration = 250;
+		const startTime = performance.now();
+
+		const animate = () => {
+			const elapsed = performance.now() - startTime;
+			const progress = Math.min(elapsed / duration, 1);
+			const eased = 1 - Math.pow(1 - progress, 3);
+			sliderDragOffset = startOffset * (1 - eased);
+
+			if (progress < 1) {
+				requestAnimationFrame(animate);
+			} else {
+				sliderDragOffset = 0;
+			}
+		};
+
+		requestAnimationFrame(animate);
+
+		e.stopPropagation?.();
+	};
 
 	// Calculate vertical position (centered, then moved 40px down)
 	const framesY = $derived(mainLayout.height * 0.5 + 40);
@@ -164,103 +305,228 @@
 
 	<!-- Welcome frame blocks -->
 	<MainContainer zIndex={9999}>
-		{#each framePositions as frameX, index}
+		{#if isSliderMode}
+			<!-- Slider mode (width <= 450): Slider with drag/swipe functionality -->
 			<Container
-				x={frameX}
+				x={0}
 				y={framesY}
-				eventMode="none"
+				eventMode="static"
+				cursor={isDragging ? 'grabbing' : 'grab'}
+				hitArea={new PIXI.Rectangle(0, -mainLayout.height * 0.5, mainLayout.width, mainLayout.height)}
+				onpointerdown={handlePointerDown}
+				onpointermove={handlePointerMove}
+				onpointerup={handlePointerUp}
+				onpointerleave={handlePointerUp}
 			>
-				<!-- Inner background (behind frame) -->
 				<Graphics
 					draw={(graphics) => {
 						graphics.clear();
-						graphics.rect(-frameWidth * 0.5, -frameHeight * 0.5, frameWidth, frameHeight);
-						graphics.fill({ color: 0x000000, alpha: 0.6 });
+						graphics.rect(0, -mainLayout.height * 0.5, mainLayout.width, mainLayout.height);
+						graphics.fill({ color: 0xffffff, alpha: 1 });
 					}}
 					eventMode="none"
+					isMask={true}
 				/>
+				<Container x={sliderGroupX} y={0} eventMode="none">
+					{#each sliderFrameOffsets as offset, index}
+						<Container
+							x={offset}
+							y={0}
+							eventMode="none"
+						>
+							<!-- Inner background (behind frame) -->
+							<Graphics
+								draw={(graphics) => {
+									graphics.clear();
+									graphics.rect(-frameWidth * 0.5, -frameHeight * 0.5, frameWidth, frameHeight);
+									graphics.fill({ color: 0x000000, alpha: 0.6 });
+								}}
+								eventMode="none"
+							/>
 
-				<Sprite
-					key="welcome_frame.png"
-					width={frameWidth}
-					height={frameHeight}
-					anchor={{ x: 0.5, y: 0.5 }}
-					x={0}
-					y={0}
+							<Sprite
+								key="welcome_frame.png"
+								width={frameWidth}
+								height={frameHeight}
+								anchor={{ x: 0.5, y: 0.5 }}
+								x={0}
+								y={0}
+								eventMode="none"
+							/>
+
+							<!-- First block: sword.png and 50x.png -->
+							{#if index === 0}
+								<Sprite
+									key="sword.png"
+									width={imageSizes.sword.width * imageScale}
+									height={imageSizes.sword.height * imageScale}
+									anchor={{ x: 0.5, y: 0.5 }}
+									x={swordX}
+									y={swordY}
+									eventMode="none"
+								/>
+								<Sprite
+									key="50x.png"
+									width={imageSizes['50x'].width * imageScale}
+									height={imageSizes['50x'].height * imageScale}
+									anchor={{ x: 0.5, y: 0.5 }}
+									x={multiplierX}
+									y={multiplierY}
+									eventMode="none"
+								/>
+							{/if}
+
+							<!-- Second block: elicsir.png -->
+							{#if index === 1}
+								<Sprite
+									key="elicsir.png"
+									width={imageSizes.elicsir.width * imageScale}
+									height={imageSizes.elicsir.height * imageScale}
+									anchor={{ x: 0.5, y: 0.5 }}
+									x={elicsirX}
+									y={elicsirY}
+									eventMode="none"
+								/>
+							{/if}
+
+							<!-- Third block: sens2000.png -->
+							{#if index === 2}
+								<Sprite
+									key="sens2000.png"
+									width={imageSizes.sens2000.width * imageScaleSens}
+									height={imageSizes.sens2000.height * imageScaleSens}
+									anchor={{ x: 0.5, y: 0.5 }}
+									x={sens2000X}
+									y={sens2000Y}
+									eventMode="none"
+								/>
+							{/if}
+
+							{#if fontLoaded}
+								{#if index === 0}
+									<Text
+										text={frameTexts[index]}
+										style={frameTextStyleFirst}
+										anchor={{ x: 0.5, y: 1 }}
+										x={frameTextXFirst}
+										y={frameTextY}
+										eventMode="none"
+									/>
+								{:else}
+									<Text
+										text={frameTexts[index]}
+										style={frameTextStyle}
+										anchor={{ x: 0.5, y: 1 }}
+										x={0}
+										y={frameTextY}
+										eventMode="none"
+									/>
+								{/if}
+							{/if}
+						</Container>
+					{/each}
+				</Container>
+			</Container>
+		{:else}
+			<!-- Non-slider: Normal centered layout -->
+			{#each normalFramePositions as frameX, index}
+				<Container
+					x={frameX}
+					y={framesY}
 					eventMode="none"
-				/>
-
-				<!-- First block: sword.png and 50x.png -->
-				{#if index === 0}
-					<Sprite
-						key="sword.png"
-						width={imageSizes.sword.width * imageScale}
-						height={imageSizes.sword.height * imageScale}
-						anchor={{ x: 0.5, y: 0.5 }}
-						x={swordX}
-						y={swordY}
+				>
+					<!-- Inner background (behind frame) -->
+					<Graphics
+						draw={(graphics) => {
+							graphics.clear();
+							graphics.rect(-frameWidth * 0.5, -frameHeight * 0.5, frameWidth, frameHeight);
+							graphics.fill({ color: 0x000000, alpha: 0.6 });
+						}}
 						eventMode="none"
 					/>
+
 					<Sprite
-						key="50x.png"
-						width={imageSizes['50x'].width * imageScale}
-						height={imageSizes['50x'].height * imageScale}
+						key="welcome_frame.png"
+						width={frameWidth}
+						height={frameHeight}
 						anchor={{ x: 0.5, y: 0.5 }}
-						x={multiplierX}
-						y={multiplierY}
+						x={0}
+						y={0}
 						eventMode="none"
 					/>
-				{/if}
 
-				<!-- Second block: elicsir.png -->
-				{#if index === 1}
-					<Sprite
-						key="elicsir.png"
-						width={imageSizes.elicsir.width * imageScale}
-						height={imageSizes.elicsir.height * imageScale}
-						anchor={{ x: 0.5, y: 0.5 }}
-						x={elicsirX}
-						y={elicsirY}
-						eventMode="none"
-					/>
-				{/if}
-
-				<!-- Third block: sens2000.png -->
-				{#if index === 2}
-					<Sprite
-						key="sens2000.png"
-						width={imageSizes.sens2000.width * imageScaleSens}
-						height={imageSizes.sens2000.height * imageScaleSens}
-						anchor={{ x: 0.5, y: 0.5 }}
-						x={sens2000X}
-						y={sens2000Y}
-						eventMode="none"
-					/>
-				{/if}
-
-				{#if fontLoaded}
+					<!-- First block: sword.png and 50x.png -->
 					{#if index === 0}
-						<Text
-							text={frameTexts[index]}
-							style={frameTextStyleFirst}
-							anchor={{ x: 0.5, y: 1 }}
-							x={frameTextXFirst}
-							y={frameTextY}
+						<Sprite
+							key="sword.png"
+							width={imageSizes.sword.width * imageScale}
+							height={imageSizes.sword.height * imageScale}
+							anchor={{ x: 0.5, y: 0.5 }}
+							x={swordX}
+							y={swordY}
 							eventMode="none"
 						/>
-					{:else}
-						<Text
-							text={frameTexts[index]}
-							style={frameTextStyle}
-							anchor={{ x: 0.5, y: 1 }}
-							x={0}
-							y={frameTextY}
+						<Sprite
+							key="50x.png"
+							width={imageSizes['50x'].width * imageScale}
+							height={imageSizes['50x'].height * imageScale}
+							anchor={{ x: 0.5, y: 0.5 }}
+							x={multiplierX}
+							y={multiplierY}
 							eventMode="none"
 						/>
 					{/if}
-				{/if}
-			</Container>
-		{/each}
+
+					<!-- Second block: elicsir.png -->
+					{#if index === 1}
+						<Sprite
+							key="elicsir.png"
+							width={imageSizes.elicsir.width * imageScale}
+							height={imageSizes.elicsir.height * imageScale}
+							anchor={{ x: 0.5, y: 0.5 }}
+							x={elicsirX}
+							y={elicsirY}
+							eventMode="none"
+						/>
+					{/if}
+
+					<!-- Third block: sens2000.png -->
+					{#if index === 2}
+						<Sprite
+							key="sens2000.png"
+							width={imageSizes.sens2000.width * imageScaleSens}
+							height={imageSizes.sens2000.height * imageScaleSens}
+							anchor={{ x: 0.5, y: 0.5 }}
+							x={sens2000X}
+							y={sens2000Y}
+							eventMode="none"
+						/>
+					{/if}
+
+					{#if fontLoaded}
+						{#if index === 0}
+							<Text
+								text={frameTexts[index]}
+								style={frameTextStyleFirst}
+								anchor={{ x: 0.5, y: 1 }}
+								x={frameTextXFirst}
+								y={frameTextY}
+								eventMode="none"
+							/>
+						{:else}
+							<Text
+								text={frameTexts[index]}
+								style={frameTextStyle}
+								anchor={{ x: 0.5, y: 1 }}
+								x={0}
+								y={frameTextY}
+								eventMode="none"
+							/>
+						{/if}
+					{/if}
+				</Container>
+			{/each}
+		{/if}
 	</MainContainer>
 
 	<MainContainer alignVertical="bottom" zIndex={10000}>

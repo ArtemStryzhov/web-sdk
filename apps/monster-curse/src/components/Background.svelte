@@ -26,21 +26,20 @@
 		return { width: 3840, height: 2160 }; // Desktop dimensions
 	});
 	
-	// Calculate scale to fill canvas width completely (no side letterboxes)
-	// This may crop top/bottom but ensures full width coverage
-	const backgroundScale = $derived(() => {
-		const img = imageDimensions();
-		const canvas = canvasSize;
-		
-		// Calculate scale for width and height separately
-		const scaleWidth = canvas.width / img.width;
-		const scaleHeight = canvas.height / img.height;
-		
-		// Use width scale to fill canvas width completely (no side letterboxes)
-		// Scale up by 5% to ensure full coverage and minimize any gaps
-		const scale = scaleWidth * 1.05;
-		return scale;
-	});
+// Calculate scale to fill canvas completely (no black bars)
+// Use the larger scale (cover) and add a slight overscan to avoid gaps
+const backgroundScale = $derived(() => {
+	const img = imageDimensions();
+	const canvas = canvasSize;
+
+	// Calculate scale for width and height separately
+	const scaleWidth = canvas.width / img.width;
+	const scaleHeight = canvas.height / img.height;
+
+	// Use the larger scale to ensure full coverage, add 5% overscan
+	const scale = Math.max(scaleWidth, scaleHeight) * 1.05;
+	return scale;
+});
 	
 	// Apply scale directly to image dimensions to fill canvas width
 	// This ensures no side letterboxes, may crop top/bottom if aspect ratios differ
