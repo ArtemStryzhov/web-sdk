@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { MainContainer, OnPressFullScreen, CanvasSizeRectangle } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
-	import { Sprite, Text, Container, Graphics } from 'pixi-svelte';
+	import { Sprite, Text, Container, Graphics, Rectangle } from 'pixi-svelte';
 	import { UI_BASE_FONT_SIZE } from 'components-ui-pixi/src/constants';
 	import * as PIXI from 'pixi.js';
 	import { onMount } from 'svelte';
+	import { getContextApp } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 
@@ -14,11 +15,33 @@
 
 	const props: Props = $props();
 	const context = getContext();
+	const pixiContext = getContextApp();
 
 	const shouldShow = $derived(context.stateGame.gameType !== 'freegame');
 
 	// Font loading state
 	let fontLoaded = $state(false);
+
+	// Helper function to convert screen coordinates to PIXI world coordinates
+	const screenToWorldX = (clientX: number): number => {
+		const app = pixiContext.stateApp.pixiApplication;
+		if (!app || !app.canvas || !app.renderer) return clientX;
+
+		const canvas = app.canvas;
+		const rect = canvas.getBoundingClientRect();
+		
+		// Calculate relative position on canvas (0 to 1)
+		const relativeX = (clientX - rect.left) / rect.width;
+		// Convert to world coordinates
+		// PIXI world coordinates are centered at 0, so we need to map:
+		// 0 (left edge) -> -canvasSizes.width/2
+		// 1 (right edge) -> +canvasSizes.width/2
+		const canvasSizes = context.stateLayoutDerived.canvasSizes();
+		// Use the actual canvas rect width for conversion to ensure accuracy
+		// The canvasSizes.width is the logical width, but we need to account for device pixel ratio
+		const worldWidth = canvasSizes.width;
+		return (relativeX - 0.5) * worldWidth;
+	};
 
 	onMount(() => {
 		// Wait for fonts to be loaded before rendering text
@@ -45,36 +68,94 @@
 			}
 		})();
 
+		// Set touch-action on canvas to prevent scroll gestures during drag
+		const app = pixiContext.stateApp.pixiApplication;
+		if (app?.canvas) {
+			app.canvas.style.touchAction = 'none';
+		}
+
 		// Add global pointer event listeners for slider dragging
+		// Using global handlers since PIXI events aren't working reliably
 		if (typeof window !== 'undefined') {
+			const handleGlobalPointerDown = (e: PointerEvent) => {
+				// Only handle if in slider mode and not already dragging
+				const currentCanvasSizes = context.stateLayoutDerived.canvasSizes();
+				if (currentCanvasSizes.width <= 450 && !isDragging) {
+					// Check if click is in the slider area (roughly center of screen)
+					const app = pixiContext.stateApp.pixiApplication;
+					if (!app || !app.canvas) return;
+					
+					const canvas = app.canvas;
+					const rect = canvas.getBoundingClientRect();
+					const relativeY = (e.clientY - rect.top) / rect.height;
+					
+					// Slider is roughly in the middle 60% of screen height
+					if (relativeY > 0.2 && relativeY < 0.8) {
+						// Prevent default to avoid pointer cancellation
+						e.preventDefault();
+						// Pass raw event data directly
+						handlePointerDown({
+							clientX: e.clientX,
+							pointerId: e.pointerId,
+							stopPropagation: () => e.stopPropagation(),
+						});
+					}
+				}
+			};
+
 			const handleGlobalPointerMove = (e: PointerEvent) => {
-				if (isDragging && isSliderMode) {
-					const pixiEvent = {
-						globalX: e.clientX,
+				// Only process if we're dragging - access reactive state directly
+				const currentCanvasSizes = context.stateLayoutDerived.canvasSizes();
+				if (isDragging && currentCanvasSizes.width <= 450) {
+					// Always prevent default to prevent pointer cancellation
+					e.preventDefault();
+					// Don't check pointer ID - just process all move events when dragging
+					// This ensures we capture all movement
+					// Pass raw event data directly
+					handlePointerMove({
 						clientX: e.clientX,
-						stopPropagation: () => {},
-					};
-					handlePointerMove(pixiEvent);
+						pointerId: e.pointerId,
+						stopPropagation: () => e.stopPropagation(),
+					});
 				}
 			};
 
 			const handleGlobalPointerUp = (e: PointerEvent) => {
-				if (isDragging && isSliderMode) {
-					const pixiEvent = {
-						globalX: e.clientX,
+				// Only process if we're dragging - access reactive state directly
+				const currentCanvasSizes = context.stateLayoutDerived.canvasSizes();
+				if (isDragging && currentCanvasSizes.width <= 450) {
+					// Don't check pointer ID - just process all up events when dragging
+					// Pass raw event data directly
+					handlePointerUp({
 						clientX: e.clientX,
-						stopPropagation: () => {},
-					};
-					handlePointerUp(pixiEvent);
+						pointerId: e.pointerId,
+						stopPropagation: () => e.stopPropagation(),
+					});
 				}
 			};
 
-			window.addEventListener('pointermove', handleGlobalPointerMove);
-			window.addEventListener('pointerup', handleGlobalPointerUp);
+			const handleGlobalPointerCancel = (e: PointerEvent) => {
+				// Treat cancel like pointerup - complete the drag gesture
+				if (isDragging && (activePointerId === null || e.pointerId === activePointerId)) {
+					// Process it like a pointer up event so the drag completes properly
+					handlePointerUp({
+						clientX: e.clientX,
+						pointerId: e.pointerId,
+						stopPropagation: () => e.stopPropagation(),
+					});
+				}
+			};
+
+			window.addEventListener('pointerdown', handleGlobalPointerDown, { passive: false });
+			window.addEventListener('pointermove', handleGlobalPointerMove, { passive: false });
+			window.addEventListener('pointerup', handleGlobalPointerUp, { passive: false });
+			window.addEventListener('pointercancel', handleGlobalPointerCancel, { passive: false });
 
 			return () => {
+				window.removeEventListener('pointerdown', handleGlobalPointerDown);
 				window.removeEventListener('pointermove', handleGlobalPointerMove);
 				window.removeEventListener('pointerup', handleGlobalPointerUp);
+				window.removeEventListener('pointercancel', handleGlobalPointerCancel);
 			};
 		}
 	});
@@ -89,8 +170,13 @@
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
 	const isTablet = $derived(layoutType === 'tablet');
+	const isLandscape = $derived(layoutType === 'landscape');
+	const isDesktop = $derived(layoutType === 'desktop');
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
-	const isSliderMode = $derived(canvasSizes.width <= 450);
+	// Use slider mode only for portrait/tablet small screens, not for small landscape
+	const isSliderMode = $derived(
+		canvasSizes.width <= 450 && !isLandscape
+	);
 	const isSmallScreen = $derived(canvasSizes.width < 380);
 
 	const buttonX = $derived(mainLayout.width * 0.5);
@@ -119,7 +205,7 @@
 				: isTablet
 					? baseFrameScale * 2 // 2 times larger on tablet
 					: baseFrameScale;
-			return base * (isSmallScreen ? 0.7 : 1); // 30% smaller on screens < 380
+			return base * (isSmallScreen ? 0.7 : 1) * 1.15; // 30% smaller on screens < 380, then increase by 15%
 		})()
 	);
 
@@ -128,79 +214,191 @@
 	const frameHeight = $derived(frameOriginalHeight * frameScale);
 
 	// Slider state for drag/swipe functionality
-	let sliderDragOffset = $state(0); // Drag offset relative to current slide
-	let currentSlideIndex = $state(1); // Focus second slide by default
+	let sliderDragOffset = $state(0); // Drag offset relative to current slide (in world coordinates)
+	let currentSlideIndex = $state(0); // Start at first slide (index 0) to show frame 1 centered
 	let isDragging = $state(false);
-	let dragStartX = $state(0);
+	let dragStartX = $state(0); // Start position in world coordinates
+	let dragStartClientX = $state(0); // Start position in screen coordinates (for reliable tracking)
+	let dragStartSlideIndex = $state(0); // Track which slide we started dragging from
+	let activePointerId = $state<number | null>(null); // Track the active pointer ID for multi-touch
 
 	const frameSpacing = $derived(frameWidth + frameGap);
 	const sliderFrameOffsets = $derived(
 		Array.from({ length: numFrames }, (_, i) => i * frameSpacing)
 	);
-	const sliderCenterX = $derived(mainLayout.width * 0.5);
+	// Position slider group so current frame is centered
+	// Shift right by 10% of mainLayout width, but adjust for portrait screens >375px
+	const rightShift = $derived.by(() => {
+		const baseShift = mainLayout.width * 0.1;
+		// On portrait screens >375px, shift 19% to the left (reduce right shift)
+		if (isPortrait && canvasSizes.width > 375) {
+			return baseShift - (mainLayout.width * 0.19);
+		}
+		return baseShift;
+	});
 	const sliderGroupX = $derived(
-		isSliderMode ? sliderCenterX - currentSlideIndex * frameSpacing + sliderDragOffset : 0
+		isSliderMode ? -currentSlideIndex * frameSpacing + sliderDragOffset + rightShift : 0
 	);
+	
 
 	// Normal mode positions (non-slider)
 	const normalFramePositions = $derived(
 		(() => {
 			const framesGroupWidth = frameWidth * numFrames + frameGap * (numFrames - 1);
 			const framesGroupStartX = (mainLayout.width - framesGroupWidth) * 0.5;
+			// Shift right by 10% of mainLayout width, but adjust for different layouts
+			let rightShift = mainLayout.width * 0.1;
+			if (isLandscape) {
+				rightShift = 0;
+			} else if (isDesktop) {
+				// On desktop, shift 12% to the left (reduce right shift by 12%)
+				rightShift = mainLayout.width * 0.1 - (mainLayout.width * 0.10);
+			}
 			return Array.from(
 				{ length: numFrames },
-				(_, i) => framesGroupStartX + i * (frameWidth + frameGap) + frameWidth * 0.5
+				(_, i) => framesGroupStartX + i * (frameWidth + frameGap) + frameWidth * 0.5 + rightShift
 			);
 		})()
 	);
 
 	// Reset slider state when leaving slider mode
+	// IMPORTANT: Don't reset if we're currently dragging
 	$effect(() => {
-		if (!isSliderMode) {
-			currentSlideIndex = 1;
+		if (!isSliderMode && !isDragging) {
+			currentSlideIndex = 0;
 			sliderDragOffset = 0;
 			isDragging = false;
+			activePointerId = null;
+			if (animationFrameId !== null) {
+				cancelAnimationFrame(animationFrameId);
+				animationFrameId = null;
+			}
 		}
 	});
 
 	// Slider drag handlers - using PIXI event coordinates
 	const handlePointerDown = (e: any) => {
-		if (!isSliderMode) return;
+		if (!isSliderMode) {
+			return;
+		}
+		// Cancel any ongoing animation
+		if (animationFrameId !== null) {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
+		}
+		
 		isDragging = true;
-		// Use globalX from PIXI event or fallback to clientX
-		dragStartX = e.globalX ?? e.clientX ?? 0;
+		activePointerId = e.pointerId ?? null;
+		dragStartSlideIndex = currentSlideIndex;
+		
+		// Reset drag offset FIRST, before calculating dragStartX
 		sliderDragOffset = 0;
+		
+		// Store both screen and world coordinates for reliable tracking
+		if (e.clientX !== undefined) {
+			dragStartClientX = e.clientX;
+			dragStartX = screenToWorldX(e.clientX);
+		} else if (e.globalX !== undefined) {
+			dragStartX = e.globalX;
+			// Try to get clientX from the event if available
+			dragStartClientX = e.clientX ?? 0;
+		} else {
+			dragStartX = 0;
+			dragStartClientX = 0;
+		}
 		e.stopPropagation();
 	};
 
 	const handlePointerMove = (e: any) => {
-		if (!isDragging || !isSliderMode) return;
-		// Use globalX from PIXI event or fallback to clientX
-		const currentX = e.globalX ?? e.clientX ?? 0;
-		const deltaX = currentX - dragStartX;
-		// Allow dragging with some resistance at boundaries
-		const maxDrag = frameSpacing * 1.2;
-		sliderDragOffset = Math.max(-maxDrag, Math.min(maxDrag, deltaX));
-		e.stopPropagation?.();
+		if (!isDragging || !isSliderMode) {
+			return;
+		}
+		
+		// Use clientX for tracking - it's the most reliable
+		if (e.clientX === undefined) {
+			return;
+		}
+		
+		const currentClientX = e.clientX;
+		
+		// Calculate delta in screen pixels
+		const deltaClientX = currentClientX - dragStartClientX;
+		
+		// Get the current canvas dimensions for scaling
+		const app = pixiContext.stateApp.pixiApplication;
+		if (!app || !app.canvas) {
+			return;
+		}
+		
+		const canvas = app.canvas;
+		const rect = canvas.getBoundingClientRect();
+		const canvasSizes = context.stateLayoutDerived.canvasSizes();
+		
+		// Convert screen pixel delta to world coordinate delta
+		// The correct conversion: world coordinates use canvasSizes.width as the full width
+		// Screen coordinates use rect.width as the full width
+		// So: 1 screen pixel = (canvasSizes.width / rect.width) world units
+		const worldToScreenRatio = canvasSizes.width / rect.width;
+		const deltaWorldX = deltaClientX * worldToScreenRatio;
+		
+		// Update the drag offset - this allows free bidirectional movement
+		// No clamping or limits - user can drag as far as they want
+		sliderDragOffset = deltaWorldX;
+		
+		if (e.stopPropagation) {
+			e.stopPropagation();
+		}
 	};
+
+	// Store animation frame ID to cancel ongoing animations
+	let animationFrameId = $state<number | null>(null);
 
 	const handlePointerUp = (e: any) => {
 		if (!isDragging || !isSliderMode) return;
+		
 		isDragging = false;
-		const endX = e.globalX ?? e.clientX ?? 0;
-		const deltaX = endX - dragStartX;
-		const swipeThreshold = frameSpacing * 0.2;
-		let finalOffset = deltaX;
-
-		if (deltaX < -swipeThreshold && currentSlideIndex < numFrames - 1) {
-			currentSlideIndex += 1;
-			finalOffset = deltaX + frameSpacing;
-		} else if (deltaX > swipeThreshold && currentSlideIndex > 0) {
-			currentSlideIndex -= 1;
-			finalOffset = deltaX - frameSpacing;
+		activePointerId = null;
+		
+		// Cancel any ongoing animation
+		if (animationFrameId !== null) {
+			cancelAnimationFrame(animationFrameId);
+			animationFrameId = null;
 		}
-
-		const startOffset = finalOffset;
+		
+		const swipeThreshold = frameSpacing * 0.2; // 20% of frame spacing to trigger slide change
+		// Also allow slide change based on absolute pixel movement (more forgiving for small screens)
+		const minSwipePixels = 50; // Minimum 50px movement to trigger slide change
+		
+		// Determine if we should change slides based on current drag offset
+		// Use the current drag offset (which is relative to dragStartX)
+		// Negative offset means dragged left (next slide), positive means dragged right (previous slide)
+		let newSlideIndex = currentSlideIndex;
+		const absOffset = Math.abs(sliderDragOffset);
+		
+		// Check both threshold-based and pixel-based swipe detection
+		if (sliderDragOffset < -swipeThreshold && currentSlideIndex < numFrames - 1) {
+			newSlideIndex = currentSlideIndex + 1;
+		} else if (sliderDragOffset > swipeThreshold && currentSlideIndex > 0) {
+			newSlideIndex = currentSlideIndex - 1;
+		} else if (absOffset >= minSwipePixels) {
+			// Also check absolute pixel movement as fallback
+			if (sliderDragOffset < 0 && currentSlideIndex < numFrames - 1) {
+				newSlideIndex = currentSlideIndex + 1;
+			} else if (sliderDragOffset > 0 && currentSlideIndex > 0) {
+				newSlideIndex = currentSlideIndex - 1;
+			}
+		}
+		
+		// Calculate the offset we need to animate from
+		// When we change slides, we need to account for the slide change
+		const slideChange = newSlideIndex - currentSlideIndex;
+		const remainingOffset = sliderDragOffset - (slideChange * frameSpacing);
+		
+		// Update slide index
+		currentSlideIndex = newSlideIndex;
+		
+		// Animate the remaining offset back to 0
+		const startOffset = remainingOffset;
 		sliderDragOffset = startOffset;
 		const duration = 250;
 		const startTime = performance.now();
@@ -212,19 +410,23 @@
 			sliderDragOffset = startOffset * (1 - eased);
 
 			if (progress < 1) {
-				requestAnimationFrame(animate);
+				animationFrameId = requestAnimationFrame(animate);
 			} else {
 				sliderDragOffset = 0;
+				animationFrameId = null;
 			}
 		};
 
-		requestAnimationFrame(animate);
+		animationFrameId = requestAnimationFrame(animate);
 
 		e.stopPropagation?.();
 	};
 
 	// Calculate vertical position (centered, then moved 40px down)
-	const framesY = $derived(mainLayout.height * 0.5 + 40);
+	// On small landscape screens, move blocks down 10px more
+	const framesY = $derived(
+		mainLayout.height * 0.5 + 40 + (isLandscape && canvasSizes.width <= 450 ? 10 : 0)
+	);
 
 	// Frame text content
 	const frameTexts = [
@@ -236,7 +438,7 @@
 	// Text style for frame content
 	const frameTextStyle = $derived({
 		fontFamily: 'Chelsea Market, Arial, sans-serif',
-		fontSize: UI_BASE_FONT_SIZE * 0.45,
+		fontSize: UI_BASE_FONT_SIZE * 0.45 * (isLandscape ? 1.10 : 1), // 10% bigger on landscape
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -247,7 +449,7 @@
 	// Text style for first block (with extra left padding)
 	const frameTextStyleFirst = $derived({
 		fontFamily: 'Chelsea Market, Arial, sans-serif',
-		fontSize: UI_BASE_FONT_SIZE * 0.45,
+		fontSize: UI_BASE_FONT_SIZE * 0.45 * (isLandscape ? 1.10 : 1), // 10% bigger on landscape
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -301,27 +503,27 @@
 </script>
 
 {#if shouldShow}
-	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.2} zIndex={9999} />
+	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.2} zIndex={9998} eventMode="none" />
 
 	<!-- Welcome frame blocks -->
 	<MainContainer zIndex={9999}>
 		{#if isSliderMode}
 			<!-- Slider mode (width <= 450): Slider with drag/swipe functionality -->
+			<!-- Content container -->
 			<Container
 				x={0}
 				y={framesY}
-				eventMode="static"
-				cursor={isDragging ? 'grabbing' : 'grab'}
-				hitArea={new PIXI.Rectangle(0, -mainLayout.height * 0.5, mainLayout.width, mainLayout.height)}
-				onpointerdown={handlePointerDown}
-				onpointermove={handlePointerMove}
-				onpointerup={handlePointerUp}
-				onpointerleave={handlePointerUp}
+				eventMode="none"
 			>
+				<!-- Mask graphics - wide enough to show all frames when sliding -->
 				<Graphics
 					draw={(graphics) => {
 						graphics.clear();
-						graphics.rect(0, -mainLayout.height * 0.5, mainLayout.width, mainLayout.height);
+						// Make mask wide enough to show all 3 frames plus sliding space
+						const totalFramesWidth = frameWidth * numFrames + frameGap * (numFrames - 1);
+						const maxSlideDistance = (numFrames - 1) * frameSpacing;
+						const maskWidth = Math.max(mainLayout.width, totalFramesWidth + maxSlideDistance);
+						graphics.rect(-maskWidth * 0.5, -mainLayout.height * 0.5, maskWidth, mainLayout.height);
 						graphics.fill({ color: 0xffffff, alpha: 1 });
 					}}
 					eventMode="none"

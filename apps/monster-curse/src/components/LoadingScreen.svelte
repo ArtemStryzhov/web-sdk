@@ -19,8 +19,17 @@
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 const logoScale = $derived(
 	(() => {
-		if (layoutType === 'desktop' && canvasSizes.height < 800) {
-			return 0.3;
+		if (layoutType === 'desktop') {
+			if (canvasSizes.height < 550) {
+				return 0.3 * 0.7; // 30% smaller (base 0.3 * 0.7 = 0.21)
+			}
+			if (canvasSizes.height < 650) {
+				return 0.3 * 0.8; // 20% smaller (base 0.3 * 0.8 = 0.24)
+			}
+			if (canvasSizes.height < 800) {
+				return 0.3;
+			}
+			return 0.4;
 		}
 
 		if (layoutType === 'tablet') {
@@ -32,7 +41,12 @@ const logoScale = $derived(
 		}
 
 		if (layoutType === 'landscape') {
-			return 0.4 / 3; // 3 times smaller on landscape
+			const baseScale = 0.4 / 3; // 3 times smaller on landscape
+			// On small landscape screens (<=450px width), make logo 2x smaller
+			if (canvasSizes.width <= 450) {
+				return baseScale / 2;
+			}
+			return baseScale;
 		}
 
 		return 0.4;

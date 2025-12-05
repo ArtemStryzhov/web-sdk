@@ -34,11 +34,26 @@
 
 	const context = getContext();
 
+	// Reactive state to trigger updates on resize
+	let resizeTrigger = $state(0);
+
 	// Layout type for logging
 const layoutType = $derived(context.stateLayoutDerived.layoutType());
 const isPortraitLayout = $derived(layoutType === 'portrait');
 const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
 const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+
+	// Force reactivity by accessing derived values when resizeTrigger changes
+	$effect(() => {
+		resizeTrigger; // Access resizeTrigger to establish dependency
+		// Access all derived layout values to ensure they're re-evaluated
+		const _ = {
+			layoutType: layoutType,
+			mainLayout: mainLayout,
+			canvasSizes: canvasSizes,
+		};
+		// This ensures all components depending on these values will update
+	});
 
 	// Throttle function for resize logging
 	const throttle = (func: () => void, delay: number) => {
@@ -59,32 +74,40 @@ const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 		};
 	};
 
-	// Log layout type
-	const logLayoutType = () => {
+	// Handle resize - trigger reactivity updates
+	const handleResize = () => {
+		// Access derived values to trigger reactivity
 		const size = canvasSizes;
-		console.log(`[Layout] Type: ${layoutType}, Size: ${size.width}x${size.height}`);
+		const layout = layoutType;
+		const main = mainLayout;
+		
+		// Update resize trigger to force re-evaluation of all dependent components
+		resizeTrigger++;
+		
+		// Log layout type
+		console.log(`[Layout] Type: ${layout}, Size: ${size.width}x${size.height}`);
 	};
 
 	onMount(() => {
 		context.stateLayout.showLoadingScreen = true;
 
 		// Log layout type on load
-		logLayoutType();
+		handleResize();
 
 		// Throttled resize handler (300ms throttle)
-		const throttledResizeLog = throttle(() => {
-			logLayoutType();
+		const throttledResize = throttle(() => {
+			handleResize();
 		}, 300);
 
 		// Add resize listener
 		if (typeof window !== 'undefined') {
-			window.addEventListener('resize', throttledResizeLog);
+			window.addEventListener('resize', throttledResize);
 		}
 
 		// Cleanup resize listener
 		return () => {
 			if (typeof window !== 'undefined') {
-				window.removeEventListener('resize', throttledResizeLog);
+				window.removeEventListener('resize', throttledResize);
 			}
 		};
 	});
