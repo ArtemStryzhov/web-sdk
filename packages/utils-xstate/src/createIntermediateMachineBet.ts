@@ -6,12 +6,14 @@ import { context, type Context } from './machineContext';
 import type { PrimaryMachines } from './types';
 
 const checkSpaceHold = fromPromise(async () => {
+	// Buy modes (buy_blades, buy_contract, etc.) should always end after the bet completes
+	// They are one-time purchases that trigger free spins, not continuous betting
+	if (stateBetDerived.activeBetMode()?.type === 'buy') {
+		stateBet.activeBetModeKey = 'BASE';
+		throw Error('end bet');
+	}
+	
 	if (stateBet.isSpaceHold) {
-		if (stateBetDerived.activeBetMode()?.type === 'buy') {
-			stateBet.activeBetModeKey = 'BASE';
-			return;
-		}
-
 		return;
 	}
 	throw Error('end bet');
@@ -70,6 +72,11 @@ export const createIntermediateMachineBet = ({
 						}),
 						onDone: [
 							{
+								actions: assign(() => {
+									if (stateBetDerived.activeBetMode()?.type === 'buy') {
+										stateBet.activeBetModeKey = 'BASE';
+									}
+								}),
 								target: 'ending',
 							},
 						],

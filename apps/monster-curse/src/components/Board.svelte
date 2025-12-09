@@ -115,14 +115,22 @@
 				// Set to expand state for S symbols
 				reelSymbol.symbolState = 'expand';
 				
-				const promise = waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+				// Protect against animations that never fire 'complete'
+				const promise = Promise.race([
+					waitForResolve((resolve) => (reelSymbol.oncomplete = resolve)),
+					new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+				]);
 				animationPromises.push(promise);
 				symbolsToTransition.push({ reelSymbol });
 			} else if (WIN_ANIMATION_SYMBOLS.includes(reelSymbol.rawSymbol.name)) {
 				// Set to 'win' state (reset already done above)
 				reelSymbol.symbolState = 'win';
 				
-				const promise = waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+				// Protect against animations that never fire 'complete'
+				const promise = Promise.race([
+					waitForResolve((resolve) => (reelSymbol.oncomplete = resolve)),
+					new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+				]);
 				animationPromises.push(promise);
 				symbolsToTransition.push({ reelSymbol });
 			} else {

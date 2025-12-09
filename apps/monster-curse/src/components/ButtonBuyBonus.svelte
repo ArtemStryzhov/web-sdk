@@ -2,12 +2,15 @@
 	import { Text, Sprite } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateModal, stateBet, stateBetDerived, stateUi } from 'state-shared';
+	import { getContextApp } from 'pixi-svelte';
+	import * as PIXI from 'pixi.js';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
+	const pixiContext = getContextApp();
 	const { stateXstateDerived, eventEmitter, stateGame, i18nDerived } = context;
 	
 	// Button sizing
@@ -62,15 +65,20 @@
 		{@const spriteKey = disabled 
 			? 'buy_button_disabled.png' 
 			: (hovered ? 'buy_button_hover.png' : 'buy_button_active.png')}
+		
+		{@const spriteTexture = pixiContext.stateApp.loadedAssets?.[spriteKey] as PIXI.Texture | undefined}
+		{@const isSpriteLoaded = spriteTexture && spriteTexture !== PIXI.Texture.EMPTY}
 
 		<!-- Background sprite from common spritesheet -->
-		<Sprite
-			{...center}
-			anchor={0.5}
-			key={spriteKey}
-			width={sizes.width}
-			height={sizes.height}
-		/>
+		{#if isSpriteLoaded}
+			<Sprite
+				{...center}
+				anchor={0.5}
+				key={spriteKey}
+				width={sizes.width}
+				height={sizes.height}
+			/>
+		{/if}
 
 		<!-- Button text - split styling for FREE SPINS vs number -->
 		{#if isFreeSpinGame}

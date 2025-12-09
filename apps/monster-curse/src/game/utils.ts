@@ -17,12 +17,23 @@ export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
 	stateGame.shouldLoopWinAnimations = false;
 	
-	await playBookEvents(bet.state);
-	eventEmitter.broadcast({ type: 'stopButtonEnable' });
-	
-	if (stateGame.winAnimationData) {
-		stateGame.shouldLoopWinAnimations = true;
-		loopWinAnimations();
+	try {
+		await playBookEvents(bet.state);
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
+		
+		if (stateGame.winAnimationData) {
+			stateGame.shouldLoopWinAnimations = true;
+			// Don't await - let it run in background, but ensure it doesn't block state transitions
+			loopWinAnimations().catch((error) => {
+				console.error('Error in win animation loop:', error);
+				stateGame.shouldLoopWinAnimations = false;
+			});
+		}
+	} catch (error) {
+		// Ensure state is reset on error
+		stateGame.shouldLoopWinAnimations = false;
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
+		throw error;
 	}
 };
 

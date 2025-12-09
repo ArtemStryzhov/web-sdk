@@ -33,11 +33,24 @@ export function createPlayMusic<TSoundName extends string>(options: {
 
 	const resumeMusic = (sound: Sound) => {
 		pauseAllMusic();
-		options.howl.play(sound.soundId);
-		options.getSoundMap()[sound.soundName] = {
-			...sound,
-			soundState: 'playing',
-		};
+		// Check if soundId is valid (not 0, not undefined)
+		// If valid, resume the existing sound, otherwise play a new instance
+		if (sound.soundId && sound.soundId !== 0) {
+			options.howl.play(sound.soundId);
+			options.getSoundMap()[sound.soundName] = {
+				...sound,
+				soundState: 'playing',
+			};
+		} else {
+			// Fall back to playing by name if soundId is invalid
+			const soundId = options.howl.play(sound.soundName);
+			options.getSoundMap()[sound.soundName] = {
+				...sound,
+				soundId,
+				soundState: 'playing',
+			};
+			options.initSoundVolume(sound.soundName);
+		}
 	};
 
 	const soundPlayMap = {

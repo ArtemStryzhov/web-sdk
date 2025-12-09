@@ -17,7 +17,17 @@
 	const context = getContext();
 	const pixiContext = getContextApp();
 
-	const shouldShow = $derived(context.stateGame.gameType !== 'freegame');
+	// Track if we've already shown the welcome frames (only show once on initial load)
+	let hasShownWelcomeFrames = $state(false);
+	
+	// Only show welcome frames during initial loading screen, not during gameplay
+	// Show only once when loaded and not in freegame, then hide forever after first press
+	const shouldShowWelcomeFrames = $derived(
+		!hasShownWelcomeFrames &&
+		context.stateLayout.showLoadingScreen && 
+		context.stateApp.loaded && 
+		context.stateGame.gameType !== 'freegame'
+	);
 
 	// Font loading state
 	let fontLoaded = $state(false);
@@ -193,19 +203,44 @@
 
 	// Calculate scale to fit available width, then reduce by 2x, then increase by 15%
 	// On portrait, multiply by 3 to make blocks 3 times larger
+	// For desktop/landscape: use fixed scale that matches 1967px exactly
 	const availableWidth = $derived(mainLayout.width - horizontalPadding * 2);
 	const totalFramesWidth = $derived(frameOriginalWidth * numFrames);
 	const totalGapsWidth = $derived(frameGap * (numFrames - 1));
 	const totalWidthNeeded = $derived(totalFramesWidth + totalGapsWidth);
-	const baseFrameScale = $derived(Math.min(1, availableWidth / totalWidthNeeded) * 0.5 * 1.15); // Scale down by 2x, then increase by 15%
+	
+	// Fixed reference final scale from the exact 1967px layout visual size.
+	// At 1967px: baseFrameScale ≈ 0.312 and mainLayout.scale ≈ 1.203 → final ≈ 0.375
+	// Keep final visual size constant by: frameScale = referenceFinalScale / mainLayout.scale
+	const referenceFinalScale = 0.375;
+	const shouldUseReferenceScale = $derived(
+		isDesktop || isLandscape || isTablet
+	);
+	
+	const baseFrameScale = $derived(
+		// For desktop / landscape / tablet, keep final size constant using the reference final scale
+		// For portrait, calculate dynamically
+		shouldUseReferenceScale
+			? (isDesktop ? (referenceFinalScale * 1.1) : referenceFinalScale) / mainLayout.scale // desktop +10%
+			: Math.min(1, availableWidth / totalWidthNeeded) * 0.5 * 1.15
+	);
+	
+	// Apply layout-specific multipliers.
+	// For desktop/landscape/tablet we use the fixed reference scale (no extra multiplier).
+	// For portrait we keep the original sizing logic.
 	const frameScale = $derived(
 		(() => {
 			const base = isPortrait
 				? baseFrameScale * 3 // 3 times larger on portrait
-				: isTablet
-					? baseFrameScale * 2 // 2 times larger on tablet
-					: baseFrameScale;
-			return base * (isSmallScreen ? 0.7 : 1) * 1.15; // 30% smaller on screens < 380, then increase by 15%
+				: baseFrameScale; // desktop / landscape / tablet uses the fixed reference base
+
+			// Extra scaling only for portrait small screens
+			const extraScale =
+				shouldUseReferenceScale
+					? 1 // no extra bump on desktop/landscape/tablet to stay consistent
+					: (isSmallScreen ? 0.7 : 1) * 1.15; // original behavior
+
+			return base * extraScale;
 		})()
 	);
 
@@ -498,11 +533,13 @@
 	});
 
 	const handlePress = () => {
+		// Mark that we've shown the welcome frames, so they won't appear again
+		hasShownWelcomeFrames = true;
 		props.onpress();
 	};
 </script>
 
-{#if shouldShow}
+{#if shouldShowWelcomeFrames}
 	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.2} zIndex={9998} eventMode="none" />
 
 	<!-- Welcome frame blocks -->
