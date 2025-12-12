@@ -63,14 +63,14 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
+		gap: 20px;
 	}
 
 	.bonuses {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 1rem;
+		gap: 20px;
 
 		transform-origin: center center;
 	}

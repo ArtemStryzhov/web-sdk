@@ -2,7 +2,6 @@
 	import { stateBet, stateModal, stateUi, INFINITY_MARK, type BetModeData } from 'state-shared';
 	import { Button } from 'components-shared';
 	import { getContextEventEmitter } from 'utils-event-emitter';
-	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import BaseIcon from './BaseIcon.svelte';
 	import BonusCard from './BonusCard.svelte';
@@ -18,13 +17,18 @@
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 </script>
 
-{#each props.list as betModeData}
+{#each props.list as betModeData, idx}
 	{#if betModeData.type !== 'default'}
 		<BonusCard>
+			{#snippet icon()}
+				{#if idx === 0}
+					<div class="icon-sprite icon-3icons"></div>
+				{:else if idx === 1}
+					<div class="icon-sprite icon-4icons"></div>
+				{/if}
+			{/snippet}
 			{#snippet title()}
-				<div class="title">
-					{betModeData.text.title}
-				</div>
+				<div class="title"></div>
 			{/snippet}
 
 			{#snippet description()}
@@ -36,13 +40,22 @@
 			{/snippet}
 
 			{#snippet price()}
+				{@const price = stateBet.betAmount * betModeData.costMultiplier}
+				{@const currencySymbol = stateBet.currency === 'USD' ? '$' : `${stateBet.currency} `}
+				{@const formatted = price.toFixed(2)}
+				{@const [intPart, decPart] = formatted.split('.')}
 				<div class="price">
-					{`${numberToCurrencyString(stateBet.betAmount * betModeData.costMultiplier)}`}
+					<span class="currency">{currencySymbol}</span>
+					<span class="price-int">{intPart}</span>
+					<span class="price-sep">.</span>
+					<span class="price-dec">{decPart}</span>
 				</div>
 			{/snippet}
 
 			{#snippet button()}
-				<div class="button-container">
+				{@const isDisabled = stateBet.betAmount <= 0 ||
+					stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
+				<div class={`button-container ${isDisabled ? 'disabled' : ''}`}>
 					<Button
 						onclick={() => {
 							// Set active bet mode for the initial purchase
@@ -54,10 +67,6 @@
 							// For 'buy' type, immediately place the bet
 							if (betModeData.type === 'buy') {
 								eventEmitter.broadcast({ type: 'bet' });
-								// Note: Don't reset to BASE here - let the bet request use the buy mode
-								// The mode will be automatically handled:
-								// - During resume: ResumeBet.svelte converts buy modes to BASE
-								// - After freespins end: freeSpinEnd handler resets to BASE
 							}
 							
 							// For 'activate' type, set infinity limits (same as confirmation logic)
@@ -68,8 +77,7 @@
 							
 							eventEmitter.broadcast({ type: 'soundPressGeneral' });
 						}}
-						disabled={stateBet.betAmount <= 0 ||
-							stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
+						disabled={isDisabled}
 					>
 						<div class="button-background"></div>
 						<BaseButtonContent>
@@ -84,18 +92,18 @@
 
 <style lang="scss">
 	.title {
-		font-size: 1rem;
-		line-height: 1rem;
-		text-align: center;
+		display: none;
 	}
 
 	.description {
-		font-size: 0.75rem;
+		font-family: 'Chelsea Market', 'Arial', sans-serif;
+		font-size: 1.16rem; /* 20% smaller */
 		text-align: center;
-		min-height: 4rem;
+		min-height: 4.5rem;
 		white-space: pre-line;
 		display: inline-flex;
 		align-items: center;
+		color: #FFFFFF;
 	}
 
 	.description:empty {
@@ -103,29 +111,76 @@
 	}
 
 	.price {
-		font-size: 1rem;
-		line-height: 1rem;
+		display: inline-block;
+		font-size: 42px; /* further -15% */
+		line-height: 1.1em;
 		text-align: center;
 		white-space: nowrap;
+		font-family: 'Crom', Arial, sans-serif;
+		font-weight: normal;
+		color: #61E5FF;
+		text-shadow: 3px 6px 0px #BF00B5;
+		-webkit-text-stroke: 5px transparent;
+		background: linear-gradient(180deg, #FF70EA 0%, #7B15FF 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		padding: 2px 4px;
+		display: inline-flex;
+		align-items: baseline;
+		gap: 6px;
+	}
+
+	.price .currency {
+		font-family: 'Kanit', Arial, sans-serif; /* fallback font with currency glyphs */
+		font-size: 0.9em;
+	}
+
+	.price .price-int {
+		font-family: 'Crom', Arial, sans-serif;
+	}
+
+	.price .price-sep,
+	.price .price-dec {
+		font-family: 'Crom', Arial, sans-serif;
+	}
+
+	/* Make decimal point always visible */
+	.price .price-sep {
+		font-family: 'Kanit', Arial, sans-serif; /* ensure glyph */
+		font-size: 0.95em;
+		-webkit-text-stroke: 0;
+		text-shadow: none;
+		color: #61E5FF;
+		display: inline-block;
+		line-height: 1em;
 	}
 
 	.button-container {
 		position: relative;
 		width: 100%;
+		height: 72px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
 	}
 
 	.button-background {
 		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-image: url('/assets/sprites/common/buy_button_active.png');
-		background-size: contain;
-		background-position: center;
+		top: 50%;
+		left: 50%;
+		width: 166px;
+		height: 63px;
+		transform: translate(-50%, -50%);
+		background-image: url('/assets/sprites/common/spritesheet.png');
+		background-size: 2884px 2027px; /* full atlas */
+		background-position: -1795px -1px; /* buy_btn_active */
 		background-repeat: no-repeat;
 		z-index: 0;
 		pointer-events: none;
+	}
+
+	.button-container.disabled .button-background {
+		background-position: -1795px -66px; /* buy_btn_disabled */
 	}
 
 	.button-text {
@@ -134,9 +189,28 @@
 		font-family: 'Lalezar', sans-serif;
 		font-weight: 400;
 		font-style: normal;
-		font-size: 47px;
+		font-size: 39px; /* further -15% */
 		line-height: 100%;
 		text-align: center;
 		color: #61E5FF;
+	}
+
+	.icon-sprite {
+		background-image: url('/assets/sprites/common/spritesheet.png');
+		background-size: 2884px 2027px;
+		background-repeat: no-repeat;
+		pointer-events: none;
+	}
+
+	.icon-3icons {
+		width: 156px;
+		height: 156px;
+		background-position: -1px -1px;
+	}
+
+	.icon-4icons {
+		width: 176px;
+		height: 156px;
+		background-position: -159px -1px;
 	}
 </style>

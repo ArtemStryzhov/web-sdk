@@ -341,27 +341,28 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				continue;
 			}
 			
-			if (reelSymbol.rawSymbol.name === 'S') {
+			// Force a sticky sword symbol even if the current rawSymbol isn't S (buy_blades uses sticky S)
+			reelSymbol.rawSymbol = {
+				name: 'S',
+				scatter: true,
 				// reelPosition represents expansion level (0-4) based on which visible row (1-5)
-				reelSymbol.rawSymbol.reelPosition = position.row - 1;
-				
-				// Reset symbol state first to ensure animation re-triggers even if already in 'expand' state
-				reelSymbol.symbolState = 'postWinStatic';
-				
-				// Small delay to ensure state change is registered
-				await new Promise(resolve => setTimeout(resolve, 50));
-				
-				reelSymbol.symbolState = 'expand';
-				
-				// Wait for animation with timeout protection (5 seconds max)
-				const animationPromise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));
-				const timeoutPromise = new Promise<void>(resolve => {
-					setTimeout(() => resolve(), 5000);
-				});
-				await Promise.race([animationPromise, timeoutPromise]);
-				
-				reelSymbol.symbolState = 'static';
-			}
+				reelPosition: position.row - 1,
+			} as any;
+
+			// Reset state to force the expand animation to play/replay
+			reelSymbol.symbolState = 'postWinStatic';
+			await new Promise(resolve => setTimeout(resolve, 50));
+			reelSymbol.symbolState = 'expand';
+
+			// Wait for animation with timeout protection (5 seconds max)
+			const animationPromise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));
+			const timeoutPromise = new Promise<void>(resolve => {
+				setTimeout(() => resolve(), 5000);
+			});
+			await Promise.race([animationPromise, timeoutPromise]);
+
+			// Keep it static but expanded; expansion mask is handled by reelPosition in SymbolSpineMain
+			reelSymbol.symbolState = 'static';
 		}
 	},
 	swordExpandEvent: async (bookEvent: BookEventOfType<'swordExpandEvent'>) => {

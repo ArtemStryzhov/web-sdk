@@ -473,7 +473,7 @@
 	// Text style for frame content
 	const frameTextStyle = $derived({
 		fontFamily: 'Chelsea Market, Arial, sans-serif',
-		fontSize: UI_BASE_FONT_SIZE * 0.45 * (isLandscape ? 1.10 : 1), // 10% bigger on landscape
+		fontSize: UI_BASE_FONT_SIZE * 0.45 * (isLandscape ? 1.10 : 0.7),
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -484,7 +484,7 @@
 	// Text style for first block (with extra left padding)
 	const frameTextStyleFirst = $derived({
 		fontFamily: 'Chelsea Market, Arial, sans-serif',
-		fontSize: UI_BASE_FONT_SIZE * 0.45 * (isLandscape ? 1.10 : 1), // 10% bigger on landscape
+		fontSize: UI_BASE_FONT_SIZE * 0.45 * (isLandscape ? 1.10 : 0.7), // 10% bigger on landscape
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -524,13 +524,14 @@
 	const sens2000X = $derived(0); // Centered horizontally
 	const sens2000Y = $derived(-frameHeight * 0.4 + 40); // Top aligned, moved 40px down
 
-	const textStyle = $derived({
-		fontFamily: 'Kanit, Arial, sans-serif',
-		fontSize: UI_BASE_FONT_SIZE * 0.65,
-		fontWeight: 600 as any,
-		fill: 0x61E5FF,
-		align: 'center' as const,
-	});
+const textStyle = $derived({
+	fontFamily: 'Kanit, Arial, sans-serif',
+	// Increase CTA button label by an additional 15% and center vertically
+	fontSize: UI_BASE_FONT_SIZE * 0.3 * 1.15 * 1.2 * 1.15,
+	fontWeight: 600 as any,
+	fill: 0x61E5FF,
+	align: 'center' as const,
+});
 
 	const handlePress = () => {
 		// Mark that we've shown the welcome frames, so they won't appear again
@@ -809,7 +810,7 @@
 				style={textStyle}
 				anchor={{ x: 0.5, y: 0.5 }}
 				x={0}
-				y={0}
+				y={5}
 				eventMode="none"
 			/>
 		</Container>

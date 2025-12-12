@@ -34,7 +34,7 @@
 	.bonuses-wrap {
 		display: flex;
 		flex-direction: row;
-		gap: 1rem;
+		gap: 20px;
 		flex-wrap: wrap;
 		justify-content: center;
 		align-items: center;
