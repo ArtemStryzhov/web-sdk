@@ -20,16 +20,24 @@
 const logoScale = $derived(
 	(() => {
 		if (layoutType === 'desktop') {
+		let scale = 0.4;
+
 			if (canvasSizes.height < 550) {
-				return 0.3 * 0.7; // 30% smaller (base 0.3 * 0.7 = 0.21)
+			scale = 0.3 * 0.7; // 30% smaller (base 0.3 * 0.7 = 0.21)
 			}
 			if (canvasSizes.height < 650) {
-				return 0.3 * 0.8; // 20% smaller (base 0.3 * 0.8 = 0.24)
+			scale = 0.3 * 0.8; // 20% smaller (base 0.3 * 0.8 = 0.24)
 			}
 			if (canvasSizes.height < 800) {
-				return 0.3;
+			scale = 0.3;
 			}
-			return 0.4;
+
+		// Width <= 1024: shrink logo an additional 20%
+		if (canvasSizes.width <= 1024) {
+			scale *= 0.8;
+		}
+
+		return scale;
 		}
 
 		if (layoutType === 'tablet') {

@@ -72,7 +72,7 @@
 
 	.icon-slot {
 		position: absolute;
-		top: 32px;
+		top: 3px;
 		left: 50%;
 		transform: translateX(-50%);
 		display: flex;
@@ -97,12 +97,27 @@
 		justify-content: center;
 	}
 
-	@media (max-width: 480px) {
-		.bonus-card-wrap {
-			width: 280px;
-		}
-		.frame {
-			padding: 36px 28px 32px;
-		}
+
+@media (max-width: 800px) {
+	.bonus-card-wrap {
+		transform: scale(0.75) !important;
+		transform-origin: center !important;
 	}
+
+	.frame-content {
+		transform: translateY(-15px) !important;
+	}
+}
+
+/* Width < 1024: shrink blocks by 30% */
+@media (max-width: 400px) {
+	.frame-content {
+		transform: translateY(-14px) !important;
+	}
+	.bonus-card-wrap {
+		transform: scale(0.55) !important;
+				width: 360px !important;
+		flex: 0 0 360px !important;
+	}
+}
 </style>

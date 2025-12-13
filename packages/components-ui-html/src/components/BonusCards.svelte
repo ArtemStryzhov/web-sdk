@@ -17,80 +17,95 @@
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 </script>
 
-{#each props.list as betModeData, idx}
-	{#if betModeData.type !== 'default'}
-		<BonusCard>
-			{#snippet icon()}
-				{#if idx === 0}
-					<div class="icon-sprite icon-3icons"></div>
-				{:else if idx === 1}
-					<div class="icon-sprite icon-4icons"></div>
-				{/if}
-			{/snippet}
-			{#snippet title()}
-				<div class="title"></div>
-			{/snippet}
+<div class="cards">
+	{#each props.list as betModeData, idx}
+		{#if betModeData.type !== 'default'}
+			<div class="card-item">
+				<BonusCard>
+					{#snippet icon()}
+						{#if idx === 0}
+							<div class="icon-sprite icon-3icons"></div>
+						{:else if idx === 1}
+							<div class="icon-sprite icon-4icons"></div>
+						{/if}
+					{/snippet}
+					{#snippet title()}
+						<div class="title"></div>
+					{/snippet}
 
-			{#snippet description()}
-				{#if betModeData?.text?.description}
-					<div class="description">
-						{betModeData.text.description}
-					</div>
-				{/if}
-			{/snippet}
+					{#snippet description()}
+						{#if betModeData?.text?.description}
+							<div class="description">
+								{betModeData.text.description}
+							</div>
+						{/if}
+					{/snippet}
 
-			{#snippet price()}
-				{@const price = stateBet.betAmount * betModeData.costMultiplier}
-				{@const currencySymbol = stateBet.currency === 'USD' ? '$' : `${stateBet.currency} `}
-				{@const formatted = price.toFixed(2)}
-				{@const [intPart, decPart] = formatted.split('.')}
-				<div class="price">
-					<span class="currency">{currencySymbol}</span>
-					<span class="price-int">{intPart}</span>
-					<span class="price-sep">.</span>
-					<span class="price-dec">{decPart}</span>
-				</div>
-			{/snippet}
+					{#snippet price()}
+						{@const price = stateBet.betAmount * betModeData.costMultiplier}
+						{@const currencySymbol = stateBet.currency === 'USD' ? '$' : `${stateBet.currency} `}
+						{@const formatted = price.toFixed(2)}
+						{@const [intPart, decPart] = formatted.split('.')}
+						<div class="price">
+							<span class="currency">{currencySymbol}</span>
+							<span class="price-int">{intPart}</span>
+							<span class="price-sep">.</span>
+							<span class="price-dec">{decPart}</span>
+						</div>
+					{/snippet}
 
-			{#snippet button()}
-				{@const isDisabled = stateBet.betAmount <= 0 ||
-					stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
-				<div class={`button-container ${isDisabled ? 'disabled' : ''}`}>
-					<Button
-						onclick={() => {
-							// Set active bet mode for the initial purchase
-							stateBet.activeBetModeKey = betModeData.mode;
-							
-							// Close the buy bonus modal
-							stateModal.modal = null;
-							
-							// For 'buy' type, immediately place the bet
-							if (betModeData.type === 'buy') {
-								eventEmitter.broadcast({ type: 'bet' });
-							}
-							
-							// For 'activate' type, set infinity limits (same as confirmation logic)
-							if (betModeData.type === 'activate') {
-								stateUi.autoSpinsLossLimitText = INFINITY_MARK;
-								stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
-							}
-							
-							eventEmitter.broadcast({ type: 'soundPressGeneral' });
-						}}
-						disabled={isDisabled}
-					>
-						<div class="button-background"></div>
-						<BaseButtonContent>
-							<span class="button-text">{betModeData.text.button}</span>
-						</BaseButtonContent>
-					</Button>
-				</div>
-			{/snippet}
-		</BonusCard>
-	{/if}
-{/each}
+					{#snippet button()}
+						{@const isDisabled = stateBet.betAmount <= 0 ||
+							stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
+						<div class={`button-container ${isDisabled ? 'disabled' : ''}`}>
+							<Button
+								onclick={() => {
+									// Set active bet mode for the initial purchase
+									stateBet.activeBetModeKey = betModeData.mode;
+									
+									// Close the buy bonus modal
+									stateModal.modal = null;
+									
+									// For 'buy' type, immediately place the bet
+									if (betModeData.type === 'buy') {
+										eventEmitter.broadcast({ type: 'bet' });
+									}
+									
+									// For 'activate' type, set infinity limits (same as confirmation logic)
+									if (betModeData.type === 'activate') {
+										stateUi.autoSpinsLossLimitText = INFINITY_MARK;
+										stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
+									}
+									
+									eventEmitter.broadcast({ type: 'soundPressGeneral' });
+								}}
+								disabled={isDisabled}
+							>
+								<div class="button-background"></div>
+								<BaseButtonContent>
+									<span class="button-text">{betModeData.text.button}</span>
+								</BaseButtonContent>
+							</Button>
+						</div>
+					{/snippet}
+				</BonusCard>
+			</div>
+		{/if}
+	{/each}
+</div>
 
 <style lang="scss">
+	.cards {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 20px;
+		justify-content: center;
+	}
+
+	.card-item {
+		display: flex;
+	}
+
 	.title {
 		display: none;
 	}
@@ -203,14 +218,60 @@
 	}
 
 	.icon-3icons {
+		margin-top: 35px;
 		width: 156px;
 		height: 156px;
 		background-position: -1px -1px;
 	}
 
 	.icon-4icons {
+		margin-top: 35px;
 		width: 176px;
 		height: 156px;
 		background-position: -159px -1px;
+	}
+
+	/* Portrait: stack cards vertically */
+	@media (orientation: portrait) {
+		.cards {
+			flex-direction: column;
+			align-items: center;
+			gap: 0 !important; /* control spacing via card-item margins */
+		}
+
+		.card-item {
+			width: 100%;
+			justify-content: center;
+			margin: 0 !important;
+		}
+
+		.card-item:not(:last-child) {
+			margin-bottom: 0 !important; /* tighten vertical spacing */
+		}
+
+		:global(.bonus-card-wrap) {
+			width: 100% !important;
+			max-width: 360px !important;
+		}
+	}
+
+	/* Extra small widths: ensure stacked with 20px vertical spacing */
+	@media (max-width: 400px) {
+		.cards {
+			flex-direction: column;
+			align-items: center;
+			gap: 0 !important;
+		}
+
+		.card-item {
+			width: 100%;
+			justify-content: center;
+			margin: 0 !important;
+			padding: 0;
+		}
+
+		.card-item:not(:last-child) {
+			margin-bottom: -130px !important;
+		}
 	}
 </style>

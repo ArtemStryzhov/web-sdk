@@ -89,8 +89,7 @@
 		if (typeof window !== 'undefined') {
 			const handleGlobalPointerDown = (e: PointerEvent) => {
 				// Only handle if in slider mode and not already dragging
-				const currentCanvasSizes = context.stateLayoutDerived.canvasSizes();
-				if (currentCanvasSizes.width <= 450 && !isDragging) {
+				if (isSliderMode && !isDragging) {
 					// Check if click is in the slider area (roughly center of screen)
 					const app = pixiContext.stateApp.pixiApplication;
 					if (!app || !app.canvas) return;
@@ -115,8 +114,7 @@
 
 			const handleGlobalPointerMove = (e: PointerEvent) => {
 				// Only process if we're dragging - access reactive state directly
-				const currentCanvasSizes = context.stateLayoutDerived.canvasSizes();
-				if (isDragging && currentCanvasSizes.width <= 450) {
+				if (isDragging && isSliderMode) {
 					// Always prevent default to prevent pointer cancellation
 					e.preventDefault();
 					// Don't check pointer ID - just process all move events when dragging
@@ -132,8 +130,7 @@
 
 			const handleGlobalPointerUp = (e: PointerEvent) => {
 				// Only process if we're dragging - access reactive state directly
-				const currentCanvasSizes = context.stateLayoutDerived.canvasSizes();
-				if (isDragging && currentCanvasSizes.width <= 450) {
+				if (isDragging && isSliderMode) {
 					// Don't check pointer ID - just process all up events when dragging
 					// Pass raw event data directly
 					handlePointerUp({
@@ -183,10 +180,15 @@
 	const isLandscape = $derived(layoutType === 'landscape');
 	const isDesktop = $derived(layoutType === 'desktop');
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
-	// Use slider mode only for portrait/tablet small screens, not for small landscape
-	const isSliderMode = $derived(
-		canvasSizes.width <= 450 && !isLandscape
-	);
+	const isSmallDesktop = $derived(isDesktop && canvasSizes.width < 1600 && canvasSizes.height < 800);
+	const isNarrowDesktop = $derived(isDesktop && canvasSizes.width <= 1024);
+	const isNarrowDesktop1200 = $derived(isDesktop && canvasSizes.width < 1200);
+	const isUltraNarrow = $derived(canvasSizes.width < 500);
+	const isLandscapeLayout = $derived(isLandscape);
+	const portraitTextScale = $derived(isPortrait ? 1.85 : 1);
+	const tabletTextScale = $derived(isTablet ? 2 : 1);
+	// Use slider mode for all portrait and tablet screen sizes
+	const isSliderMode = $derived(isPortrait || isTablet);
 	const isSmallScreen = $derived(canvasSizes.width < 380);
 
 	const buttonX = $derived(mainLayout.width * 0.5);
@@ -240,7 +242,14 @@
 					? 1 // no extra bump on desktop/landscape/tablet to stay consistent
 					: (isSmallScreen ? 0.7 : 1) * 1.15; // original behavior
 
-			return base * extraScale;
+			// Small desktop: shrink frames by 15% when below 1600x800
+			const smallDesktopScale = isSmallDesktop ? 0.85 : 1;
+			// Narrow desktop: shrink frames by 30% when width <= 1024
+			const narrowDesktopScale = isNarrowDesktop ? 0.7 : 1;
+			// Landscape: shrink frames by 30%
+			const landscapeScale = isLandscapeLayout ? 0.7 : 1;
+
+			return base * extraScale * smallDesktopScale * narrowDesktopScale * landscapeScale;
 		})()
 	);
 
@@ -473,7 +482,17 @@
 	// Text style for frame content
 	const frameTextStyle = $derived({
 		fontFamily: 'Chelsea Market, Arial, sans-serif',
-		fontSize: UI_BASE_FONT_SIZE * 0.45 * (isLandscape ? 1.10 : 0.7),
+		fontSize:
+			UI_BASE_FONT_SIZE *
+			0.45 *
+			(isLandscape ? 1.10 : 0.7) *
+			(isSmallDesktop ? 1.2 : 1) *
+			(isNarrowDesktop ? 1.2 : 1) *
+			(isLandscapeLayout ? 1.2 : 1) *
+			(isNarrowDesktop1200 ? 1.15 : 1) *
+			(isUltraNarrow ? 0.8 : 1) *
+			portraitTextScale *
+			tabletTextScale,
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -484,7 +503,17 @@
 	// Text style for first block (with extra left padding)
 	const frameTextStyleFirst = $derived({
 		fontFamily: 'Chelsea Market, Arial, sans-serif',
-		fontSize: UI_BASE_FONT_SIZE * 0.45 * (isLandscape ? 1.10 : 0.7), // 10% bigger on landscape
+		fontSize:
+			UI_BASE_FONT_SIZE *
+			0.45 *
+			(isLandscape ? 1.10 : 0.7) *
+			(isSmallDesktop ? 1.2 : 1) *
+			(isNarrowDesktop ? 1.2 : 1) *
+			(isLandscapeLayout ? 1.2 : 1) *
+			(isNarrowDesktop1200 ? 1.15 : 1) *
+			(isUltraNarrow ? 0.8 : 1) *
+			portraitTextScale *
+			tabletTextScale, // 10% bigger on landscape
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -546,7 +575,7 @@ const textStyle = $derived({
 	<!-- Welcome frame blocks -->
 	<MainContainer zIndex={9999}>
 		{#if isSliderMode}
-			<!-- Slider mode (width <= 450): Slider with drag/swipe functionality -->
+			<!-- Slider mode: Slider with drag/swipe functionality -->
 			<!-- Content container -->
 			<Container
 				x={0}

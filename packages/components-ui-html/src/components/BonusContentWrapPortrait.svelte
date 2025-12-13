@@ -19,14 +19,16 @@
 
 	let contentRect = $state({ width: 0, height: 0, left: 0, top: 0 } as ContentRect);
 
-	const horizontalScale = $derived(
-		stateLayoutDerived.canvasSizes().width / (240 * (props.maxListLength || 1)),
-	); // {maxListLength} columns, 240 is the width benchmark
-	const verticalScale = $derived(
-		(stateLayoutDerived.canvasSizes().height - 250) / (contentRect?.height || 0),
-	);
-	const scale = $derived(Math.min(verticalScale, horizontalScale));
-	const scaled = $derived(scale < 1);
+const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
+const horizontalScale = $derived(
+	canvasSizes.width / (240 * (props.maxListLength || 1)),
+); // {maxListLength} columns, 240 is the width benchmark
+const verticalScale = $derived(
+	(canvasSizes.height - 250) / (contentRect?.height || 0),
+);
+const rawScale = $derived(Math.min(verticalScale, horizontalScale));
+const scale = $derived(canvasSizes.width < 420 ? 1 : Math.min(rawScale, 1));
+const scaled = $derived(scale < 1);
 </script>
 
 <div class="container">
@@ -73,5 +75,14 @@
 		gap: 20px;
 
 		transform-origin: center center;
+	}
+
+	@media (max-width: 420px) {
+		.wrap {
+			gap: 0;
+		}
+		.bonuses {
+			gap: 0;
+		}
 	}
 </style>
