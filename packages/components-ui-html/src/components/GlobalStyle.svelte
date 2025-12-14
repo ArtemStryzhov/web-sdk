@@ -9,13 +9,11 @@
 
 	const props: Props = $props();
 
-	// Use SvelteKit assets path so fonts resolve when the app is served behind a prefix or CDN.
-	// Falls back to BASE_URL (or root) when assets is empty (e.g., during dev).
-	// @ts-ignore - available at app runtime; ignored in package typecheck
-	import { assets } from '$app/paths';
-	const base = (assets ?? (import.meta as any).env?.BASE_URL ?? '') as string;
-	const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
-	const cromUrl = `${assetBase}/assets/fonts/crom/Crom_v1.ttf`;
+	// Bundle the font with the library so it is available in any host app.
+	// Vite/SvelteKit will emit the hashed asset URL at build time.
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	import cromUrl from '../assets/fonts/Crom_v1.ttf?url';
 </script>
 
 <svelte:head>

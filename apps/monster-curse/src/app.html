@@ -3,9 +3,23 @@
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+		<link
+			rel="preload"
+			as="font"
+			type="font/ttf"
+			href="%sveltekit.assets%/assets/fonts/crom/Crom_v1.ttf"
+			crossorigin="anonymous"
+		/>
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Lalezar&family=Chelsea+Market&display=swap" />
 		<style>
 			@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Lalezar&family=Chelsea+Market&display=swap');
+			@font-face {
+				font-family: 'Crom';
+				src: url('%sveltekit.assets%/assets/fonts/crom/Crom_v1.ttf') format('truetype');
+				font-weight: normal;
+				font-style: normal;
+				font-display: swap;
+			}
 			body { font-family: 'Kanit', Arial, sans-serif; }
 		</style>
 		<meta name="viewport" content="width=device-width" />
