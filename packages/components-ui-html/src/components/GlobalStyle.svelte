@@ -9,7 +9,11 @@
 
 	const props: Props = $props();
 
-	const base = (import.meta as any).env?.BASE_URL ?? '/';
+	// Use SvelteKit assets path so fonts resolve when the app is served behind a prefix or CDN.
+	// Falls back to BASE_URL (or root) when assets is empty (e.g., during dev).
+	// @ts-ignore - available at app runtime; ignored in package typecheck
+	import { assets } from '$app/paths';
+	const base = (assets ?? (import.meta as any).env?.BASE_URL ?? '') as string;
 	const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
 	const cromUrl = `${assetBase}/assets/fonts/crom/Crom_v1.ttf`;
 </script>
