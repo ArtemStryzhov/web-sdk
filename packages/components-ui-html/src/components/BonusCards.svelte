@@ -15,9 +15,13 @@
 
 	const props: Props = $props();
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
+
+	const base = (import.meta as any).env?.BASE_URL ?? '/';
+	const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
+	const spritesheetUrl = `${assetBase}/assets/sprites/common/spritesheet.png`;
 </script>
 
-<div class="cards">
+<div class="cards" style={`--spritesheet-url: url(${spritesheetUrl});`}>
 	{#each props.list as betModeData, idx}
 		{#if betModeData.type !== 'default'}
 			<div class="card-item">
@@ -186,7 +190,7 @@
 		width: 166px;
 		height: 63px;
 		transform: translate(-50%, -50%);
-		background-image: url('/assets/sprites/common/spritesheet.png');
+		background-image: var(--spritesheet-url);
 		background-size: 2884px 2027px; /* full atlas */
 		background-position: -1795px -1px; /* buy_btn_active */
 		background-repeat: no-repeat;
@@ -211,7 +215,7 @@
 	}
 
 	.icon-sprite {
-		background-image: url('/assets/sprites/common/spritesheet.png');
+		background-image: var(--spritesheet-url);
 		background-size: 2884px 2027px;
 		background-repeat: no-repeat;
 		pointer-events: none;

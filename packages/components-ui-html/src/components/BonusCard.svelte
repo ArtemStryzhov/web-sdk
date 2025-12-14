@@ -6,13 +6,17 @@
 		description: Snippet;
 		price: Snippet;
 		button: Snippet;
-	icon?: Snippet;
+		icon?: Snippet;
 	};
 
 	const props: Props = $props();
+
+	const base = (import.meta as any).env?.BASE_URL ?? '/';
+	const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
+	const spritesheetUrl = `${assetBase}/assets/sprites/common/spritesheet.png`;
 </script>
 
-<div class="bonus-card-wrap">
+<div class="bonus-card-wrap" style={`--spritesheet-url: url(${spritesheetUrl});`}>
 	<div class="frame">
 		{#if props.icon}
 			<div class="icon-slot">
@@ -51,7 +55,7 @@
 		align-items: center;
 		justify-content: center;
 		box-sizing: border-box;
-		background-image: url('/assets/sprites/common/spritesheet.png');
+		background-image: var(--spritesheet-url);
 		background-size: calc(2884px * var(--frame-scale)) calc(2027px * var(--frame-scale));
 		background-position: calc(-1827px * var(--frame-scale)) calc(-1033px * var(--frame-scale));
 		background-repeat: no-repeat;

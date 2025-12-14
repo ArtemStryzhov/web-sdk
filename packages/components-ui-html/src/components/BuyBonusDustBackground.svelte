@@ -4,10 +4,14 @@
 	 * Uses only the dust region from mm_bg_feature_animated.atlas
 	 * Atlas info: dust at xy: 290, 0, size: 1175x1223 from 1464x1234 total image
 	 */
+
+	const base = (import.meta as any).env?.BASE_URL ?? '/';
+	const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
+	const runesUrl = `${assetBase}/assets/spines/foregroundFeatureAnimation/animated/runes.png`;
 </script>
 
 <div class="dust-background">
-	<div class="dust-container"></div>
+	<div class="dust-container" style={`--runes-url: url(${runesUrl});`}></div>
 </div>
 
 <style lang="scss">
@@ -30,7 +34,7 @@
 		transform: translate(-50%, -50%) scale(0.75);
 		width: 1175px; // Actual dust region width from atlas
 		height: 1223px; // Actual dust region height from atlas
-		background-image: url('/assets/spines/foregroundFeatureAnimation/animated/runes.png');
+		background-image: var(--runes-url);
 		// Atlas shows dust at xy: 290, 0 with size 1175x1223 from 1464x1234 image
 		// Use pixel-based positioning to crop to dust region only
 		background-position: -290px 0px; // Offset to show only dust (starts at x:290 in atlas)
