@@ -1,8 +1,9 @@
 @font-face {
   font-family: 'Crom';
-  src: url('../static/assets/fonts/crom/Crom_v1.ttf') format('truetype');
+  src: var(--font-crom-url, url('/assets/fonts/crom/Crom_v1.ttf')) format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 .multiplier-text {
