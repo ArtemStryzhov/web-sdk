@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { cubicInOut } from 'svelte/easing';
-	import * as PIXI from 'pixi.js';
 
 	import { stateUi } from 'state-shared';
 	import { Text } from 'pixi-svelte';
@@ -19,8 +18,7 @@
 	
 	// Check if base_mobile_drawer asset exists
 	const hasDrawerAsset = $derived(
-		appContext.stateApp.loadedAssets?.['base_mobile_drawer'] !== undefined &&
-		appContext.stateApp.loadedAssets?.['base_mobile_drawer'] !== PIXI.Texture.EMPTY
+		appContext.stateApp.loadedAssets?.['base_mobile_drawer'] !== undefined
 	);
 
 	const degreesToRads = (degrees: number) => (degrees * Math.PI) / 180.0;
