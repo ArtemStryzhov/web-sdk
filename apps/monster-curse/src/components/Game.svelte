@@ -30,6 +30,7 @@
 	import BottomGradient from './BottomGradient.svelte';
 	import LabelBet from './LabelBet.svelte';
 	import ButtonBuyBonus from './ButtonBuyBonus.svelte';
+	import ButtonAutoSpin from './ButtonAutoSpin.svelte';
 	import StoneFXOverlay from './StoneFXOverlay.svelte';
 
 	const context = getContext();
@@ -171,6 +172,7 @@ const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 			logo={logoSnippet}
 			amountBet={amountBetSnippet}
 			buttonBuyBonus={buttonBuyBonusSnippet}
+			buttonAutoSpin={buttonAutoSpinSnippet}
 		/>
 	</Container>
 
@@ -216,6 +218,10 @@ const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 
 {#snippet buttonBuyBonusSnippet(buttonProps: any)}
 	<ButtonBuyBonus {...buttonProps} />
+{/snippet}
+
+{#snippet buttonAutoSpinSnippet(buttonProps: any)}
+	<ButtonAutoSpin {...buttonProps} />
 {/snippet}
 
 		<Win />

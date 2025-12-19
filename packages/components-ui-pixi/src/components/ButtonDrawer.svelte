@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { cubicInOut } from 'svelte/easing';
+	import * as PIXI from 'pixi.js';
 
 	import { stateUi } from 'state-shared';
 	import { Text } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
+	import { getContextApp } from 'pixi-svelte';
 
 	import UiSprite from './UiSprite.svelte';
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
@@ -12,7 +14,14 @@
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
+	const appContext = getContextApp();
 	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	
+	// Check if base_mobile_drawer asset exists
+	const hasDrawerAsset = $derived(
+		appContext.stateApp.loadedAssets?.['base_mobile_drawer'] !== undefined &&
+		appContext.stateApp.loadedAssets?.['base_mobile_drawer'] !== PIXI.Texture.EMPTY
+	);
 
 	const degreesToRads = (degrees: number) => (degrees * Math.PI) / 180.0;
 
@@ -58,13 +67,15 @@
 
 <Button {...props} {sizes} {onpress} {disabled} alpha={disabled ? 0.5 : 1}>
 	{#snippet children({ center })}
-		<UiSprite
-			key="base_mobile_drawer"
-			{...center}
-			anchor={0.5}
-			width={sizes.width}
-			height={sizes.height}
-		/>
+		{#if hasDrawerAsset}
+			<UiSprite
+				key="base_mobile_drawer"
+				{...center}
+				anchor={0.5}
+				width={sizes.width}
+				height={sizes.height}
+			/>
+		{/if}
 		<Text
 			{...center}
 			anchor={0.5}

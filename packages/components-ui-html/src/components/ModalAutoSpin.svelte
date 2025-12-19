@@ -17,7 +17,7 @@
 </script>
 
 {#if stateModal.modal?.name === 'autoSpin'}
-	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)} noFullScreenOverlay allowClickOutsideToClose>
+	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)} allowClickOutsideToClose>
 		<div class="autoplay-modal-container">
 			<div class="autoplay-background"></div>
 			<BaseContent width="720px" height="420px">

@@ -27,6 +27,11 @@
 	// Main layout for positioning
 	const context = getContext();
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const isPortrait = $derived(layoutType === 'portrait');
+	
+	// Adjust speed for portrait layout (2x slower)
+	const adjustedSpeed = $derived(isPortrait ? STONE_FALL_SPEED / 2 : STONE_FALL_SPEED);
 
 	// Calculate stone dimensions maintaining aspect ratio to fit canvas width, reduced by scale factor
 	$effect(() => {
@@ -53,8 +58,8 @@
 			lastTime = now;
 			const elapsedTime = now - animationStartTime;
 
-			// Update stone position
-			currentY = currentY + STONE_FALL_SPEED * deltaTime;
+			// Update stone position (use adjusted speed for portrait)
+			currentY = currentY + adjustedSpeed * deltaTime;
 
 			// Continue animation or end it
 			if (elapsedTime >= ANIMATION_DURATION) {
@@ -92,7 +97,7 @@
 
 {#if isAnimating}
 	<Container
-		x={canvasSizes.width - stoneDimensions.width * 0.4}
+		x={isPortrait ? canvasSizes.width - stoneDimensions.width * 0.4 - 60 : canvasSizes.width - stoneDimensions.width * 0.4}
 		y={currentY}
 		zIndex={10001}
 	>

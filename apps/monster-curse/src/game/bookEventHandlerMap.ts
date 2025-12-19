@@ -235,8 +235,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
-		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
-		eventEmitter.broadcast({ type: 'drawerFold' });
+		// Don't fold drawer in bonus game - keep all UI elements visible
+		// Unfold drawer if it was folded, and hide the drawer button (arrow)
+		eventEmitter.broadcast({ type: 'drawerUnfold' });
+		await eventEmitter.broadcastAsync({ type: 'drawerButtonHide' });
 	},
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });

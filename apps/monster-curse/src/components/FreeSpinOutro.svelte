@@ -33,7 +33,7 @@
 		const layoutType = context.stateLayoutDerived.layoutType();
 		const isDesktop = layoutType === 'desktop';
 		const baseFontSize = 60;
-		const fontSize = isDesktop ? baseFontSize * 1.85 : baseFontSize;
+		const fontSize = isDesktop ? baseFontSize * 1.85 : baseFontSize * 1.5;
 		const strokeThickness = 5;
 		const shadowDistance = Math.hypot(3, 6);
 
@@ -73,9 +73,9 @@
 		if (layoutType === 'desktop') {
 			scale = 1.35;
 		} else if (layoutType === 'tablet') {
-			scale = 0.9;
+			scale = 1;
 		} else if (layoutType === 'portrait') {
-			scale = 0.86;
+			scale = 0.9;
 		}
 		
 		// Base size: 605x539 / 2 = 302.5x269.5
@@ -106,7 +106,7 @@
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<!-- Background with opacity for total win screen -->
-				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
+				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.7} />
 
 				<OnMount
 					onmount={async () => {

@@ -32,6 +32,7 @@
 		// Optional snippet overrides
 		amountBet?: Snippet<[any]>;
 		buttonBuyBonus?: Snippet<[any]>;
+		buttonAutoSpin?: Snippet<[any]>;
 	};
 
 	const props: Props = $props();
@@ -155,7 +156,11 @@
 		{/snippet}
 
 		{#snippet buttonAutoSpin(buttonProps)}
-			<ButtonAutoSpin {...buttonProps} />
+			{#if props.buttonAutoSpin}
+				{@render props.buttonAutoSpin(buttonProps)}
+			{:else}
+				<ButtonAutoSpin {...buttonProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet buttonIncrease(buttonProps)}

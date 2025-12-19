@@ -44,7 +44,7 @@
 		const layoutType = context.stateLayoutDerived.layoutType();
 		const isDesktop = layoutType === 'desktop';
 		const baseFontSize = 60;
-		const fontSize = isDesktop ? baseFontSize * 1.85 : baseFontSize * 1.2; // 69 on desktop, 60 otherwise
+		const fontSize = isDesktop ? baseFontSize * 1.85 : baseFontSize * 1.4; // 69 on desktop, 60 otherwise
 		const strokeThickness = 5; // Match -webkit-text-stroke: 5px
 		const shadowDistance = Math.hypot(3, 6); // Match text-shadow: 3px 6px (distance = sqrt(3^2 + 6^2) ≈ 6.708)
 
@@ -86,9 +86,9 @@
 		if (layoutType === 'desktop') {
 			scale = 1.35; 
 		} else if (layoutType === 'tablet') {
-			scale = 0.9; 
+			scale = 1; 
 		} else if (layoutType === 'portrait') {
-			scale = 0.75; 
+			scale = 0.85; 
 		}
 		// landscape: scale = 1.0 (default)
 		
@@ -137,7 +137,7 @@
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<!-- Background with opacity only for win levels >= 6 -->
 				{#if winLevelData && winLevelData.level >= 6}
-					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
+					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.7} />
 				{/if}
 
 				<OnMount

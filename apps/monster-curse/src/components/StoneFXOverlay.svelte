@@ -13,6 +13,22 @@
 	let show = $state(false);
 	let prevGameType = $state<string | null>(null);
 	let playedTransitions = $state(new Set<string>());
+	let waitingForOutro = $state(false);
+
+	// Listen for freeSpinOutroHide to trigger stones animation after total win
+	context.eventEmitter.subscribeOnMount({
+		freeSpinOutroHide: async () => {
+			// If we're waiting for outro to complete, trigger stones animation now
+			if (waitingForOutro && prevGameType === 'freegame' && context.stateGame.gameType === 'basegame') {
+				const transitionKey = 'freegame->basegame';
+				if (!playedTransitions.has(transitionKey) && !show) {
+					show = true;
+					playedTransitions.add(transitionKey);
+					waitingForOutro = false;
+				}
+			}
+		},
+	});
 
 	$effect(() => {
 		const loading = context.stateLayout.showLoadingScreen;
@@ -34,9 +50,13 @@
 		const isBaseToFree = prevGameType === 'basegame' && current === 'freegame';
 		const isFreeToBase = prevGameType === 'freegame' && current === 'basegame';
 
-		if ((isBaseToFree || isFreeToBase) && !playedTransitions.has(transitionKey) && !show) {
+		if (isBaseToFree && !playedTransitions.has(transitionKey) && !show) {
+			// Base to free: play immediately
 			show = true;
 			playedTransitions.add(transitionKey);
+		} else if (isFreeToBase && !playedTransitions.has(transitionKey) && !show) {
+			// Free to base: wait for total win animation to complete
+			waitingForOutro = true;
 		}
 
 		prevGameType = current;
