@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-	import { Container } from 'pixi-svelte';
+	import { Container, Sprite } from 'pixi-svelte';
 	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
@@ -17,9 +17,7 @@
 	import { FillGradient, type TextStyleOptions } from 'pixi.js';
 
 	import WinCoins from './WinCoins.svelte';
-	import WinAnimation from './WinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-	import { SYMBOL_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
 
 	const context = getContext();
@@ -40,9 +38,15 @@
 		dokdoFontReady;
 	});
 
-	const multiplierFontStyle = (fontSize: number): TextStyleOptions => {
-		const strokeThickness = Math.max(5, fontSize * 0.1); // keep stroke visible (min 5px)
-		const shadowDistance = Math.max(1, fontSize * (Math.hypot(3, 6) / 50) * 0.6); // shadow
+	const multiplierFontStyle = (): TextStyleOptions => {
+		// Match multiplier.css exactly: font-size: 50px, text-shadow: 3px 6px 0px #BF00B5, -webkit-text-stroke: 5px transparent
+		// Base: 50 * 1.2 = 60, then +15% on desktop: 60 * 1.15 = 69
+		const layoutType = context.stateLayoutDerived.layoutType();
+		const isDesktop = layoutType === 'desktop';
+		const baseFontSize = 60;
+		const fontSize = isDesktop ? baseFontSize * 1.85 : baseFontSize * 1.2; // 69 on desktop, 60 otherwise
+		const strokeThickness = 5; // Match -webkit-text-stroke: 5px
+		const shadowDistance = Math.hypot(3, 6); // Match text-shadow: 3px 6px (distance = sqrt(3^2 + 6^2) ≈ 6.708)
 
 		const strokeGradient = new FillGradient({
 			type: 'linear',
@@ -56,22 +60,63 @@
 		});
 
 		return {
-			fontFamily: '"Dokdo", Crom, Arial, sans-serif',
-			fontSize,
+			fontFamily: 'Crom, Arial, sans-serif', // Match multiplier.css font-family: 'Crom', Arial, sans-serif
+			fontSize, // Increased by 20%: 60px
 			align: 'center' as const,
-			fontWeight: 'normal' as TextStyleOptions['fontWeight'],
-			fill: '#61E5FF', // base color like multiplier.css text color
-			stroke: strokeGradient, // mimic gradient background clipped to text edges
-			strokeThickness,
+			fontWeight: 'normal' as TextStyleOptions['fontWeight'], // Match font-weight: normal
+			fill: '#61E5FF', // Match color: #61E5FF
+			stroke: strokeGradient, // Match border-image gradient: linear-gradient(180deg, #FF70EA 0%, #7B15FF 100%)
+			strokeThickness, // Match -webkit-text-stroke: 5px
 			lineJoin: 'round',
-			letterSpacing: fontSize * 0.08, // keep '.' divider visible
-			padding: fontSize * 0.08, // avoid clipping small glyphs like '.'
 			dropShadow: true,
-			dropShadowColor: '#BF00B5',
-			dropShadowBlur: 0,
-			dropShadowAngle: Math.atan2(6, 3),
+			dropShadowColor: '#BF00B5', // Match text-shadow: 3px 6px 0px #BF00B5
+			dropShadowBlur: 0, // Match text-shadow blur: 0px
+			dropShadowAngle: Math.atan2(6, 3), // Match text-shadow: 3px 6px
 			dropShadowDistance: shadowDistance,
 		} as TextStyleOptions;
+	};
+
+	// Get sprite key and size for each win level
+	const getWinLevelSprite = (level: number | undefined): { key: string; width: number; height: number } | null => {
+		if (!level) return null;
+		
+		const layoutType = context.stateLayoutDerived.layoutType();
+		let scale = 1.0; // Default (landscape)
+		
+		if (layoutType === 'desktop') {
+			scale = 1.35; 
+		} else if (layoutType === 'tablet') {
+			scale = 0.9; 
+		} else if (layoutType === 'portrait') {
+			scale = 0.75; 
+		}
+		// landscape: scale = 1.0 (default)
+		
+		let baseSprite: { key: string; width: number; height: number } | null = null;
+		
+		switch (level) {
+			case 6:
+				baseSprite = { key: 'big.png', width: 412.5, height: 126 }; // 825x252 / 2
+				break;
+			case 7:
+				baseSprite = { key: 'mega.png', width: 412.5, height: 183.5 }; // 825x367 / 2
+				break;
+			case 8:
+				baseSprite = { key: 'super.png', width: 436.5, height: 244.5 }; // 873x489 / 2
+				break;
+			case 9:
+			case 10:
+				baseSprite = { key: 'sens.png', width: 498.5, height: 244.5 }; // 997x489 / 2
+				break;
+			default:
+				return null;
+		}
+		
+		return {
+			key: baseSprite.key,
+			width: baseSprite.width * scale,
+			height: baseSprite.height * scale,
+		};
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -87,11 +132,11 @@
 
 <FadeContainer {show}>
 	{#if winLevelData}
-		{@const isBigWin = winLevelData.type === 'big'}
 		{@const duration = winLevelData.presentDuration}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
-				{#if isBigWin}
+				<!-- Background with opacity only for win levels >= 6 -->
+				{#if winLevelData && winLevelData.level >= 6}
 					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
 				{/if}
 
@@ -110,22 +155,45 @@
 						y={context.stateGameDerived.boardLayout().y}
 						zIndex={1000}
 					>
-						{#if winLevelData?.animation}
-							<WinAnimation animationMap={winLevelData.animation}>
+						{@const mainLayout = context.stateLayoutDerived.mainLayout()}
+						{@const boardLayout = context.stateGameDerived.boardLayout()}
+						{@const spriteData = getWinLevelSprite(winLevelData?.level)}
+						
+						{#if spriteData}
+							<!-- Win level sprite at top center -->
+							<Container
+								x={mainLayout.width * 0.5 - boardLayout.x}
+								y={-230}
+								zIndex={1001}
+							>
+								<Sprite
+									key={spriteData.key}
+									anchor={0.5}
+									width={spriteData.width}
+									height={spriteData.height}
+								/>
+							</Container>
+							<!-- Win amount text below sprite -->
+							<Container
+								x={mainLayout.width * 0.5 - boardLayout.x}
+								y={120}
+								zIndex={1000}
+							>
 								<ResponsiveText
 									anchor={0.5}
 									maxWidth={2130}
 									text={bookEventAmountToCurrencyString(countUpAmount).replace(/\./g, '•')}
-									style={multiplierFontStyle(SYMBOL_SIZE)}
+									style={multiplierFontStyle()}
 								/>
-							</WinAnimation>
+							</Container>
 						{:else}
+							<!-- Fallback for levels without sprites -->
 							<ResponsiveText
 								anchor={0.5}
 								maxWidth={context.stateLayoutDerived.canvasSizes().width /
 									context.stateLayoutDerived.mainLayout().scale}
 									text={bookEventAmountToCurrencyString(countUpAmount).replace(/\./g, '•')}
-									style={multiplierFontStyle(SYMBOL_SIZE)}
+									style={multiplierFontStyle()}
 							/>
 						{/if}
 					</Container>

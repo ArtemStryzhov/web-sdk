@@ -2,6 +2,7 @@ import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateUi } from 'state-shared';
+import { SECOND } from 'constants-shared/time';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
@@ -275,6 +276,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			winLevelData,
 		});
 		winLevelSoundsStop();
+		// Add 2 second delay before hiding total win display
+		const { waitForTimeout } = await import('utils-shared/wait');
+		await waitForTimeout(2 * SECOND);
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
