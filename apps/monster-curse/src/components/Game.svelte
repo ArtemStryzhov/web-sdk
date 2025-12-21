@@ -4,7 +4,7 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Text, REM, Container, Sprite } from 'pixi-svelte';
+	import { App, Text, REM, Container, Sprite, Graphics } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UI } from 'components-ui-pixi';
@@ -34,6 +34,9 @@
 	import StoneFXOverlay from './StoneFXOverlay.svelte';
 
 	const context = getContext();
+
+	// Track if FreeSpinOutro is showing for background overlay
+	let freeSpinOutroShowing = $state(false);
 
 	// Reactive state to trigger updates on resize
 	let resizeTrigger = $state(0);
@@ -117,6 +120,8 @@ const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 		buyBonusConfirm: () => {
 			stateModal.modal = { name: 'buyBonusConfirm' };
 		},
+		freeSpinOutroShow: () => (freeSpinOutroShowing = true),
+		freeSpinOutroHide: () => (freeSpinOutroShowing = false),
 	});
 </script>
 

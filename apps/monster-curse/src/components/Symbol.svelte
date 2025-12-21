@@ -60,8 +60,22 @@ type Props = {
 		/>
 	</Container>
 {/if}
-{#if (props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier) && !props.rawSymbol.isCollected}
-	{@const displayMultiplier = props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier}
+{#if (() => {
+		// For S symbols: if collectedMultiplier exists, hide initial multiplier and show only collectedMultiplier
+		if (props.rawSymbol.name === 'S' && props.rawSymbol.collectedMultiplier) {
+			return true; // Show collectedMultiplier, hide initial multiplier
+		}
+		// For other symbols or S without collectedMultiplier: show multiplier if it exists
+		return (props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier) && !props.rawSymbol.isCollected;
+	})()}
+	{@const displayMultiplier = (() => {
+		// For S symbols: prioritize collectedMultiplier (hides initial multiplier)
+		if (props.rawSymbol.name === 'S' && props.rawSymbol.collectedMultiplier) {
+			return props.rawSymbol.collectedMultiplier;
+		}
+		// For other symbols: use collectedMultiplier if available, otherwise multiplier
+		return props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier;
+	})()}
 	<Container x={props.x} y={(props.y ?? 0) + (props.rawSymbol.name === 'S' && props.state === 'expand' ? 20 : 0)} zIndex={props.rawSymbol.name === 'S' ? 100 : 50}>
 		<!-- Gradient border background -->
 		<Graphics

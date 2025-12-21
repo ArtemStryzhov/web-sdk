@@ -8,16 +8,17 @@
 </script>
 
 <script lang="ts">
-	import { Container, Sprite } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveText } from 'components-pixi';
+	import { Container, Sprite, Text, Graphics } from 'pixi-svelte';
+	import { FadeContainer, ResponsiveText, WinCountUpProvider } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
-	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
-	import { OnMount } from 'components-shared';
+	import { MainContainer, OnPressFullScreen } from 'components-layout';
+	import { OnHotkey, OnMount } from 'components-shared';
 	import { FillGradient, type TextStyleOptions } from 'pixi.js';
+	import { UI_BASE_FONT_SIZE } from 'components-ui-pixi/src/constants';
+	import * as PIXI from 'pixi.js';
 
 	import { getContext } from '../game/context';
-	import PressToContinue from './PressToContinue.svelte';
 	import WinCoins from './WinCoins.svelte';
 
 	const context = getContext();
@@ -27,6 +28,8 @@
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
 	let onCountUpComplete = $state(() => {});
+	let isHovered = $state(false);
+	let countUpCompleted = $state(false);
 
 	// Same font style as Win.svelte
 	const multiplierFontStyle = (): TextStyleOptions => {
@@ -89,34 +92,77 @@
 		};
 	};
 
+	const handlePress = () => {
+		// Immediately resolve and hide without delay
+		oncomplete();
+		show = false;
+	};
+
 	context.eventEmitter.subscribeOnMount({
-		freeSpinOutroShow: () => (show = true),
+		freeSpinOutroShow: () => {
+			show = true;
+			countUpCompleted = false; // Reset when screen shows
+		},
 		freeSpinOutroHide: async () => (show = false),
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
+			countUpCompleted = false; // Reset when new count-up starts
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
+
+	// Button styling (same as PressToContinue.svelte)
+	const buttonWidth = 436;
+	const buttonHeight = 106;
+	const buttonScale = 0.75;
+	const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
+	const buttonX = $derived(mainLayout.width * 0.5);
+	const buttonY = $derived(mainLayout.height - 80);
+	const buttonSpriteKey = $derived(isHovered ? 'button_grey.png' : 'button_inactive.png');
+
+	const textStyle = $derived({
+		fontFamily: 'Kanit, Arial, sans-serif',
+		fontSize: UI_BASE_FONT_SIZE * 0.3 * 1.15 * 1.2 * 1.15,
+		fontWeight: 600 as any,
+		fill: 0x61E5FF,
+		align: 'center' as const,
+	});
 </script>
 
-<FadeContainer {show}>
-	{#if winLevelData}
+{#if winLevelData && show}
+	<!-- Fullscreen background - rendered FIRST with lowest z-index -->
+	{@const canvasSizes = context.stateLayoutDerived.canvasSizes()}
+	<Container zIndex={0}>
+		<Graphics
+			draw={(g) => {
+				g.clear();
+				g.rect(0, 0, canvasSizes.width, canvasSizes.height);
+				g.fill({ color: 0x000000, alpha: 0.7 });
+			}}
+			eventMode="none"
+		/>
+	</Container>
+	
+	<FadeContainer {show} zIndex={1}>
 		{@const duration = winLevelData.presentDuration}
-		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
-			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
-				<!-- Background with opacity for total win screen -->
-				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.7} />
+		<WinCountUpProvider {amount} {duration} oncomplete={() => {
+			onCountUpComplete();
+			countUpCompleted = true;
+		}}>
+			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted: countUpCompletedParam })}
 
 				<OnMount
 					onmount={async () => {
+						countUpCompleted = false; // Reset when starting
 						await startCountUp();
-						await waitForTimeout(300);
-						oncomplete();
+						// Wait for count-up to finish, then stop coins animation
+						// The count-up will complete automatically after duration
 					}}
 				/>
 
-				<MainContainer>
+				<!-- Content (sprite and amount) -->
+				<MainContainer zIndex={1}>
 					<Container
 						x={context.stateGameDerived.boardLayout().x}
 						y={context.stateGameDerived.boardLayout().y}
@@ -155,10 +201,92 @@
 					</Container>
 				</MainContainer>
 
-				<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+				<!-- Coins animation - only render when counter is not completed -->
+				{#if !countUpCompletedParam}
+					<WinCoins emit={true} levelAlias={winLevelData?.alias} />
+				{/if}
 
-				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
 			{/snippet}
 		</WinCountUpProvider>
+	</FadeContainer>
+
+	{#if countUpCompleted}
+		<!-- Fullscreen clickable overlay - captures all clicks to close screen -->
+		{@const canvasSizes = context.stateLayoutDerived.canvasSizes()}
+		<Container 
+			zIndex={2} 
+			eventMode="static" 
+			cursor="pointer" 
+			interactive={true}
+			hitArea={new PIXI.Rectangle(0, 0, canvasSizes.width, canvasSizes.height)}
+			onpointerup={(e) => {
+				handlePress();
+			}}
+		>
+			<Graphics
+				draw={(g) => {
+					g.clear();
+					g.rect(0, 0, canvasSizes.width, canvasSizes.height);
+					g.fill({ color: 0xffffff, alpha: 0.001 });
+				}}
+				eventMode="none"
+			/>
+		</Container>
+		
+		<!-- Click to continue button at bottom - highest z-index, wrapped in Container to ensure z-index works -->
+		<Container zIndex={10000}>
+			<MainContainer alignVertical="bottom">
+				<Container
+					x={buttonX}
+					y={buttonY}
+					zIndex={1}
+					eventMode="static"
+					cursor="pointer"
+					interactive={true}
+					hitArea={new PIXI.Rectangle(
+						0,
+						0,
+						buttonWidth * buttonScale,
+						buttonHeight * buttonScale
+					)}
+					onpointerover={(e) => {
+						e.stopPropagation();
+						isHovered = true;
+					}}
+					onpointerout={(e) => {
+						e.stopPropagation();
+						isHovered = false;
+					}}
+					onpointerup={(e) => {
+						e.stopPropagation();
+						handlePress();
+					}}
+				>
+					<Sprite
+						key={buttonSpriteKey}
+						width={buttonWidth * buttonScale}
+						height={buttonHeight * buttonScale}
+						anchor={{ x: 0.5, y: 0.5 }}
+						x={0}
+						y={0}
+						eventMode="none"
+					/>
+
+					<Text
+						text="CLICK TO CONTINUE"
+						style={textStyle}
+						anchor={{ x: 0.5, y: 0.5 }}
+						x={0}
+						y={5}
+						eventMode="none"
+					/>
+				</Container>
+			</MainContainer>
+		</Container>
 	{/if}
-</FadeContainer>
+{/if}
+
+<!-- Hotkey support - outside FadeContainer so it always works -->
+{#if winLevelData && show}
+	<OnHotkey hotkey="Space" onpress={handlePress} />
+{/if}

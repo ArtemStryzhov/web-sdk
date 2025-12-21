@@ -374,7 +374,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	swordExpandEvent: async (bookEvent: BookEventOfType<'swordExpandEvent'>) => {
 		const { reel, swordRow, expandedRows, multiplier } = bookEvent;
 		
-		const reelSymbol = stateGame.board[reel]?.reelState?.symbols?.[swordRow];
+		// swordRow is 1-based (1-5), normalize to array index
+		const normalizedSwordRow = normalizeRowIndex(swordRow, reel);
+		const reelSymbol = stateGame.board[reel]?.reelState?.symbols?.[normalizedSwordRow];
 		
 		// Safety check - ensure symbol exists
 		if (!reelSymbol) {
@@ -404,7 +406,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Show collected multipliers from W symbols above S (visual collection animation)
 		// Mark W symbols above S as collected to hide their multipliers
 		stateGame.board[reel].reelState.symbols.forEach((symbol, rowIndex) => {
-			if (rowIndex < swordRow && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
+			if (rowIndex < normalizedSwordRow && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
 				symbol.rawSymbol.isCollected = true;
 			}
 		});

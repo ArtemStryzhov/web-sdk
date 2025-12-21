@@ -162,7 +162,8 @@ export const calculateSSymbolCollectedMultiplier = (
 
 	// Calculate the starting index for visible symbols (middle 5 symbols)
 	const startIndex = Math.floor((reelSymbols.length - 5) / 2);
-	const sSymbolAbsoluteIndex = startIndex + sSymbolRowIndex;
+	// Convert 1-based row index (1-5) to absolute index: row 1 -> startIndex, row 2 -> startIndex+1, etc.
+	const sSymbolAbsoluteIndex = startIndex + (sSymbolRowIndex - 1);
 
 	// Find all W symbols ABOVE the S symbol in the same reel and sum their multipliers
 	const wMultipliersSum = reelSymbols
@@ -175,11 +176,9 @@ export const calculateSSymbolCollectedMultiplier = (
 		)
 		.reduce((sum, { symbol }) => sum + (symbol.multiplier || 0), 0);
 
-	// If no W multipliers found, return the S symbol's own multiplier
-	if (wMultipliersSum === 0) return sSymbolMultiplier;
-
-	// Calculate: (sum of W multipliers above) × S multiplier
-	return wMultipliersSum * sSymbolMultiplier;
+	// Always return calculated value: (sum of W multipliers above) × S multiplier
+	// If no W multipliers found, return S's own multiplier (ensures collectedMultiplier is always set)
+	return wMultipliersSum === 0 ? sSymbolMultiplier : wMultipliersSum * sSymbolMultiplier;
 };
 
 /**
