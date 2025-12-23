@@ -130,14 +130,14 @@
 	});
 </script>
 
-<FadeContainer {show}>
+<FadeContainer {show} zIndex={10004}>
 	{#if winLevelData}
 		{@const duration = winLevelData.presentDuration}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<!-- Background with opacity only for win levels >= 6 -->
 				{#if winLevelData && winLevelData.level >= 6}
-					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.7} />
+					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.7} zIndex={0} />
 				{/if}
 
 				<OnMount
@@ -149,7 +149,7 @@
 					}}
 				/>
 
-				<MainContainer>
+				<MainContainer zIndex={1}>
 					<Container
 						x={context.stateGameDerived.boardLayout().x}
 						y={context.stateGameDerived.boardLayout().y}
@@ -199,9 +199,13 @@
 					</Container>
 				</MainContainer>
 
-				<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+				<Container zIndex={1}>
+					<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+				</Container>
 
-				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
+				<Container zIndex={1}>
+					<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
+				</Container>
 			{/snippet}
 		</WinCountUpProvider>
 	{/if}
