@@ -23,7 +23,6 @@
 	import Anticipations from './Anticipations.svelte';
 	import Win from './Win.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
-	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import I18nTest from './I18nTest.svelte';
@@ -32,11 +31,15 @@
 	import ButtonBuyBonus from './ButtonBuyBonus.svelte';
 	import ButtonAutoSpin from './ButtonAutoSpin.svelte';
 	import StoneFXOverlay from './StoneFXOverlay.svelte';
+	import Mascot from './Mascot.svelte';
 
 	const context = getContext();
 
 	// Track if FreeSpinOutro is showing for background overlay
 	let freeSpinOutroShowing = $state(false);
+
+	// Track if win screen is showing (for mascot version switching)
+	let winScreenShowing = $state(false);
 
 	// Reactive state to trigger updates on resize
 	let resizeTrigger = $state(0);
@@ -46,6 +49,36 @@ const layoutType = $derived(context.stateLayoutDerived.layoutType());
 const isPortraitLayout = $derived(layoutType === 'portrait');
 const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
 const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+const mainLayoutStandard = $derived(context.stateLayoutDerived.mainLayoutStandard());
+const shouldUsePortraitStyle = $derived(
+	isPortraitLayout || canvasSizes.width < 800
+);
+const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
+
+	// Mascot positioning
+	const boardLayout = $derived(context.stateGameDerived.boardLayout());
+	const mascotWidth = 500;
+	const mascotHeight = 550;
+	const mascotScalePortrait = 0.55; // 20% smaller on portrait
+	const mascotScaleSmall = $derived(
+		canvasSizes.width < 380 ? mascotScalePortrait * 0.8 : mascotScalePortrait
+	);
+	
+	// Desktop/Landscape position: left side of board, 20px to the left
+	const mascotXDesktop = $derived(
+		boardLayout.x - boardLayout.width / 2 - 20 - mascotWidth / 2
+	);
+	const mascotYDesktop = $derived(boardLayout.y);
+	
+	// Portrait position: below board, 15px above menu button
+	const menuButtonX = $derived(mainLayoutStandard.width * 0.01 + 60);
+	const menuButtonY = $derived(mainLayoutStandard.height - 260);
+	const mascotXPortrait = $derived(
+		menuButtonX + (canvasSizes.width > 480 && canvasSizes.width < 530 ? 15 : 0)
+	);
+	const mascotYPortrait = $derived(
+		menuButtonY - 15 - (mascotHeight * mascotScalePortrait) / 2 - (canvasSizes.width < 380 ? 15 : 0)
+	);
 
 	// Force reactivity by accessing derived values when resizeTrigger changes
 	$effect(() => {
@@ -122,6 +155,20 @@ const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 		},
 		freeSpinOutroShow: () => (freeSpinOutroShowing = true),
 		freeSpinOutroHide: () => (freeSpinOutroShowing = false),
+		winShow: () => {
+			// Win screen is shown, but we need to check winUpdate for the level
+		},
+		winHide: () => {
+			winScreenShowing = false;
+		},
+		winUpdate: (emitterEvent) => {
+			// Show win screen mascot (version 2) only for win levels >= 6 (big win, mega win, etc.)
+			if (emitterEvent.winLevelData && emitterEvent.winLevelData.level >= 6) {
+				winScreenShowing = true;
+			} else {
+				winScreenShowing = false;
+			}
+		},
 	});
 </script>
 
@@ -137,18 +184,17 @@ const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 		<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
 	{:else}
 		{#if isPortraitLayout}
-			<MainContainer alignVertical="center" zIndex={10003}>
-				<Container x={0} y={-mainLayout.height * 0.5 + 40} eventMode="none">
-					<Sprite
-						key="logo_s.png"
-						anchor={{ x: 0.5, y: 0 }}
-						x={0}
-						y={0}
-						width={250}
-						height={129}
-					/>
-				</Container>
-			</MainContainer>
+			<Container zIndex={10004} x={canvasSizes.width / 2} y={60}>
+				<Sprite
+					key="logo_s.png"
+					anchor={{ x: 0.5, y: 0 }}
+					x={0}
+					y={0}
+					width={250 * logoScale}
+					height={129 * logoScale}
+					zIndex={10004}
+				/>
+			</Container>
 		{/if}
 
 		<ResumeBet />
@@ -167,6 +213,40 @@ const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 			<Board />
 			<Anticipations />
 		</MainContainer>
+
+		<!-- Animated Mascot -->
+		{#if shouldUsePortraitStyle}
+			<MainContainer standard alignVertical="bottom">
+				<Mascot
+					x={mascotXPortrait}
+					y={mascotYPortrait}
+					width={mascotWidth}
+					height={mascotHeight}
+					anchor={{ x: 0.5, y: 0.5 }}
+					zIndex={10010}
+					format="lottie"
+					loop={true}
+					autoplay={true}
+					scale={mascotScaleSmall}
+					version={winScreenShowing ? 2 : 1}
+				/>
+			</MainContainer>
+		{:else}
+			<MainContainer>
+				<Mascot
+					x={mascotXDesktop}
+					y={mascotYDesktop}
+					width={mascotWidth}
+					height={mascotHeight}
+					anchor={{ x: 0.5, y: 0.5 }}
+					zIndex={10010}
+					format="lottie"
+					loop={true}
+					autoplay={true}
+					version={winScreenShowing ? 2 : 1}
+				/>
+			</MainContainer>
+		{/if}
 
 		<!-- Bottom gradient background - renders behind UI buttons -->
 		<BottomGradient />
@@ -202,17 +282,24 @@ const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	{@const frameRightCanvasX = mainLayout.x + (frameRightMainX - mainLayout.width / 2) * mainLayout.scale}
 	{@const frameTopCanvasY = mainLayout.y + (frameTopMainY - mainLayout.height / 2) * mainLayout.scale}
 	{@const containerX = canvasSizes.width - 20}
-	{@const logoX = frameRightCanvasX - containerX + 20}
-	{@const logoY = frameTopCanvasY}
+	{@const shouldCenterLogo = canvasSizes.width < 650}
+	{@const logoHeight = 129 * logoScale}
+	{@const logoY = frameTopCanvasY + logoHeight}
+	{@const logoXCenteredCanvas = canvasSizes.width / 2}
+	{@const logoXRightCanvas = frameRightCanvasX}
+	{@const logoXCentered = logoXCenteredCanvas - containerX}
+	{@const logoXRight = logoXRightCanvas - containerX}
+	{@const logoXFinal = shouldCenterLogo ? logoXCentered : logoXRight}
+	{@const logoAnchor = shouldCenterLogo ? { x: 0.5, y: 1 } : { x: 0, y: 1 }}
 
 	{#if !isPortraitLayout}
 		<Sprite
-			x={logoX}
+			x={logoXFinal}
 			y={logoY}
-			anchor={{ x: 0, y: 0 }}
+			anchor={logoAnchor}
 			key="logo_s.png"
-			width={250}
-			height={129}
+			width={250 * logoScale}
+			height={logoHeight}
 		/>
 	{/if}
 {/snippet}
