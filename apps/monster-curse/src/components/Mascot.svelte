@@ -65,6 +65,13 @@
 	const setupLottie = () => {
 		if (!pixiContext) return;
 
+		// Capture current version value
+		const currentVersion = version;
+		if (!currentVersion) {
+			console.error('[Mascot] Version is undefined');
+			return;
+		}
+
 		// Create container for Lottie (it will create its own canvas)
 		lottieContainer = document.createElement('div');
 		lottieContainer.style.width = `${actualWidth}px`;
@@ -74,16 +81,19 @@
 		lottieContainer.style.top = '-9999px';
 		document.body.appendChild(lottieContainer);
 
-		// Load Lottie animation - use absolute path for static assets
-		const lottiePath = `/assets/spines/mascot/${version}/${version}.json`;
+		// Load Lottie animation - use absolute paths for runtime loading
+		// Support BASE_URL if configured (for deployments with base paths)
+		const base = (import.meta as any).env?.BASE_URL ?? '/';
+		const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
+		const lottiePath = `${assetBase}/assets/spines/mascot/${currentVersion}/${currentVersion}.json`;
 		// Set assetsPath so Lottie knows where to find the images
 		// Version 1 has images directly in the folder, version 2 has them in a subfolder
-		const assetsPath = version === 2 
-			? `/assets/spines/mascot/${version}/images/`
-			: `/assets/spines/mascot/${version}/`;
+		const assetsPath = currentVersion === 2 
+			? `${assetBase}/assets/spines/mascot/${currentVersion}/images/`
+			: `${assetBase}/assets/spines/mascot/${currentVersion}/`;
 
 		// For version 2 (win screen mascot), don't loop - play once and hold last frame
-		const shouldLoop = version === 2 ? false : loop;
+		const shouldLoop = currentVersion === 2 ? false : loop;
 
 		if (!lottieContainer) return;
 
@@ -158,7 +168,7 @@
 
 			if (animationItem) {
 				// For version 2, listen for complete event to hold last frame
-				if (version === 2) {
+				if (currentVersion === 2) {
 					animationItem.addEventListener('complete', () => {
 						animationCompleted = true;
 						// Keep the last frame visible by continuing to update texture
@@ -209,8 +219,18 @@
 	const setupVideo = () => {
 		if (!canvas || !pixiContext) return;
 
+		// Capture current version value
+		const currentVersion = version;
+		if (!currentVersion) {
+			console.error('[Mascot] Version is undefined');
+			return;
+		}
+
+		// Support BASE_URL if configured
+		const base = (import.meta as any).env?.BASE_URL ?? '/';
+		const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
 		videoElement = document.createElement('video');
-		videoElement.src = `/assets/spines/mascot/${version}.mov`;
+		videoElement.src = `${assetBase}/assets/spines/mascot/${currentVersion}.mov`;
 		videoElement.loop = loop;
 		videoElement.autoplay = autoplay;
 		videoElement.muted = true; // Required for autoplay
@@ -279,6 +299,13 @@
 	const setupImageSequence = () => {
 		if (!canvas || !pixiContext) return;
 
+		// Capture current version value
+		const currentVersion = version;
+		if (!currentVersion) {
+			console.error('[Mascot] Version is undefined');
+			return;
+		}
+
 		canvas.width = actualWidth;
 		canvas.height = actualHeight;
 		const ctx = canvas.getContext('2d');
@@ -290,14 +317,18 @@
 
 		let lastFrameTime = Date.now();
 
+		// Support BASE_URL if configured
+		const base = (import.meta as any).env?.BASE_URL ?? '/';
+		const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
+		
 		const loadImage = (index: number): Promise<HTMLImageElement> => {
 			return new Promise((resolve, reject) => {
 				const img = new Image();
 				img.onload = () => resolve(img);
 				img.onerror = reject;
-				const imagePath = version === 2
-					? `/assets/spines/mascot/${version}/images/img_${index}.png`
-					: `/assets/spines/mascot/${version}/img_${index}.png`;
+				const imagePath = currentVersion === 2
+					? `${assetBase}/assets/spines/mascot/${currentVersion}/images/img_${index}.png`
+					: `${assetBase}/assets/spines/mascot/${currentVersion}/img_${index}.png`;
 				img.src = imagePath;
 			});
 		};
