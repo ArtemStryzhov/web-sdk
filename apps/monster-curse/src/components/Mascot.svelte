@@ -85,6 +85,8 @@
 		// For version 2 (win screen mascot), don't loop - play once and hold last frame
 		const shouldLoop = version === 2 ? false : loop;
 
+		if (!lottieContainer) return;
+
 		animationItem = lottie.loadAnimation({
 			container: lottieContainer,
 			renderer: 'canvas',
@@ -101,7 +103,9 @@
 
 		if (animationItem) {
 			animationItem.addEventListener('data_failed', (err) => {
-				console.error('[Mascot] Lottie data failed to load:', err);
+				console.error(`[Mascot] Lottie data failed to load from ${lottiePath}:`, err);
+				console.error(`[Mascot] Make sure the file exists at: ${lottiePath}`);
+				console.error(`[Mascot] Assets path: ${assetsPath}`);
 			});
 		}
 
