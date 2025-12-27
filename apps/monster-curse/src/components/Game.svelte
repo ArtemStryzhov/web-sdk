@@ -184,7 +184,7 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 		<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
 	{:else}
 		{#if isPortraitLayout}
-			<Container zIndex={10004} x={canvasSizes.width / 2} y={45}>
+			<Container zIndex={9} x={canvasSizes.width / 2} y={45}>
 				<Sprite
 					key="logo_s.png"
 					anchor={{ x: 0.5, y: 0 }}
@@ -192,7 +192,7 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 					y={0}
 					width={250 * logoScale}
 					height={129 * logoScale}
-					zIndex={10004}
+					zIndex={9}
 				/>
 			</Container>
 		{/if}
