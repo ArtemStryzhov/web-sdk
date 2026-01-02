@@ -1,13 +1,17 @@
 B_animation.png
 size:1463,714
 filter:Linear,Linear
-head
-  bounds:210,405,194,211
-body1
-  bounds:429,418,194,216
-body2
-  bounds:429,418,194,216
-body3
-  bounds:429,418,194,216
-body4
-  bounds:429,418,194,216
+frame1
+bounds:29,103,194,211
+frame2
+bounds:231,103,194,211
+frame3
+bounds:433,103,194,211
+frame4
+bounds:635,103,194,211
+frame5
+bounds:837,103,194,211
+frame6
+bounds:1039,103,194,211
+frame7
+bounds:1241,103,194,211

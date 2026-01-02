@@ -10,6 +10,7 @@
 	import { getSymbolConfig } from '../config/symbolConfig';
 	import { getContext } from '../game/context';
 	import SymbolWAnimated from './SymbolWAnimated.svelte';
+	import BSymbolAnimation from './BSymbolAnimation.svelte';
 
 	type Props = {
 		x?: number;
@@ -23,21 +24,51 @@
 
 	const props: Props = $props();
 	const isScatter = $derived(props.rawSymbol.scatter === true);
+	
+	// Generate unique key for this symbol position + state (allows animation in both land and win states)
+	const symbolPositionKey = $derived(`${props.x}_${props.y}_${props.rawSymbol.name}_${props.state}`);
 
 	// Get symbol configuration
 	const symbolConfig = $derived(getSymbolConfig(props.rawSymbol.name));
+	
+	// Pre-compute sorted and visible layers to avoid recalculation in template
+	const sortedLayers = $derived(
+		symbolConfig ? [...symbolConfig.backgroundLayers].sort((a, b) => a.zIndex - b.zIndex) : []
+	);
+	
+	const visibleLayers = $derived.by(() => {
+		const layers = sortedLayers.filter(layer => layer.alwaysVisible || (layer.visibleInStates && layer.visibleInStates.includes(props.state)));
+		
+		// Remove duplicate B_animation layers - keep only the first one
+		let bAnimationFound = false;
+		return layers.filter(layer => {
+			if (layer.spineKey === 'B_animation') {
+				if (bAnimationFound) {
+					return false;
+				}
+				bAnimationFound = true;
+			}
+			return true;
+		});
+	});
+	
+	// Check if B_animation layer is visible for current state
+	const hasBAnimationVisible = $derived(
+		visibleLayers.some(layer => layer.spineKey === 'B_animation')
+	);
 
 	// Track spine animation completion
-	let pendingCompletions = $state(0);
 	let hasCompleted = $state(false);
-
-	function handleSpineComplete() {
-		// Complete immediately for all symbols to prevent hanging
-		if (!hasCompleted) {
-			hasCompleted = true;
-			props.oncomplete?.();
+	
+	// Stable listener object to prevent recreation on each render
+	const spineListener = {
+		complete: () => {
+			if (!hasCompleted) {
+				hasCompleted = true;
+				props.oncomplete?.();
+			}
 		}
-	}
+	};
 
 	onMount(() => {
 		// Complete immediately to prevent game from getting stuck - ALL symbols must complete
@@ -47,60 +78,57 @@
 
 <Container x={props.x} y={props.y} zIndex={props.state === 'win' ? 1000 : 0}>
 	{#if symbolConfig}
-		<!-- Render background layers for all symbols -->
-		{#if true}
-			{@const sortedLayers = [...symbolConfig.backgroundLayers].sort((a, b) => a.zIndex - b.zIndex)}
-			{@const visibleLayers = sortedLayers.filter(layer => layer.alwaysVisible || (layer.visibleInStates && layer.visibleInStates.includes(props.state)))}
-			
+		<!-- Render static sprite layers -->
+		{#each visibleLayers as layer, idx (`sprite_${idx}_${layer.key ?? layer.spineKey ?? layer.zIndex}`)}
+			{#if layer.key}
+				<Sprite
+					anchor={0.5}
+					key={layer.key}
+					width={SYMBOL_SIZE * layer.sizeMultiplier}
+					height={SYMBOL_SIZE * layer.sizeMultiplier}
+					alpha={layer.alpha ?? 1}
+					zIndex={layer.zIndex}
+				/>
+			{/if}
+		{/each}
 
-			<!-- Render static sprite layers -->
-			{#each visibleLayers as layer}
-				{#if layer.key}
-					<Sprite
-						anchor={0.5}
-						key={layer.key}
-						width={SYMBOL_SIZE * layer.sizeMultiplier}
-						height={SYMBOL_SIZE * layer.sizeMultiplier}
-						alpha={layer.alpha ?? 1}
-						zIndex={layer.zIndex}
-					/>
-				{/if}
-			{/each}
-
-			<!-- Render individual spine layers -->
-			{#each visibleLayers as layer, index}
-				{#if layer.spineKey}
-					<!-- Use unique key for Svelte reactivity but correct spineKey for asset loading -->
-					{@const context = getContextApp()}
-					{@const spineData = context.stateApp.loadedAssets?.[layer.spineKey]}
-					{#if spineData}
-						{#key `${layer.spineKey}_${layer.animationName}_${index}`}
-							<SpineProvider
-								key={layer.spineKey}
-								x={0}
-								y={0}
-								anchor={0.5}
-								height={SYMBOL_SIZE * layer.sizeMultiplier}
-								alpha={layer.alpha ?? 1}
-								zIndex={layer.zIndex}
-							>
-								<SpineTrack
-									trackIndex={0}
-									animationName={layer.animationName!}
-									loop={props.loop ?? layer.loop ?? false}
-									timeScale={stateBetDerived.timeScale()}
-									listener={{
-										complete: index === 0 ? handleSpineComplete : undefined // Only the first spine layer handles completion
-									}}
-								/>
-							</SpineProvider>
-						{/key}
+		<!-- Render individual spine layers -->
+		{#each visibleLayers as layer, index (`spine_${index}_${layer.spineKey ?? layer.zIndex}`)}
+			{#if layer.spineKey}
+				{@const context = getContextApp()}
+				{@const spineData = context.stateApp.loadedAssets?.[layer.spineKey]}
+				{@const isBAnimation = layer.spineKey === 'B_animation'}
+				{#if spineData}
+					{#if isBAnimation}
+						<BSymbolAnimation
+							sizeMultiplier={layer.sizeMultiplier}
+							zIndex={layer.zIndex}
+							positionKey={symbolPositionKey}
+							state={props.state}
+							oncomplete={index === 0 ? spineListener.complete : undefined}
+						/>
 					{:else}
-						<!-- Spine asset not loaded, skip this layer -->
+						<SpineProvider
+							key={layer.spineKey}
+							x={0}
+							y={0}
+							anchor={0.5}
+							height={SYMBOL_SIZE * layer.sizeMultiplier}
+							alpha={layer.alpha ?? 1}
+							zIndex={layer.zIndex}
+						>
+							<SpineTrack
+								trackIndex={0}
+								animationName={layer.animationName!}
+								loop={layer.loop ?? false}
+								timeScale={stateBetDerived.timeScale()}
+								listener={index === 0 ? spineListener : undefined}
+							/>
+						</SpineProvider>
 					{/if}
 				{/if}
-			{/each}
-		{/if}
+			{/if}
+		{/each}
 
 		<!-- Render main symbol -->
 		{#if props.rawSymbol.name === 'W' && props.state === 'win'}
@@ -112,8 +140,8 @@
 				rawSymbol={props.rawSymbol}
 				state={props.state}
 			/>
-		{:else}
-			<!-- Regular symbol rendering -->
+		{:else if !hasBAnimationVisible}
+			<!-- Regular symbol rendering - hide base sprite when B_animation is visible -->
 			<Sprite
 				anchor={0.5}
 				key={props.symbolInfo.assetKey}

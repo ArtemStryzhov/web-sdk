@@ -330,20 +330,20 @@ export const SYMBOL_CONFIGS: Record<string, SymbolConfig> = {
 				spineKey: 'H4',
 				animationName: 'tornado_blue_static',
 				sizeMultiplier: 1.06,
-				visibleInStates: ['static', 'spin', 'land', 'postWinStatic'],
+				visibleInStates: ['static', 'spin', 'postWinStatic'],
 				zIndex: 2,
 			},
 		{
-			spineKey: 'H4',
-			animationName: 'tornado_spin',
-			sizeMultiplier: 1.0,
-			visibleInStates: ['win'],
+			spineKey: 'B_animation',
+			animationName: 'win',
+			sizeMultiplier: 0.386,
+			visibleInStates: ['land', 'win'],
 			zIndex: 5,
 			loop: false,
 		},
-	],
-	supportsScatter: false,
-},
+		],
+		supportsScatter: false,
+	},
 };
 
 /**

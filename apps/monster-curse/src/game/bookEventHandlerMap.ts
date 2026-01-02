@@ -181,13 +181,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				});
 			});
 			
-			// Set all B symbols to 'win' state (triggers looping video animation)
+			// Set all B symbols to 'win' state (triggers B_animation win animation)
 			bSymbolPositions.forEach(position => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
 				reelSymbol.symbolState = 'win';
 			});
 			
-			// Wait for 2 animation cycles (assuming ~1 second per cycle)
+			// Wait for animation to complete (B_animation win is ~1.3 seconds, wait 2 seconds to be safe)
 			await new Promise(resolve => setTimeout(resolve, 2000));
 			
 			// Return B symbols to static state

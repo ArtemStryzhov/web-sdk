@@ -1,0 +1,107 @@
+{
+	"skeleton": {
+		"hash": "B_animation",
+		"spine": "4.1.23",
+		"x": 0,
+		"y": 0,
+		"width": 194,
+		"height": 211,
+		"images": "./",
+		"audio": ""
+	},
+	"bones": [
+		{
+			"name": "root"
+		}
+	],
+	"slots": [
+		{
+			"name": "frame_slot",
+			"bone": "root",
+			"attachment": "frame1"
+		}
+	],
+	"skins": [
+		{
+			"name": "default",
+			"attachments": {
+				"frame_slot": {
+					"frame1": {
+						"type": "region",
+						"width": 194,
+						"height": 211
+					},
+					"frame2": {
+						"type": "region",
+						"width": 194,
+						"height": 211
+					},
+					"frame3": {
+						"type": "region",
+						"width": 194,
+						"height": 211
+					},
+					"frame4": {
+						"type": "region",
+						"width": 194,
+						"height": 211
+					},
+					"frame5": {
+						"type": "region",
+						"width": 194,
+						"height": 211
+					},
+					"frame6": {
+						"type": "region",
+						"width": 194,
+						"height": 211
+					},
+					"frame7": {
+						"type": "region",
+						"width": 194,
+						"height": 211
+					}
+				}
+			}
+		}
+	],
+	"animations": {
+		"win": {
+			"slots": {
+				"frame_slot": {
+					"attachment": [
+						{
+							"time": 0.0,
+							"name": "frame1"
+						},
+						{
+							"time": 0.1,
+							"name": "frame2"
+						},
+						{
+							"time": 0.2,
+							"name": "frame3"
+						},
+						{
+							"time": 0.3,
+							"name": "frame4"
+						},
+						{
+							"time": 0.4,
+							"name": "frame5"
+						},
+						{
+							"time": 0.5,
+							"name": "frame6"
+						},
+						{
+							"time": 0.6,
+							"name": "frame7"
+						}
+					]
+				}
+			},
+			"bones": {}
+		}
+	}
+}

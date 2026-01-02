@@ -176,6 +176,15 @@ export default {
 			scale: 2,
 		},
 	},
+	B_animation: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/B_animation/symbols3.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/B_animation/B_animation.json', import.meta.url).href,
+			scale: 2,
+		},
+		preload: true,
+	},
 	reelsFrame: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/reelsFrame/reels_frame.json', import.meta.url).href,
