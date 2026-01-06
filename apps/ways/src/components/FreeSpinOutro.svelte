@@ -15,6 +15,7 @@
 	import { CanvasSizeRectangle } from 'components-layout';
 	import { OnMount } from 'components-shared';
 	import { stateUrlDerived } from 'state-shared';
+	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
@@ -45,7 +46,7 @@
 
 <FadeContainer {show}>
 	{#if winLevelData}
-		{@const duration = winLevelData.presentDuration}
+		{@const duration = Math.max(winLevelData.presentDuration, 3 * SECOND)}
 		{@const isBigWin = winLevelData.type === 'big'}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}

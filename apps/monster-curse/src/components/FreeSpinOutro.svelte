@@ -17,6 +17,7 @@
 	import { FillGradient, type TextStyleOptions } from 'pixi.js';
 	import { UI_BASE_FONT_SIZE } from 'components-ui-pixi/src/constants';
 	import * as PIXI from 'pixi.js';
+	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
 	import WinCoins from './WinCoins.svelte';
@@ -146,7 +147,7 @@
 	</Container>
 	
 	<FadeContainer {show} zIndex={1}>
-		{@const duration = winLevelData.presentDuration}
+		{@const duration = Math.max(winLevelData.presentDuration, 3 * SECOND)}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => {
 			onCountUpComplete();
 			countUpCompleted = true;

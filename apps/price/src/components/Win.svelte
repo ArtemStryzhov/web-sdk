@@ -14,6 +14,7 @@
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
+	import { SECOND } from 'constants-shared/time';
 
 	import WinCoins from './WinCoins.svelte';
 	import WinAnimation from './WinAnimation.svelte';
@@ -43,7 +44,7 @@
 <FadeContainer {show}>
 	{#if winLevelData}
 		{@const isBigWin = winLevelData.type === 'big'}
-		{@const duration = winLevelData.presentDuration}
+		{@const duration = Math.max(winLevelData.presentDuration, 3 * SECOND)}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				{#if isBigWin}

@@ -15,6 +15,7 @@
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
 	import { FillGradient, type TextStyleOptions } from 'pixi.js';
+	import { SECOND } from 'constants-shared/time';
 
 	import WinCoins from './WinCoins.svelte';
 	import PressToContinue from './PressToContinue.svelte';
@@ -133,7 +134,7 @@
 
 <FadeContainer {show} zIndex={10004}>
 	{#if winLevelData}
-		{@const duration = winLevelData.presentDuration}
+		{@const duration = Math.max(winLevelData.presentDuration, 3 * SECOND)}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<!-- Background with opacity only for win levels >= 6 -->
