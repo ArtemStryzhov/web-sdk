@@ -38,6 +38,61 @@ type Props = {
 	// Text dimensions for manual centering (to account for padding affecting anchor)
 	let textWidth = $state(0);
 	let textHeight = $state(0);
+	
+	// Multiplier scale animation state for land and win animations
+	let multiplierScale = $state(1.0);
+	
+	// Multiplier animation on land and win for W and S symbols
+	$effect(() => {
+		// Trigger animation when symbol lands or wins and has a multiplier
+		if ((props.state === 'land' || props.state === 'win') && 
+			(props.rawSymbol.name === 'W' || props.rawSymbol.name === 'S') &&
+			(props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier)) {
+			
+			// Reset scale to 1.0 at start
+			multiplierScale = 1.0;
+			
+			// Create scaling animation matching W's win animation timing
+			const startScale = 1.0;
+			const maxScale = 1.25; // 25% increase
+			const endScale = 1.0;
+			const duration = 1900; // 1.9 seconds
+			const peakTime = 1200; // 1.2 seconds
+			
+			const startTime = Date.now();
+			
+			const animate = () => {
+				const elapsed = Date.now() - startTime;
+				const progress = Math.min(elapsed / duration, 1);
+				
+				let scale;
+				if (progress <= peakTime / duration) {
+					// Scale up to peak
+					const peakProgress = progress / (peakTime / duration);
+					scale = startScale + (maxScale - startScale) * peakProgress;
+				} else {
+					// Scale down from peak
+					const downProgress = (progress - peakTime / duration) / (1 - peakTime / duration);
+					scale = maxScale + (endScale - maxScale) * downProgress;
+				}
+				
+				// Update reactive state
+				multiplierScale = scale;
+				
+				if (progress < 1) {
+					requestAnimationFrame(animate);
+				} else {
+					// Ensure we end at exactly 1.0
+					multiplierScale = 1.0;
+				}
+			};
+			
+			requestAnimationFrame(animate);
+		} else if (props.state !== 'land' && props.state !== 'win') {
+			// Reset scale when not in land or win state
+			multiplierScale = 1.0;
+		}
+	});
 </script>
 
 		{#if isSprite && (isComposite || hasSymbolConfig)}
@@ -80,7 +135,12 @@ type Props = {
 		// For other symbols: use collectedMultiplier if available, otherwise multiplier
 		return props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier;
 	})()}
-	<Container x={props.x} y={(props.y ?? 0) + (props.rawSymbol.name === 'S' && props.state === 'expand' ? 20 : 0)} zIndex={props.rawSymbol.name === 'S' ? 100 : 50}>
+	<Container 
+		x={props.x} 
+		y={(props.y ?? 0) + (props.rawSymbol.name === 'S' && props.state === 'expand' ? 20 : 0)} 
+		zIndex={2000}
+		scale={{ x: multiplierScale, y: multiplierScale }}
+	>
 		<!-- Gradient border background -->
 		<Graphics
 			x={0}
