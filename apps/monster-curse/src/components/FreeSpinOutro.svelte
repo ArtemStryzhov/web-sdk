@@ -65,6 +65,7 @@
 			dropShadowBlur: 0,
 			dropShadowAngle: Math.atan2(6, 3),
 			dropShadowDistance: shadowDistance,
+			padding: 20, // Add padding to texture bounds to prevent clipping from stroke/shadow/tall characters
 		} as TextStyleOptions;
 	};
 
@@ -162,11 +163,12 @@
 				/>
 
 				<!-- Content (sprite and amount) -->
-				<MainContainer zIndex={1}>
+				<MainContainer zIndex={1} cullable={false}>
 					<Container
 						x={context.stateGameDerived.boardLayout().x}
 						y={context.stateGameDerived.boardLayout().y}
 						zIndex={1000}
+						cullable={false}
 					>
 						{@const mainLayout = context.stateLayoutDerived.mainLayout()}
 						{@const boardLayout = context.stateGameDerived.boardLayout()}
@@ -186,10 +188,12 @@
 							/>
 						</Container>
 						<!-- Win amount text below sprite -->
+						<!-- TextStyle padding should prevent clipping -->
 						<Container
 							x={mainLayout.width * 0.5 - boardLayout.x}
 							y={120}
 							zIndex={1000}
+							cullable={false}
 						>
 							<ResponsiveText
 								anchor={0.5}

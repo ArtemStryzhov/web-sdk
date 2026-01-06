@@ -34,6 +34,10 @@ type Props = {
 		props.state;
 		props.key;
 	});
+	
+	// Text dimensions for manual centering (to account for padding affecting anchor)
+	let textWidth = $state(0);
+	let textHeight = $state(0);
 </script>
 
 		{#if isSprite && (isComposite || hasSymbolConfig)}
@@ -94,33 +98,56 @@ type Props = {
 			}}
 		/>
 		
-		<!-- Drop shadow -->
-		<Text
-			anchor={0.5}
-			x={3}
-			y={6}
-			text={`${displayMultiplier}x`}
-			style={{
-				fontFamily: 'Crom, Arial, sans-serif',
-				fontWeight: 'bold',
-				fill: 0xBF00B5,
-				fontSize: 50,
-			}}
-		/>
-		
-		<!-- Main text -->
-		<Text
-			anchor={0.5}
-			x={0}
-			y={0}
-			text={`${displayMultiplier}x`}
-			style={{
-				fontFamily: 'Crom, Arial, sans-serif',
-				fontWeight: 'bold',
-				fill: 0x61E5FF,
-				fontSize: 50,
-				stroke: { color: 0x7B15FF, width: 3 },
-			}}
-		/>
+		<!-- Wrap text in container -->
+		<!-- Center text horizontally and align to bottom of the 80px wide border -->
+		<!-- Border spans from -40 to +40 horizontally, -30 to +30 vertically (60px tall) -->
+		<!-- Move text 2% more to bottom: currently at y=66, move another 2% of 60px = 1.2px more -->
+		<!-- So container at y=66+1.2≈67 to position text further down -->
+		<Container x={0} y={67}>
+			<!-- Drop shadow - behind main text, offset by (3, 6) -->
+			<Text
+				anchor={{ x: 0, y: 1 }}
+				x={3 + (-textWidth / 2)}
+				y={6}
+				text={`${displayMultiplier}x`}
+				style={{
+					fontFamily: 'Crom, Arial, sans-serif',
+					fontWeight: 'bold',
+					fill: 0xBF00B5,
+					fontSize: 45, // Reduced by 10% (50 * 0.9 = 45)
+					align: 'center',
+					padding: 15, // Match padding to keep alignment
+				}}
+				onresize={(size) => {
+					// Use main text width for centering (shadow has same content)
+					if (size.width > 0 && textWidth === 0) textWidth = size.width;
+					if (size.height > 0 && textHeight === 0) textHeight = size.height;
+				}}
+			/>
+			
+			<!-- Main text - center horizontally, align to bottom -->
+			<!-- anchor y=1 means bottom of texture (including bottom padding) aligns with y position -->
+			<!-- Position at y=0 so bottom edge aligns with container y=42 (20% down from border center) -->
+			<Text
+				anchor={{ x: 0, y: 1 }}
+				x={-textWidth / 2}
+				y={0}
+				text={`${displayMultiplier}x`}
+				style={{
+					fontFamily: 'Crom, Arial, sans-serif',
+					fontWeight: 'bold',
+					fill: 0x61E5FF,
+					fontSize: 45, // Reduced by 10% (50 * 0.9 = 45)
+					stroke: { color: 0x7B15FF, width: 3 },
+					align: 'center',
+					padding: 15, // Add padding to texture bounds to prevent clipping from stroke/shadow/tall characters
+				}}
+				onresize={(size) => {
+					// Update text dimensions for centering
+					if (size.width > 0) textWidth = size.width;
+					if (size.height > 0) textHeight = size.height;
+				}}
+			/>
+		</Container>
 	</Container>
 {/if}

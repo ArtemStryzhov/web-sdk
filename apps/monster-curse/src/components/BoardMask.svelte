@@ -12,9 +12,10 @@
 	const boardContext = getContextBoard();
 	
 	// Conditional mask height: normal during spin to hide padding, extended during win for S symbols
+	// COMPLETELY REVERTED TO ORIGINAL - the original 600px mask was working fine
 	const maskHeight = $derived(
 		boardContext.animate 
-			? context.stateGameDerived.boardLayout().height // 600px during spin - clips padding
+			? context.stateGameDerived.boardLayout().height // 600px during spin - clips padding (ORIGINAL - was working)
 			: context.stateGameDerived.boardLayout().height + SYMBOL_SIZE * 4 // 1080px during win - allows S expansion
 	);
 </script>

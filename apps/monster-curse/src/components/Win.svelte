@@ -73,6 +73,7 @@
 			dropShadowBlur: 0, // Match text-shadow blur: 0px
 			dropShadowAngle: Math.atan2(6, 3), // Match text-shadow: 3px 6px
 			dropShadowDistance: shadowDistance,
+			padding: 20, // Add padding to texture bounds to prevent clipping from stroke/shadow/tall characters
 		} as TextStyleOptions;
 	};
 
@@ -149,11 +150,12 @@
 					}}
 				/>
 
-				<MainContainer zIndex={1}>
+				<MainContainer zIndex={1} cullable={false}>
 					<Container
 						x={context.stateGameDerived.boardLayout().x}
 						y={context.stateGameDerived.boardLayout().y}
 						zIndex={1000}
+						cullable={false}
 					>
 						{@const mainLayout = context.stateLayoutDerived.mainLayout()}
 						{@const boardLayout = context.stateGameDerived.boardLayout()}
@@ -174,10 +176,12 @@
 								/>
 							</Container>
 							<!-- Win amount text below sprite -->
+							<!-- TextStyle padding should prevent clipping, but keep container padding as backup -->
 							<Container
 								x={mainLayout.width * 0.5 - boardLayout.x}
 								y={120}
 								zIndex={1000}
+								cullable={false}
 							>
 								<ResponsiveText
 									anchor={0.5}
@@ -188,13 +192,20 @@
 							</Container>
 						{:else}
 							<!-- Fallback for levels without sprites -->
-							<ResponsiveText
-								anchor={0.5}
-								maxWidth={context.stateLayoutDerived.canvasSizes().width /
-									context.stateLayoutDerived.mainLayout().scale}
+							<Container
+								x={mainLayout.width * 0.5 - boardLayout.x}
+								y={0}
+								zIndex={1000}
+								cullable={false}
+							>
+								<ResponsiveText
+									anchor={0.5}
+									maxWidth={context.stateLayoutDerived.canvasSizes().width /
+										context.stateLayoutDerived.mainLayout().scale}
 									text={bookEventAmountToCurrencyString(countUpAmount).replace(/\./g, '•')}
 									style={multiplierFontStyle()}
-							/>
+								/>
+							</Container>
 						{/if}
 					</Container>
 				</MainContainer>
