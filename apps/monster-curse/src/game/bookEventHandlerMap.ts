@@ -292,13 +292,41 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setWin: async (bookEvent: BookEventOfType<'setWin'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
-		eventEmitter.broadcast({ type: 'winShow' });
-		winLevelSoundsPlay({ winLevelData });
-		await eventEmitter.broadcastAsync({
-			type: 'winUpdate',
-			amount: bookEvent.amount,
-			winLevelData,
-		});
+		// For big wins (level >= 6), show version 2 mascot 2 seconds before win screen
+		if (winLevelData.level >= 6) {
+			// Broadcast winUpdate immediately (synchronously) to switch mascot to version 2
+			// Use broadcast (not broadcastAsync) to avoid waiting for Win component which isn't shown yet
+			// This only updates Game.svelte's winScreenShowing state for the mascot
+			eventEmitter.broadcast({
+				type: 'winUpdate',
+				amount: bookEvent.amount,
+				winLevelData,
+			});
+			
+			// Wait 2 seconds before showing win screen
+			const { waitForTimeout } = await import('utils-shared/wait');
+			await waitForTimeout(2 * SECOND);
+			
+			// Now show the win screen and update Win component properly
+			eventEmitter.broadcast({ type: 'winShow' });
+			winLevelSoundsPlay({ winLevelData });
+			// Call winUpdate again so Win component can set up and wait for completion
+			await eventEmitter.broadcastAsync({
+				type: 'winUpdate',
+				amount: bookEvent.amount,
+				winLevelData,
+			});
+		} else {
+			// For non-big wins, keep current behavior
+			eventEmitter.broadcast({ type: 'winShow' });
+			winLevelSoundsPlay({ winLevelData });
+			await eventEmitter.broadcastAsync({
+				type: 'winUpdate',
+				amount: bookEvent.amount,
+				winLevelData,
+			});
+		}
+		
 		winLevelSoundsStop();
 		eventEmitter.broadcast({ type: 'winHide' });
 	},
