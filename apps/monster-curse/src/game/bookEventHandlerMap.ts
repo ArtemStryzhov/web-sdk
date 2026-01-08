@@ -102,6 +102,72 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 		
+		// Handle S symbols that should expand even without wins (when W symbols are above them)
+		// Import utility functions
+		const { calculateSSymbolCollectedMultiplier, generateSSymbolExpansionPositions } = await import('./utils');
+		const currentBoard = stateGameDerived.boardRaw();
+		
+		// Find all S symbols on the board
+		const sSymbolPositions: Position[] = [];
+		currentBoard.forEach((reel, reelIndex) => {
+			const startIndex = Math.floor((reel.length - 5) / 2);
+			const visibleSymbols = reel.slice(startIndex, startIndex + 5);
+			
+			visibleSymbols.forEach((symbol, visibleIndex) => {
+				if (symbol.name === 'S') {
+					// Convert visible index (0-4) to 1-based row (1-5)
+					const row = visibleIndex + 1;
+					sSymbolPositions.push({ reel: reelIndex, row });
+				}
+			});
+		});
+		
+		// For each S symbol, check if it should expand (has W symbols above it)
+		const sSymbolsToExpand: Position[] = [];
+		for (const sPosition of sSymbolPositions) {
+			// Get the S symbol from board state
+			const normalizedRow = normalizeRowIndex(sPosition.row, sPosition.reel);
+			const reelSymbol = stateGame.board[sPosition.reel]?.reelState?.symbols?.[normalizedRow];
+			if (!reelSymbol || reelSymbol.rawSymbol.name !== 'S') continue;
+			
+			const sOwnMultiplier = reelSymbol.rawSymbol.multiplier || 1;
+			
+			// Calculate collected multiplier
+			const collectedMultiplier = calculateSSymbolCollectedMultiplier(
+				currentBoard,
+				sPosition.reel,
+				sPosition.row,
+				sOwnMultiplier
+			);
+			
+			// If collected multiplier > S's own multiplier, there are W symbols above
+			if (collectedMultiplier > sOwnMultiplier) {
+				sSymbolsToExpand.push(sPosition);
+				
+				// Set the collected multiplier and expansion state
+				reelSymbol.rawSymbol.collectedMultiplier = collectedMultiplier;
+				reelSymbol.rawSymbol.reelPosition = sPosition.row - 1;
+				
+				// Mark W symbols above S as collected
+				stateGame.board[sPosition.reel].reelState.symbols.forEach((symbol, rowIndex) => {
+					if (rowIndex < normalizedRow && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
+						symbol.rawSymbol.isCollected = true;
+					}
+				});
+				
+				// Set to expand state
+				reelSymbol.symbolState = 'expand';
+			}
+		}
+		
+		// Animate S symbol expansion if any should expand
+		if (sSymbolsToExpand.length > 0) {
+			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsToExpand);
+			if (expansionPositions.length > 0) {
+				await animateSymbols({ positions: expansionPositions });
+			}
+		}
+		
 		// Add minimum delay to ensure each spin is visible (especially spins without wins)
 		// This prevents spins from being "skipped" visually when they process too quickly
 		if (isBonusGame) {
@@ -389,16 +455,26 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (lastUpdateGlobalMultEvent) playBookEvent(lastUpdateGlobalMultEvent, { bookEvents });
 	},
 	swordCollectEvent: async (bookEvent: BookEventOfType<'swordCollectEvent'>) => {
-		const currentBoard = stateGameDerived.boardRaw();
-		const startIndex = Math.floor((currentBoard[bookEvent.reel].length - 5) / 2);
-		const visibleSymbols = currentBoard[bookEvent.reel].slice(startIndex, startIndex + 5);
+		const { reel, swordMultiplier, wildSum } = bookEvent;
 		
-		visibleSymbols.forEach((symbol, rowIndex) => {
-			if (symbol.name === 'S') {
-				const reelSymbol = stateGame.board[bookEvent.reel].reelState.symbols[rowIndex];
-				reelSymbol.rawSymbol.collectedMultiplier = bookEvent.collectWin / (bookEvent.wildSum || 1);
+		// Find the specific S symbol that matches the swordMultiplier
+		// Iterate through all symbols in the reel to find the matching S symbol
+		const reelSymbols = stateGame.board[reel]?.reelState?.symbols;
+		if (!reelSymbols) return;
+		
+		// Calculate collected multiplier: (sum of W multipliers above S) × S multiplier
+		const collectedMultiplier = wildSum * swordMultiplier;
+		
+		// Find the S symbol with matching multiplier in the visible area
+		const startIndex = Math.floor((reelSymbols.length - 5) / 2);
+		for (let i = startIndex; i < startIndex + 5; i++) {
+			const reelSymbol = reelSymbols[i];
+			if (reelSymbol?.rawSymbol?.name === 'S' && 
+				reelSymbol.rawSymbol.multiplier === swordMultiplier) {
+				reelSymbol.rawSymbol.collectedMultiplier = collectedMultiplier;
+				break; // Found the matching S symbol, no need to continue
 			}
-		});
+		}
 	},
 	stickySwordEvent: async (bookEvent: BookEventOfType<'stickySwordEvent'>) => {
 		const { waitForResolve } = await import('utils-shared/wait');
