@@ -2,6 +2,7 @@ import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateUi } from 'state-shared';
+import type { Bet } from './typesBookEvent';
 import { SECOND } from 'constants-shared/time';
 
 import { eventEmitter } from './eventEmitter';
@@ -60,6 +61,11 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
+		
+		// Detect when bonus game ends (transition from bonus to non-bonus)
+		const wasInBonusGame = stateGame.isInBonusGame;
+		const bonusGameEnded = wasInBonusGame && !isBonusGame;
+		
 		if (isBonusGame) {
 			eventEmitter.broadcast({ type: 'stopButtonEnable' });
 			recordBookEvent({ bookEvent });
@@ -100,6 +106,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// This prevents spins from being "skipped" visually when they process too quickly
 		if (isBonusGame) {
 			await new Promise(resolve => setTimeout(resolve, 500));
+		}
+		
+		// Update bonus game state
+		stateGame.isInBonusGame = isBonusGame;
+		
+		// If bonus game just ended, broadcast event (StoneFXOverlay will handle timing with win screen)
+		if (bonusGameEnded) {
+			// Small delay to ensure any win screen has closed
+			setTimeout(() => {
+				eventEmitter.broadcast({ type: 'bonusGameEnd' });
+			}, 200);
 		}
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
@@ -152,7 +169,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			
 			// Reset S symbols first to force animation to replay (in case they're already in 'expand' state)
 			sSymbolsInWins.forEach(position => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
 				reelSymbol.symbolState = 'postWinStatic';
 			});
 			
@@ -160,7 +177,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await new Promise(resolve => setTimeout(resolve, 50));
 			
 			sSymbolsInWins.forEach(position => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
 				reelSymbol.symbolState = 'expand';
 			});
 			
@@ -171,19 +188,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		
 		// After all win animations, check if bonus trigger animation should play
 		if (stateGame.pendingBonusTriggerAnimation) {
-			// Find all B symbol positions on the board
+			// Find all B symbol positions on the board (only visible symbols at indices 1-5)
 			const bSymbolPositions: Position[] = [];
 			stateGame.board.forEach((reel, reelIndex) => {
-				reel.reelState.symbols.forEach((reelSymbol, rowIndex) => {
-					if (reelSymbol.rawSymbol.name === 'B') {
-						bSymbolPositions.push({ reel: reelIndex, row: rowIndex });
+				reel.reelState.symbols.forEach((reelSymbol, arrayIndex) => {
+					// Only collect visible symbols (indices 1-5 in a 7-symbol reel)
+					if (arrayIndex >= 1 && arrayIndex <= 5 && reelSymbol.rawSymbol.name === 'B') {
+						// Convert array index to 1-based row number for consistency with Position type
+						// For 7-symbol reel: arrayIndex 1→row 1, arrayIndex 2→row 2, etc.
+						const row = arrayIndex;
+						bSymbolPositions.push({ reel: reelIndex, row });
 					}
 				});
 			});
 			
 			// Set all B symbols to 'win' state (triggers B_animation win animation)
 			bSymbolPositions.forEach(position => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
 				reelSymbol.symbolState = 'win';
 			});
 			
@@ -192,7 +213,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			
 			// Return B symbols to static state
 			bSymbolPositions.forEach(position => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
 				reelSymbol.symbolState = 'static';
 			});
 			
@@ -253,6 +274,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
+
+		// Track if the freegame that's ending was a bonus game
+		// This is needed for B symbol triggered bonus games where there may be no setWin during the bonus game
+		// Check both isInBonusGame state and lastBet to determine if it was a bonus game
+		// (isInBonusGame might be false if bonus game already ended, so check lastBet as fallback)
+		const isInBonusGame = stateGame.isInBonusGame;
+		const lastBetIsBonusGame = stateBet.lastBet 
+			? checkIsMultipleRevealEvents({ bookEvents: (stateBet.lastBet as Bet).state })
+			: false;
+		const wasBonusGame = isInBonusGame || lastBetIsBonusGame;
+		
+		if (wasBonusGame) {
+			stateGame.wasBonusGameWhenFreegameEnded = true;
+		}
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		stateGame.gameType = 'basegame';

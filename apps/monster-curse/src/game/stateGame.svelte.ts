@@ -82,6 +82,8 @@ export const stateGame = $state({
 	pendingBonusTriggerAnimation: false, // Flag for B symbol bonus trigger (3+ B symbols)
 	winAnimationData: null as { wins: any[], sSymbols: any[] } | null, // Store win data for looping
 	shouldLoopWinAnimations: false, // Flag to control win animation looping
+	isInBonusGame: false, // Track if we're currently in a bonus game (multiple reveals)
+	wasBonusGameWhenFreegameEnded: false, // Track if the freegame that just ended was a bonus game
 });
 
 const boardLayout = () => {

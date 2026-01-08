@@ -10,6 +10,18 @@ import { bookEventHandlerMap } from './bookEventHandlerMap';
 import type { RawSymbol, SymbolState, Position } from './types';
 import { stateGame } from './stateGame.svelte.js';
 
+// Convert payload row (1..5, top-based visible rows) to board array index.
+// The board contains 7 symbols; visible window is the middle 5 with startIndex = floor((len-5)/2).
+// Mapping: boardIndex = startIndex + (row - 1). If row not in 1..5, pass through.
+const normalizeRowIndex = (row: number, reel: number) => {
+	if (row >= 1 && row <= 5) {
+		const len = stateGame.board[reel]?.reelState?.symbols?.length ?? 7;
+		const startIndex = Math.floor((len - 5) / 2);
+		return startIndex + (row - 1);
+	}
+	return row;
+};
+
 // general utils
 export const { getEmptyBoard } = createGetEmptyPaddedBoard({ reelsDimensions: BOARD_DIMENSIONS });
 export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEventHandlerMap });
@@ -57,7 +69,7 @@ const loopWinAnimations = async () => {
 		
 		// Set only the current win's symbols to postWinStatic first to reset them before animation
 		win.positions.forEach((pos: Position) => {
-			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[pos.row];
+			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
 			if (reelSymbol.rawSymbol.name !== 'S') {
 				reelSymbol.symbolState = 'postWinStatic';
 			}
@@ -73,7 +85,7 @@ const loopWinAnimations = async () => {
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbols);
 			
 			sSymbols.forEach((position: any) => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[position.row];
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
 				reelSymbol.symbolState = 'expand';
 			});
 			
@@ -193,8 +205,10 @@ export const checkSSymbolsInWins = (
 	
 	wins.forEach(win => {
 		win.positions.forEach(position => {
+			// Normalize row index: position.row is 1-based (1-5), convert to array index
 			const startIndex = Math.floor((board[position.reel].length - 5) / 2);
-			const symbolAtPosition = board[position.reel][startIndex + position.row];
+			const arrayIndex = startIndex + (position.row - 1);
+			const symbolAtPosition = board[position.reel][arrayIndex];
 			
 			// Check if this position has an S symbol
 			if (symbolAtPosition && symbolAtPosition.name === 'S') {
@@ -224,8 +238,10 @@ export const calculateCombinedMultipliers = (
 	let hasMultiplierSymbols = false;
 	
 	winPositions.forEach(position => {
+		// Normalize row index: position.row is 1-based (1-5), convert to array index
 		const startIndex = Math.floor((board[position.reel].length - 5) / 2);
-		const symbol = board[position.reel][startIndex + position.row];
+		const arrayIndex = startIndex + (position.row - 1);
+		const symbol = board[position.reel][arrayIndex];
 		
 		if (symbol && (symbol.name === 'S' || symbol.name === 'W') && symbol.multiplier) {
 			totalMultiplier += symbol.multiplier;

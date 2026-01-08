@@ -25,6 +25,9 @@ const primaryMachines = createPrimaryMachines<Bet>({
 		stateGame.shouldLoopWinAnimations = false;
 		stateGame.winAnimationData = null;
 		
+		// Note: Don't reset isInBonusGame here - let the reveal handler detect the transition
+		// from bonus to non-bonus when processing the first reveal of the new bet
+		
 		// Clear isCollected flags from previous spin
 		stateGame.board.forEach(reel => {
 			reel.reelState.symbols.forEach(symbol => {
