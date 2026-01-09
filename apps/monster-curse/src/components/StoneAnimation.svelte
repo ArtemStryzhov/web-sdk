@@ -7,6 +7,8 @@
 		duration?: number; // Animation duration in ms
 		speed?: number; // Fall speed in px/s
 		scale?: number; // Scale factor for the stone
+		stonesPerCycle?: number; // Number of stones to show simultaneously per cycle
+		cycles?: number; // Number of cycles to play sequentially
 		onComplete?: () => void;
 	};
 
@@ -15,14 +17,18 @@
 	const ANIMATION_DURATION = props.duration ?? 500;
 	const STONE_FALL_SPEED = props.speed ?? 4500;
 	const SCALE_FACTOR = props.scale ?? 1/2;
+	const STONES_PER_CYCLE = props.stonesPerCycle ?? 5;
+	const CYCLES = props.cycles ?? 1;
 
 	const STONE_ORIGINAL_WIDTH = 1557;
 	const STONE_ORIGINAL_HEIGHT = 934;
 
 	// Animation state
 	let isAnimating = $state(false);
-	let currentY = $state(0);
-	let stoneDimensions = $state({ width: 0, height: 0 });
+	let stoneYPositions = $state<number[]>([]); // Y positions for each stone
+	let stoneDimensions = $state({ width: 0, height: 0, offsetX: 0, useTiled: false, tilesCount: 1 });
+	let currentCycle = $state(0); // Track which cycle we're on (0 to CYCLES-1)
+	let hasStarted = $state(false); // Track if animation sequence has been initiated
 
 	// Main layout for positioning
 	const context = getContext();
@@ -30,47 +36,97 @@
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
 	
-	// Adjust speed for portrait layout (2x slower)
-	const adjustedSpeed = $derived(isPortrait ? STONE_FALL_SPEED / 2 : STONE_FALL_SPEED);
+	const adjustedSpeed = $derived(STONE_FALL_SPEED * 1.6);
 
-	// Calculate stone dimensions maintaining aspect ratio to fit canvas width, reduced by scale factor
+	// Calculate stone dimensions - width always full screen, height maintains aspect ratio
+	// Spine has an offset in the JSON: root bone x: -778.5, so we need to compensate
+	const SPINE_OFFSET_X = -778.5; // From stones.json skeleton.x
+	const SPINE_OFFSET_Y = -467; // From stones.json skeleton.y
+	const TILED_THRESHOLD = 1800; // Use tiled approach for screens >= 1800px
+	
 	$effect(() => {
-		const scale = (canvasSizes.width / STONE_ORIGINAL_WIDTH) * SCALE_FACTOR;
-		stoneDimensions = {
-			width: STONE_ORIGINAL_WIDTH * scale,
-			height: STONE_ORIGINAL_HEIGHT * scale,
-		};
+		const aspectRatio = STONE_ORIGINAL_HEIGHT / STONE_ORIGINAL_WIDTH;
+		const useTiled = canvasSizes.width >= TILED_THRESHOLD;
+		
+		if (useTiled) {
+			// Use tiled approach: multiple images of original size
+			const tilesCount = Math.ceil(canvasSizes.width / STONE_ORIGINAL_WIDTH);
+			stoneDimensions = {
+				width: STONE_ORIGINAL_WIDTH, // Original width for each tile
+				height: STONE_ORIGINAL_HEIGHT, // Original height
+				offsetX: SPINE_OFFSET_X, // Original offset (no scaling)
+				useTiled: true,
+				tilesCount,
+			};
+		} else {
+			// Use scaled approach: single image scaled to full width
+			const scaleFactor = canvasSizes.width / STONE_ORIGINAL_WIDTH;
+			stoneDimensions = {
+				width: canvasSizes.width, // Full screen width
+				height: canvasSizes.width * aspectRatio, // Maintain aspect ratio
+				offsetX: SPINE_OFFSET_X * scaleFactor, // Compensate for Spine offset (scaled)
+				useTiled: false,
+				tilesCount: 1,
+			};
+		}
 	});
 
-	// Start animation
-	const startAnimation = () => {
-		if (isAnimating) return;
-
+	// Start a single cycle of animation
+	const startCycle = (cycleIndex: number) => {
 		isAnimating = true;
-		currentY = -stoneDimensions.height; // Start above screen
+		// Calculate time delay between stones (time for one stone to move down by one stone height)
+		const timeBetweenStones = stoneDimensions.height / adjustedSpeed;
+		
+		// Initialize all stones starting positions - each one stone height above the previous
+		stoneYPositions = Array(STONES_PER_CYCLE).fill(0).map((_, i) => 
+			-stoneDimensions.height - (i * stoneDimensions.height)
+		);
+		
 		let animationId: number | null = null;
 		let animationStartTime = Date.now();
 		let lastTime = Date.now();
+		// Track when each stone should start (in seconds from cycle start)
+		const stoneStartTimes = Array(STONES_PER_CYCLE).fill(0).map((_, i) => i * timeBetweenStones);
 
 		const animate = () => {
 			const now = Date.now();
 			const deltaTime = (now - lastTime) / 1000; // Convert to seconds
 			lastTime = now;
-			const elapsedTime = now - animationStartTime;
+			const elapsedTime = (now - animationStartTime) / 1000; // Elapsed time in seconds
 
-			// Update stone position (use adjusted speed for portrait)
-			currentY = currentY + adjustedSpeed * deltaTime;
+			// Update each stone's position
+			stoneYPositions = stoneYPositions.map((y, i) => {
+				// Only move stone if its start time has passed
+				if (elapsedTime >= stoneStartTimes[i]) {
+					const stoneElapsedTime = elapsedTime - stoneStartTimes[i];
+					return y + adjustedSpeed * deltaTime;
+				}
+				return y;
+			});
 
-			// Continue animation or end it
-			if (elapsedTime >= ANIMATION_DURATION) {
-				// Animation complete - clean up
+			// Check if all stones have finished (last stone has been animating for ANIMATION_DURATION)
+			const lastStoneStartTime = stoneStartTimes[STONES_PER_CYCLE - 1];
+			const totalCycleDuration = (lastStoneStartTime * 1000) + ANIMATION_DURATION;
+			const elapsedTimeMs = (now - animationStartTime);
+
+			if (elapsedTimeMs >= totalCycleDuration) {
+				// Cycle complete - clean up
 				isAnimating = false;
-				currentY = 0;
+				stoneYPositions = [];
 				animationId = null;
 
-				// Call completion callback
-				if (props.onComplete) {
-					props.onComplete();
+				// Check if we have more cycles to play
+				if (cycleIndex < CYCLES - 1) {
+					// Start next cycle immediately (no delay)
+					currentCycle = cycleIndex + 1;
+					startCycle(currentCycle);
+				} else {
+					// All cycles complete - call completion callback
+					currentCycle = 0;
+					hasStarted = false; // Reset so animation can be restarted if needed
+					if (props.onComplete) {
+						props.onComplete();
+					}
 				}
 			} else {
 				animationId = requestAnimationFrame(animate);
@@ -80,9 +136,17 @@
 		animationId = requestAnimationFrame(animate);
 	};
 
+	// Start the full animation sequence
+	const startAnimation = () => {
+		if (isAnimating || hasStarted) return;
+		hasStarted = true;
+		currentCycle = 0;
+		startCycle(0);
+	};
+
 	// Auto-start animation when component mounts
 	$effect(() => {
-		if (!isAnimating) {
+		if (!hasStarted && !isAnimating) {
 			startAnimation();
 		}
 	});
@@ -97,17 +161,41 @@
 
 {#if isAnimating}
 	<Container
-		x={isPortrait ? canvasSizes.width - stoneDimensions.width * 0.4 - 60 : canvasSizes.width - stoneDimensions.width * 0.4}
-		y={currentY}
+		x={0}
 		zIndex={10001}
 	>
-		<SpineProvider
-			key="stones"
-			width={stoneDimensions.width}
-			height={stoneDimensions.height}
-			anchor={0.5}
-		>
-			<SpineTrack trackIndex={0} animationName="idle" loop />
-		</SpineProvider>
+		{#each Array(STONES_PER_CYCLE) as _, i}
+			{#if stoneYPositions[i] !== undefined}
+				{#if stoneDimensions.useTiled}
+					<!-- Tiled approach: multiple images of original size -->
+					{#each Array(stoneDimensions.tilesCount) as _, tileIndex}
+						<Container y={stoneYPositions[i]} x={tileIndex * STONE_ORIGINAL_WIDTH - stoneDimensions.offsetX}>
+							<SpineProvider
+								key="stones"
+								width={STONE_ORIGINAL_WIDTH}
+								height={STONE_ORIGINAL_HEIGHT}
+								anchor={0}
+								x={0}
+							>
+								<SpineTrack trackIndex={0} animationName="idle" loop />
+							</SpineProvider>
+						</Container>
+					{/each}
+				{:else}
+					<!-- Scaled approach: single image scaled to full width -->
+					<Container y={stoneYPositions[i]} x={-stoneDimensions.offsetX}>
+						<SpineProvider
+							key="stones"
+							width={stoneDimensions.width}
+							height={stoneDimensions.height}
+							anchor={0}
+							x={0}
+						>
+							<SpineTrack trackIndex={0} animationName="idle" loop />
+						</SpineProvider>
+					</Container>
+				{/if}
+			{/if}
+		{/each}
 	</Container>
 {/if}
