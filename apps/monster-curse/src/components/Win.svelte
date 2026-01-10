@@ -134,7 +134,9 @@
 
 <FadeContainer {show} zIndex={10004}>
 	{#if winLevelData}
-		{@const duration = Math.max(winLevelData.presentDuration, 3 * SECOND)}
+		{@const duration = winLevelData.presentDuration <= 1 * SECOND
+			? Math.max(winLevelData.presentDuration, 1.8 * SECOND)
+			: Math.max(winLevelData.presentDuration, 2.2 * SECOND)}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<!-- Background with opacity only for win levels >= 6 -->

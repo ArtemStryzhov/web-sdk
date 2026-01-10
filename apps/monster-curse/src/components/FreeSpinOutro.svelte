@@ -147,7 +147,9 @@
 	</Container>
 	
 	<FadeContainer {show} zIndex={1}>
-		{@const duration = Math.max(winLevelData.presentDuration, 3 * SECOND)}
+		{@const duration = winLevelData.presentDuration <= 1 * SECOND
+			? Math.max(winLevelData.presentDuration, 1.8 * SECOND)
+			: Math.max(winLevelData.presentDuration, 2.2 * SECOND)}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => {
 			onCountUpComplete();
 			countUpCompleted = true;
