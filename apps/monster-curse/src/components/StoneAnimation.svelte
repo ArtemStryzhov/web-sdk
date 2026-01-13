@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Container, SpineProvider, SpineTrack } from 'pixi-svelte';
+	import { Container, SpineProvider, SpineTrack, getContextApp } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 
@@ -26,7 +26,7 @@
 	// Animation state
 	let isAnimating = $state(false);
 	let stoneYPositions = $state<number[]>([]); // Y positions for each stone
-	let stoneDimensions = $state({ width: 0, height: 0, offsetX: 0, useTiled: false, tilesCount: 1 });
+	let stoneDimensions = $state({ width: 0, height: 0, offsetX: 0, useTiled: false, tilesCount: 1, scale: 1 });
 	let currentCycle = $state(0); // Track which cycle we're on (0 to CYCLES-1)
 	let hasStarted = $state(false); // Track if animation sequence has been initiated
 
@@ -41,33 +41,58 @@
 	// Calculate stone dimensions - width always full screen, height maintains aspect ratio
 	// Spine has an offset in the JSON: root bone x: -778.5, so we need to compensate
 	const SPINE_OFFSET_X = -778.5; // From stones.json skeleton.x
-	const SPINE_OFFSET_Y = -467; // From stones.json skeleton.y
-	const TILED_THRESHOLD = 1800; // Use tiled approach for screens >= 1800px
+	const TILED_THRESHOLD = 1300; // Use tiled approach for screens >= 1300px
 	
 	$effect(() => {
 		const aspectRatio = STONE_ORIGINAL_HEIGHT / STONE_ORIGINAL_WIDTH;
 		const useTiled = canvasSizes.width >= TILED_THRESHOLD;
 		
+		// Calculate scale: 
+		// - scale = 0.40 for screens 1400-1800px
+		// - reduce by 30% (scale = 0.7) for screens 1800-2300px
+		// - original size (scale = 1.0) for other screens
+		const scale = canvasSizes.width >= 1300 && canvasSizes.width < 1800 
+			? 0.55
+			: canvasSizes.width >= 1800 && canvasSizes.width <= 2300 
+				? 0.65 
+				: 1.0;  // Original size
+
+		// Calculate new dimensions
+		let newDimensions;
 		if (useTiled) {
 			// Use tiled approach: multiple images of original size
 			const tilesCount = Math.ceil(canvasSizes.width / STONE_ORIGINAL_WIDTH);
-			stoneDimensions = {
+			newDimensions = {
 				width: STONE_ORIGINAL_WIDTH, // Original width for each tile
 				height: STONE_ORIGINAL_HEIGHT, // Original height
 				offsetX: SPINE_OFFSET_X, // Original offset (no scaling)
 				useTiled: true,
 				tilesCount,
+				scale,
 			};
 		} else {
 			// Use scaled approach: single image scaled to full width
 			const scaleFactor = canvasSizes.width / STONE_ORIGINAL_WIDTH;
-			stoneDimensions = {
+			newDimensions = {
 				width: canvasSizes.width, // Full screen width
 				height: canvasSizes.width * aspectRatio, // Maintain aspect ratio
 				offsetX: SPINE_OFFSET_X * scaleFactor, // Compensate for Spine offset (scaled)
 				useTiled: false,
 				tilesCount: 1,
+				scale,
 			};
+		}
+		
+		// Only update if values actually changed to prevent infinite loops
+		if (
+			stoneDimensions.width !== newDimensions.width ||
+			stoneDimensions.height !== newDimensions.height ||
+			stoneDimensions.offsetX !== newDimensions.offsetX ||
+			stoneDimensions.useTiled !== newDimensions.useTiled ||
+			stoneDimensions.tilesCount !== newDimensions.tilesCount ||
+			stoneDimensions.scale !== newDimensions.scale
+		) {
+			stoneDimensions = newDimensions;
 		}
 	});
 
@@ -167,15 +192,20 @@
 		{#each Array(STONES_PER_CYCLE) as _, i}
 			{#if stoneYPositions[i] !== undefined}
 				{#if stoneDimensions.useTiled}
-					<!-- Tiled approach: multiple images of original size -->
+					<!-- Tiled approach: multiple images of original size, positioned side by side -->з
 					{#each Array(stoneDimensions.tilesCount) as _, tileIndex}
-						<Container y={stoneYPositions[i]} x={tileIndex * STONE_ORIGINAL_WIDTH - stoneDimensions.offsetX}>
+						{@const tileX = tileIndex * STONE_ORIGINAL_WIDTH - stoneDimensions.offsetX}
+						{@const isFirstRender = tileIndex === 0 && i === 0}
+						{#if isFirstRender}
+							{console.log('[StoneAnimation] Rendering', stoneDimensions.tilesCount, 'tiles for stone', i)}
+							{console.log('[StoneAnimation] Tile', tileIndex, 'at x:', tileX, 'offsetX:', stoneDimensions.offsetX)}
+						{/if}
+						<Container y={stoneYPositions[i]} x={tileX}>
 							<SpineProvider
 								key="stones"
-								width={STONE_ORIGINAL_WIDTH}
-								height={STONE_ORIGINAL_HEIGHT}
 								anchor={0}
 								x={0}
+								scale={{ x: stoneDimensions.scale, y: stoneDimensions.scale }}
 							>
 								<SpineTrack trackIndex={0} animationName="idle" loop />
 							</SpineProvider>
