@@ -54,7 +54,7 @@
 		const scale = canvasSizes.width >= 1300 && canvasSizes.width < 1800 
 			? 0.55
 			: canvasSizes.width >= 1800 && canvasSizes.width <= 2300 
-				? 0.65 
+				? 0.6 
 				: 1.0;  // Original size
 
 		// Calculate new dimensions
