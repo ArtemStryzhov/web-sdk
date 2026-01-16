@@ -196,10 +196,6 @@
 					{#each Array(stoneDimensions.tilesCount) as _, tileIndex}
 						{@const tileX = tileIndex * STONE_ORIGINAL_WIDTH - stoneDimensions.offsetX}
 						{@const isFirstRender = tileIndex === 0 && i === 0}
-						{#if isFirstRender}
-							{console.log('[StoneAnimation] Rendering', stoneDimensions.tilesCount, 'tiles for stone', i)}
-							{console.log('[StoneAnimation] Tile', tileIndex, 'at x:', tileX, 'offsetX:', stoneDimensions.offsetX)}
-						{/if}
 						<Container y={stoneYPositions[i]} x={tileX}>
 							<SpineProvider
 								key="stones"

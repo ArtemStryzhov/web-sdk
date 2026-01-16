@@ -142,21 +142,37 @@
 			/>
 		{:else if !hasBAnimationVisible}
 			<!-- Regular symbol rendering - hide base sprite when B_animation is visible -->
+			{@const isB = props.rawSymbol.name === 'B'}
+			{@const shouldIncreaseSize = isB && ['static', 'spin', 'postWinStatic'].includes(props.state)}
+			{@const baseSizeMultiplier = shouldIncreaseSize ? 1.2 : 1}
+			{@const sizeMultiplier = isB ? baseSizeMultiplier * 1.05 : baseSizeMultiplier}
+			{@const xOffset = isB ? -(SYMBOL_SIZE * 0.02) : 0}
+			{@const yOffset = isB ? (SYMBOL_SIZE * 0.03) : 0}
 			<Sprite
 				anchor={0.5}
 				key={props.symbolInfo.assetKey}
-				width={SYMBOL_SIZE * (props.symbolInfo.sizeRatios?.width ?? 1)}
-				height={SYMBOL_SIZE * (props.symbolInfo.sizeRatios?.height ?? 1)}
+				x={xOffset}
+				y={yOffset}
+				width={SYMBOL_SIZE * (props.symbolInfo.sizeRatios?.width ?? 1) * sizeMultiplier}
+				height={SYMBOL_SIZE * (props.symbolInfo.sizeRatios?.height ?? 1) * sizeMultiplier}
 				zIndex={10}
 			/>
 		{/if}
 	{:else}
 		<!-- Fallback for symbols without configuration -->
+		{@const isB = props.rawSymbol.name === 'B'}
+		{@const shouldIncreaseSize = isB && ['static', 'spin', 'postWinStatic'].includes(props.state)}
+		{@const baseSizeMultiplier = shouldIncreaseSize ? 1.2 : 1}
+		{@const sizeMultiplier = isB ? baseSizeMultiplier * 1.05 : baseSizeMultiplier}
+		{@const xOffset = isB ? -(SYMBOL_SIZE * 0.02) : 0}
+		{@const yOffset = isB ? (SYMBOL_SIZE * 0.03) : 0}
 		<Sprite
 			anchor={0.5}
 			key={props.symbolInfo.assetKey}
-			width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
-			height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+			x={xOffset}
+			y={yOffset}
+			width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width * sizeMultiplier}
+			height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height * sizeMultiplier}
 		/>
 	{/if}
 

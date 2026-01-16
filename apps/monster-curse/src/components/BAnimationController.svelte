@@ -26,20 +26,21 @@
 			return;
 		}
 		
-		// Get or initialize the set of animated states for this spine instance
-		const animatedStates = startedSpines.get(spine) || new Set<string>();
-		
-		// Check if this spine has already animated in this state
-		if (animatedStates.has(currentState)) {
+		// Animate in both 'win' and 'land' states
+		if (currentState !== 'win' && currentState !== 'land') {
 			return;
 		}
 		
-		// Mark this state as animated for this spine instance
-		animatedStates.add(currentState);
-		startedSpines.set(spine, animatedStates);
+		// Always allow animation to restart - remove the blocking check
+		// This ensures animation plays every time state changes to 'win'
 		
 		// Clear any existing tracks to start fresh
 		spine.state.clearTracks();
+		
+		// Reset animation state completely
+		spine.state.timeScale = 1;
+		spine.skeleton.setToSetupPose();
+		spine.state.apply(spine.skeleton);
 		
 		// Set animation with loop=false EXPLICITLY
 		const track = spine.state.setAnimation(0, 'win', false);
@@ -47,8 +48,10 @@
 		// FORCE settings
 		if (track) {
 			track.loop = false;
-			track.timeScale = 0.85; // 15% slower
+			track.timeScale = 1; // Normal speed
 			track.mixDuration = 0; // No mixing/blending
+			track.trackTime = 0; // Start from beginning
+			track.animationStart = 0; // Start from beginning
 		}
 		
 		// Track when animation completes
@@ -71,14 +74,15 @@
 			};
 		}
 		
-		// Fallback timeout in case listener doesn't fire (0.6s / 0.85 + buffer = ~900ms)
+		// Fallback timeout: animation duration is 3.025 seconds + buffer
+		// 3.025 * 1000 = 3025ms, add 500ms buffer = 3525ms
 		timeout = setTimeout(() => {
 			if (!hasCompleted) {
 				hasCompleted = true;
 				spine.state.clearTracks();
 				props.oncomplete?.();
 			}
-		}, 900);
+		}, 3525);
 		
 		// Cleanup when effect re-runs or component destroys
 		return () => {
