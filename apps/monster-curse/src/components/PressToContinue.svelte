@@ -185,14 +185,15 @@
 	const isNarrowDesktop1200 = $derived(isDesktop && canvasSizes.width < 1200);
 	const isUltraNarrow = $derived(canvasSizes.width < 500);
 	const isLandscapeLayout = $derived(isLandscape);
-	const portraitTextScale = $derived(isPortrait ? 1.85 : 1);
-	const tabletTextScale = $derived(isTablet ? 2 : 1);
+	const portraitTextScale = $derived(isPortrait ? 1.48 : 1); // Reduced by 20% for portrait (1.85 * 0.8 = 1.48)
+	const tabletTextScale = $derived(isTablet ? 1.02 : 1); // Reduced by 40% then additional 15% for tablets (2 * 0.6 * 0.85 = 1.02)
+	const portraitNarrowTextScale = $derived(isPortrait && canvasSizes.width < 500 ? 1.15 : 1); // Increase by 15% for portrait screens with width < 500
+	const ultraNarrowTextScale = $derived(canvasSizes.width < 500 ? 1.15 : 1); // Increase by 15% for all screens with width < 500
 	// Use slider mode for all portrait and tablet screen sizes
 	const isSliderMode = $derived(isPortrait || isTablet);
 	const isSmallScreen = $derived(canvasSizes.width < 380);
 
 	const buttonX = $derived(mainLayout.width * 0.5);
-	const buttonY = $derived(mainLayout.height - 80);
 
 	const buttonSpriteKey = $derived(isHovered ? 'button_grey.png' : 'button_inactive.png');
 
@@ -472,6 +473,10 @@
 		mainLayout.height * 0.5 + 40 + (isLandscape && canvasSizes.width <= 450 ? 10 : 0)
 	);
 
+	// Position button above the bottom of the blocks (accounting for button center anchor)
+	// Margin reduced by 60%: 30px * 0.4 = 12px
+	const buttonY = $derived(framesY + frameHeight * 0.5 + 12 + (buttonHeight * buttonScale * 0.5));
+
 	// Frame text content
 	const frameTexts = [
 		'Silver Sword symbols may carry variable multiplier values and expand vertically to occupy the entire reel.',
@@ -492,7 +497,10 @@
 			(isNarrowDesktop1200 ? 1.15 : 1) *
 			(isUltraNarrow ? 0.8 : 1) *
 			portraitTextScale *
-			tabletTextScale,
+			tabletTextScale *
+			1.15 * // Increase by 15%
+			portraitNarrowTextScale * // Additional 15% for portrait screens with width < 500
+			ultraNarrowTextScale, // Additional 15% for all screens with width < 500
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -513,7 +521,10 @@
 			(isNarrowDesktop1200 ? 1.15 : 1) *
 			(isUltraNarrow ? 0.8 : 1) *
 			portraitTextScale *
-			tabletTextScale, // 10% bigger on landscape
+			tabletTextScale *
+			1.25 * // Increase by 15%
+			portraitNarrowTextScale * // Additional 15% for portrait screens with width < 500
+			ultraNarrowTextScale, // Additional 15% for all screens with width < 500
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -521,8 +532,6 @@
 		wordWrapWidth: frameWidth * 0.8 - 15, // Reduced width by 15px for left padding
 	});
 
-	// Calculate text Y position (bottom of frame with padding)
-	const frameTextY = $derived(frameHeight * 0.5 - 40); // Bottom of frame minus padding
 	const frameTextXFirst = $derived(15 * 0.5); // Shift right by half of the padding to maintain visual balance
 
 	// Image dimensions from spritesheet (original sizes)
@@ -552,6 +561,26 @@
 	// Third block: sens2000.png centered horizontally, top aligned
 	const sens2000X = $derived(0); // Centered horizontally
 	const sens2000Y = $derived(-frameHeight * 0.4 + 40); // Top aligned, moved 40px down
+
+	// Calculate text Y position below images to avoid overlap
+	// Images are anchored at center, so bottom edge = imageY + (imageHeight / 2)
+	const frameTextY = $derived.by(() => {
+		// Calculate bottom edge of each image
+		const block0ImageBottom = multiplierY + (imageSizes['50x'].height * imageScale / 2);
+		const block1ImageBottom = elicsirY + (imageSizes.elicsir.height * imageScale / 2);
+		const block2ImageBottom = sens2000Y + (imageSizes.sens2000.height * imageScaleSens / 2);
+		
+		// Find the maximum bottom edge (lowest image)
+		const maxImageBottom = Math.max(block0ImageBottom, block1ImageBottom, block2ImageBottom);
+		
+		// Position text below the lowest image with 20px padding
+		return maxImageBottom + 20;
+	});
+
+	// Text Y position for first two blocks (raised by additional 60% from current position)
+	const frameTextYFirstTwo = $derived(frameTextY * 0.1 -20);
+	// Text Y position for first block only - positioned much higher, near the top of the frame, lowered by 15%
+	const frameTextYFirst = $derived(-frameHeight * 0.5 + 145);
 
 const textStyle = $derived({
 	fontFamily: 'Kanit, Arial, sans-serif',
@@ -676,16 +705,25 @@ const textStyle = $derived({
 									<Text
 										text={frameTexts[index]}
 										style={frameTextStyleFirst}
-										anchor={{ x: 0.5, y: 1 }}
+										anchor={{ x: 0.5, y: 0 }}
 										x={frameTextXFirst}
-										y={frameTextY}
+										y={frameTextYFirst}
+										eventMode="none"
+									/>
+								{:else if index === 1}
+									<Text
+										text={frameTexts[index]}
+										style={frameTextStyle}
+										anchor={{ x: 0.5, y: 0 }}
+										x={0}
+										y={frameTextYFirstTwo}
 										eventMode="none"
 									/>
 								{:else}
 									<Text
 										text={frameTexts[index]}
 										style={frameTextStyle}
-										anchor={{ x: 0.5, y: 1 }}
+										anchor={{ x: 0.5, y: 0 }}
 										x={0}
 										y={frameTextY}
 										eventMode="none"
@@ -777,16 +815,25 @@ const textStyle = $derived({
 							<Text
 								text={frameTexts[index]}
 								style={frameTextStyleFirst}
-								anchor={{ x: 0.5, y: 1 }}
+								anchor={{ x: 0.5, y: 0 }}
 								x={frameTextXFirst}
-								y={frameTextY}
+								y={frameTextYFirst}
+								eventMode="none"
+							/>
+						{:else if index === 1}
+							<Text
+								text={frameTexts[index]}
+								style={frameTextStyle}
+								anchor={{ x: 0.5, y: 0 }}
+								x={0}
+								y={frameTextYFirstTwo}
 								eventMode="none"
 							/>
 						{:else}
 							<Text
 								text={frameTexts[index]}
 								style={frameTextStyle}
-								anchor={{ x: 0.5, y: 1 }}
+								anchor={{ x: 0.5, y: 0 }}
 								x={0}
 								y={frameTextY}
 								eventMode="none"

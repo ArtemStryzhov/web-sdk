@@ -36,7 +36,7 @@
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
 	
-	const adjustedSpeed = $derived(STONE_FALL_SPEED * 1.6);
+	const adjustedSpeed = $derived(STONE_FALL_SPEED * 1.3); 
 
 	// Calculate stone dimensions - width always full screen, height maintains aspect ratio
 	// Spine has an offset in the JSON: root bone x: -778.5, so we need to compensate

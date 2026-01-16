@@ -41,11 +41,11 @@ const logoScale = $derived(
 		}
 
 		if (layoutType === 'tablet') {
-			return 0.4 / 2; // 2 times smaller on tablet
+			return 0.4 / 2 * 1.2; // 2 times smaller on tablet, then increased by 20%
 		}
 
 		if (layoutType === 'portrait') {
-			return (0.4 / 3) * 1.3; // 30% larger on portrait
+			return (0.4 / 3) * 1.3 * 1.5; // 30% larger on portrait, then increased by 50%
 		}
 
 		if (layoutType === 'landscape') {
