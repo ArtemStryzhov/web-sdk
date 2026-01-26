@@ -48,6 +48,10 @@
 	let videoElement: HTMLVideoElement | null = $state(null);
 	let imageSequenceIndex = $state(0);
 	let texture: PIXI.Texture | null = $state(null);
+	let oldTexture: PIXI.Texture | null = $state(null);
+	let oldActualWidth: number | null = $state(null);
+	let oldActualHeight: number | null = $state(null);
+	let isTransitioning = $state(false);
 	let sprite: PIXI.Sprite | null = $state(null);
 	let canvas: HTMLCanvasElement | null = $state(null);
 	let animationFrameId: number | null = $state(null);
@@ -56,10 +60,22 @@
 	let animationCompleted = $state(false);
 
 	// Calculate actual dimensions with scale
-	// Version 2 (win screen mascot) should be 25% larger
-	const versionScale = $derived(version === 2 ? 1.35 : 1);
+	const versionScale = $derived(version === 2 ? 1.68 : 1);
 	const actualWidth = $derived(width * scale * versionScale);
 	const actualHeight = $derived(height * scale * versionScale);
+	
+	// Display dimensions: use old dimensions when transitioning, otherwise use current dimensions
+	// During transition, prefer oldTexture dimensions even if texture exists
+	const displayWidth = $derived(
+		isTransitioning && oldTexture && oldActualWidth !== null 
+			? oldActualWidth 
+			: (texture ? actualWidth : (oldTexture && oldActualWidth !== null ? oldActualWidth : actualWidth))
+	);
+	const displayHeight = $derived(
+		isTransitioning && oldTexture && oldActualHeight !== null 
+			? oldActualHeight 
+			: (texture ? actualHeight : (oldTexture && oldActualHeight !== null ? oldActualHeight : actualHeight))
+	);
 
 	// Lottie animation setup
 	const setupLottie = () => {
@@ -152,6 +168,15 @@
 						texture.destroy();
 					}
 					texture = PIXI.Texture.from(canvas);
+					
+					// If we were transitioning and now have a new texture, clean up oldTexture
+					if (isTransitioning && oldTexture && texture) {
+						oldTexture.destroy();
+						oldTexture = null;
+						oldActualWidth = null;
+						oldActualHeight = null;
+						isTransitioning = false;
+					}
 				}
 			};
 
@@ -273,6 +298,15 @@
 						texture.destroy();
 					}
 					texture = PIXI.Texture.from(canvas);
+					
+					// If we were transitioning and now have a new texture, clean up oldTexture
+					if (isTransitioning && oldTexture && texture) {
+						oldTexture.destroy();
+						oldTexture = null;
+						oldActualWidth = null;
+						oldActualHeight = null;
+						isTransitioning = false;
+					}
 				}
 			};
 
@@ -342,6 +376,15 @@
 					texture.destroy();
 				}
 				texture = PIXI.Texture.from(canvas);
+				
+				// If we were transitioning and now have a new texture, clean up oldTexture
+				if (isTransitioning && oldTexture && texture) {
+					oldTexture.destroy();
+					oldTexture = null;
+					oldActualWidth = null;
+					oldActualHeight = null;
+					isTransitioning = false;
+				}
 			}
 		};
 
@@ -389,7 +432,7 @@
 	let previousVersion = $state<number | null>(null);
 
 	// Cleanup function
-	const cleanup = () => {
+	const cleanup = (preserveTexture = false) => {
 		if (animationFrameId !== null) {
 			cancelAnimationFrame(animationFrameId);
 			animationFrameId = null;
@@ -407,7 +450,7 @@
 			videoElement.src = '';
 			videoElement = null;
 		}
-		if (texture) {
+		if (texture && !preserveTexture) {
 			texture.destroy();
 			texture = null;
 		}
@@ -416,8 +459,37 @@
 	};
 
 	// Setup animation based on format and version
-	const setupAnimation = () => {
-		cleanup();
+	const setupAnimation = (oldVersion: number | null = null) => {
+		// Save current texture as oldTexture if it exists and we're transitioning between versions
+		if (texture && oldVersion !== null && oldVersion !== version) {
+			// Clean up old oldTexture if it exists
+			if (oldTexture) {
+				oldTexture.destroy();
+				oldActualWidth = null;
+				oldActualHeight = null;
+			}
+
+			const oldVersionScale = oldVersion === 2 ? 2 : 1;
+			oldActualWidth = width * scale * oldVersionScale;
+			oldActualHeight = height * scale * oldVersionScale;
+			// Move texture to oldTexture and clear texture immediately
+			// This ensures displayWidth uses oldTexture dimensions during transition
+			oldTexture = texture;
+			texture = null; // Clear texture so displayWidth uses oldTexture
+			isTransitioning = true;
+			// Don't destroy texture in cleanup - we're keeping it as oldTexture
+			cleanup(true);
+		} else {
+			// Not transitioning (initial mount or no version change), clean up normally
+			if (oldTexture) {
+				oldTexture.destroy();
+				oldTexture = null;
+			}
+			oldActualWidth = null;
+			oldActualHeight = null;
+			isTransitioning = false;
+			cleanup();
+		}
 		animationCompleted = false;
 		
 		// Setup based on format
@@ -438,8 +510,9 @@
 	$effect(() => {
 		const currentVersion = version;
 		if (previousVersion === null || currentVersion !== previousVersion) {
+			const oldVersion = previousVersion;
 			previousVersion = currentVersion;
-			setupAnimation();
+			setupAnimation(oldVersion);
 		}
 	});
 
@@ -449,12 +522,18 @@
 
 	onDestroy(() => {
 		cleanup();
+		if (oldTexture) {
+			oldTexture.destroy();
+			oldTexture = null;
+		}
+		oldActualWidth = null;
+		oldActualHeight = null;
 	});
 </script>
 
 <Container x={x} y={y} zIndex={zIndex} eventMode="none">
-	{#if texture}
-		<MascotSprite {texture} {anchor} width={actualWidth} height={actualHeight} />
+	{#if texture || oldTexture}
+		<MascotSprite texture={isTransitioning && oldTexture ? oldTexture : (texture || oldTexture)} {anchor} width={displayWidth} height={displayHeight} />
 	{/if}
 </Container>
 
