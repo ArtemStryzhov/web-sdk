@@ -14,6 +14,7 @@
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
 	import { SECOND } from 'constants-shared/time';
+	import { bookEventAmountToNormalisedAmount } from 'utils-shared/amount';
 
 	import WinCoins from './WinCoins.svelte';
 	import WinCounter from './WinCounter.svelte';
@@ -114,6 +115,8 @@
 			? Math.max(winLevelData.presentDuration, 1.8 * SECOND)
 			: Math.max(winLevelData.presentDuration, 2.2 * SECOND)}
 		{@const perScreenDuration = bigWinLevels.length > 0 ? duration / bigWinLevels.length : duration}
+		{@const normalisedAmount = bookEventAmountToNormalisedAmount(amount)}
+		{@const shouldShowCoins = normalisedAmount > 3}
 		
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
@@ -204,9 +207,11 @@
 								</Container>
 							</MainContainer>
 
-							<Container zIndex={1}>
-								<WinCoins emit={!countUpCompleted} levelAlias={levelData?.alias} />
-							</Container>
+							{#if shouldShowCoins}
+								<Container zIndex={1}>
+									<WinCoins emit={!countUpCompleted} levelAlias={levelData?.alias} />
+								</Container>
+							{/if}
 
 							<!-- Show PressToContinue only on level 10 -->
 							{#if level === 10}
@@ -248,9 +253,11 @@
 						</Container>
 					</MainContainer>
 
-					<Container zIndex={1}>
-						<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
-					</Container>
+					{#if shouldShowCoins}
+						<Container zIndex={1}>
+							<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+						</Container>
+					{/if}
 
 					<Container zIndex={1}>
 						<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
