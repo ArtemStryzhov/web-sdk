@@ -163,7 +163,7 @@ const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: 0.15,
 	reelSpinSpeedBeforeBounce: 4,
 	reelPaddingMultiplierNormal: 1.2,
-	reelPaddingMultiplierAnticipated: 10,
+	reelPaddingMultiplierAnticipated: 4,
 	reelSpinDelay: 145,
 };
 
