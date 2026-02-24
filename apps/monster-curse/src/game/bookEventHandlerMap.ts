@@ -213,11 +213,39 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		
-	// Animate each win line sequentially
+		// If S symbols are in wins, expand them FIRST and keep them expanded throughout all win animations
+		if (sSymbolsInWins.length > 0) {
+			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsInWins);
+			
+			// Set S symbols to expand state and ensure they have the correct expandAnimation property
+			sSymbolsInWins.forEach(position => {
+				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
+				
+				// If expandAnimation is not set (sticky S symbols without swordExpandEvent), calculate it
+				if (!reelSymbol.rawSymbol.expandAnimation) {
+					// Calculate how many rows this S symbol should expand (rows above it, up to row 1)
+					const expandedRowsCount = position.row - 1;
+					const animationName = expandedRowsCount === 0 
+						? 'sword_expanding_pos0'
+						: `sword_expanding_pos${expandedRowsCount}`;
+					reelSymbol.rawSymbol.expandAnimation = animationName;
+				}
+				
+				reelSymbol.symbolState = 'expand';
+			});
+			
+			// Animate upward expansion if there are positions to expand
+			if (expansionPositions.length > 0) {
+				await animateSymbols({ positions: expansionPositions });
+			}
+		}
+		
+		// Animate each win line sequentially
 	for (let i = 0; i < bookEvent.wins.length; i++) {
 		const win = bookEvent.wins[i];
 		logHighlight(stateGame.round, win, i + 1, bookEvent.wins.length);
 		// Set only the current win's symbols to postWinStatic first to reset them before animation
+		// BUT: Skip S symbols - they should stay expanded throughout all win animations
 		win.positions.forEach((pos: Position) => {
 			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
 			if (reelSymbol.rawSymbol.name !== 'S') {
@@ -228,29 +256,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Then animate current win line
 		await animateSymbols({ positions: win.positions });
 	}
-		
-		// If S symbols are in wins, animate their upward expansion
-		if (sSymbolsInWins.length > 0) {
-			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsInWins);
-			
-			// Reset S symbols first to force animation to replay (in case they're already in 'expand' state)
-			sSymbolsInWins.forEach(position => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
-				reelSymbol.symbolState = 'postWinStatic';
-			});
-			
-			// Small delay to ensure state change is registered
-			await new Promise(resolve => setTimeout(resolve, 50));
-			
-			sSymbolsInWins.forEach(position => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
-				reelSymbol.symbolState = 'expand';
-			});
-			
-			if (expansionPositions.length > 0) {
-				await animateSymbols({ positions: expansionPositions });
-			}
-		}
 		
 		// After all win animations, check if bonus trigger animation should play
 		if (stateGame.pendingBonusTriggerAnimation) {
@@ -479,35 +484,49 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	stickySwordEvent: async (bookEvent: BookEventOfType<'stickySwordEvent'>) => {
 		const { waitForResolve } = await import('utils-shared/wait');
 		
+		// Store sticky positions for next reveal (as per backend specification)
+		stateGame.stickySwordPositions = bookEvent.stickyPositions;
+		
 		for (const position of bookEvent.stickyPositions) {
-			const reelSymbol = stateGame.board[position.reel]?.reelState?.symbols?.[position.row];
+			// Normalize row index from backend (1-5) to array index
+			const normalizedRow = normalizeRowIndex(position.row, position.reel);
+			const reelSymbol = stateGame.board[position.reel]?.reelState?.symbols?.[normalizedRow];
 			
 			if (!reelSymbol) {
 				continue;
 			}
 			
-			// Force a sticky sword symbol even if the current rawSymbol isn't S (buy_blades uses sticky S)
+			// PRESERVE existing rawSymbol and update/add necessary fields
+			// This prevents losing collectedMultiplier set by swordExpandEvent
 			reelSymbol.rawSymbol = {
+				...reelSymbol.rawSymbol, // Preserve existing fields like collectedMultiplier
 				name: 'S',
 				scatter: true,
 				// reelPosition represents expansion level (0-4) based on which visible row (1-5)
 				reelPosition: position.row - 1,
+				multiplier: position.multiplier,
 			} as any;
 
-			// Reset state to force the expand animation to play/replay
-			reelSymbol.symbolState = 'postWinStatic';
-			await new Promise(resolve => setTimeout(resolve, 50));
+			// Only play expanding animation if the S symbol has expandAnimation set
+			// (meaning it was just expanded via swordExpandEvent in this spin)
+			// Otherwise, just keep it in 'expand' state without replaying animation
+			if (reelSymbol.rawSymbol.expandAnimation) {
+				// This S was just expanded in this spin - play the animation
+				reelSymbol.symbolState = 'postWinStatic';
+				await new Promise(resolve => setTimeout(resolve, 50));
+				reelSymbol.symbolState = 'expand';
+
+				// Wait for animation with timeout protection (5 seconds max)
+				const animationPromise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));
+				const timeoutPromise = new Promise<void>(resolve => {
+					setTimeout(() => resolve(), 5000);
+				});
+				await Promise.race([animationPromise, timeoutPromise]);
+			}
+
+			// Keep sticky S symbols in 'expand' state to maintain visual expansion
+			// even when they don't participate in win combinations
 			reelSymbol.symbolState = 'expand';
-
-			// Wait for animation with timeout protection (5 seconds max)
-			const animationPromise = waitForResolve((resolve: () => void) => (reelSymbol.oncomplete = resolve));
-			const timeoutPromise = new Promise<void>(resolve => {
-				setTimeout(() => resolve(), 5000);
-			});
-			await Promise.race([animationPromise, timeoutPromise]);
-
-			// Keep it static but expanded; expansion mask is handled by reelPosition in SymbolSpineMain
-			reelSymbol.symbolState = 'static';
 		}
 	},
 	swordExpandEvent: async (bookEvent: BookEventOfType<'swordExpandEvent'>) => {

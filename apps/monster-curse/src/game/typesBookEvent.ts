@@ -90,7 +90,7 @@ type BookEventSwordCollect = {
 type BookEventStickySword = {
 	index: number;
 	type: 'stickySwordEvent';
-	stickyPositions: Array<{ reel: number; row: number }>;
+	stickyPositions: Array<{ reel: number; row: number; multiplier: number }>;
 };
 
 type BookEventSwordExpand = {

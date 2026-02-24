@@ -119,22 +119,26 @@ type Props = {
 		/>
 	</Container>
 {/if}
-{#if (() => {
-		// For S symbols: if collectedMultiplier exists, hide initial multiplier and show only collectedMultiplier
-		if (props.rawSymbol.name === 'S' && props.rawSymbol.collectedMultiplier) {
-			return true; // Show collectedMultiplier, hide initial multiplier
-		}
-		// For other symbols or S without collectedMultiplier: show multiplier if it exists
-		return (props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier) && !props.rawSymbol.isCollected;
-	})()}
+{#if (props.rawSymbol.multiplier || props.rawSymbol.collectedMultiplier) && !props.rawSymbol.isCollected}
 	{@const displayMultiplier = (() => {
 		// For S symbols: prioritize collectedMultiplier (hides initial multiplier)
 		if (props.rawSymbol.name === 'S' && props.rawSymbol.collectedMultiplier) {
 			return props.rawSymbol.collectedMultiplier;
 		}
 		// For other symbols: use collectedMultiplier if available, otherwise multiplier
-		return props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier;
+		// Default to 2 for W/S symbols if no multiplier specified (backend always sends 2-50)
+		const defaultMultiplier = (props.rawSymbol.name === 'W' || props.rawSymbol.name === 'S') ? 2 : 0;
+		return props.rawSymbol.collectedMultiplier || props.rawSymbol.multiplier || defaultMultiplier;
 	})()}
+	{@const shouldShowMultiplier = (() => {
+		// For S symbols: always show multiplier when in win states (expand, win, postWinStatic)
+		if (props.rawSymbol.name === 'S' && (props.state === 'expand' || props.state === 'win' || props.state === 'postWinStatic')) {
+			return true;
+		}
+		// For all symbols: hide 1x multipliers
+		return displayMultiplier > 1;
+	})()}
+	{#if shouldShowMultiplier}
 	<Container 
 		x={props.x} 
 		y={(props.y ?? 0) + (props.rawSymbol.name === 'S' && props.state === 'expand' ? 20 : 0)} 
@@ -210,4 +214,5 @@ type Props = {
 			/>
 		</Container>
 	</Container>
+	{/if}
 {/if}

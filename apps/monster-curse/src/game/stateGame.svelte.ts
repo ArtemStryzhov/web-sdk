@@ -84,6 +84,7 @@ export const stateGame = $state({
 	shouldLoopWinAnimations: false, // Flag to control win animation looping
 	isInBonusGame: false, // Track if we're currently in a bonus game (multiple reveals)
 	wasBonusGameWhenFreegameEnded: false, // Track if the freegame that just ended was a bonus game
+	stickySwordPositions: [] as { reel: number; row: number; multiplier: number }[], // Sticky sword positions for next spin (Blades of Fate mode)
 });
 
 const boardLayout = () => {

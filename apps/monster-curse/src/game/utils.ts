@@ -269,8 +269,9 @@ export const generateSSymbolExpansionPositions = (
 	const expansionPositions: Position[] = [];
 	
 	sSymbolPositions.forEach(sPosition => {
-		// Add positions from the S symbol's row up to the top (row 0)
-		for (let row = sPosition.row - 1; row >= 0; row--) {
+		// Add positions from the S symbol's row up to the top (row 1, not row 0 which is padding)
+		// Rows are 1-based: 1 (top visible) to 5 (bottom visible)
+		for (let row = sPosition.row - 1; row >= 1; row--) {
 			// Check if this position is already an S symbol position (skip it)
 			const isSSybolPosition = sSymbolPositions.some(
 				sPos => sPos.reel === sPosition.reel && sPos.row === row
