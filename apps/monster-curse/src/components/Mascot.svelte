@@ -438,6 +438,13 @@
 			animationFrameId = null;
 		}
 		if (animationItem) {
+			// Remove all event listeners before destroying to prevent memory leaks
+			animationItem.removeEventListener('data_failed');
+			animationItem.removeEventListener('complete');
+			animationItem.removeEventListener('DOMLoaded');
+			animationItem.removeEventListener('loaded_images');
+			animationItem.removeEventListener('enterFrame');
+			animationItem.removeEventListener('config_ready');
 			animationItem.destroy();
 			animationItem = null;
 		}
@@ -446,6 +453,9 @@
 			lottieContainer = null;
 		}
 		if (videoElement) {
+			// Remove video event listeners before cleanup
+			videoElement.removeEventListener('loadedmetadata', () => {});
+			videoElement.removeEventListener('play', () => {});
 			videoElement.pause();
 			videoElement.src = '';
 			videoElement = null;

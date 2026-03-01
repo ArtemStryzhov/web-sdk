@@ -2,6 +2,7 @@
 	import { SpineProvider, SpineTrack, Graphics, Container, type SpineTrackProps } from 'pixi-svelte';
 	import * as PIXI from 'pixi.js';
 	import { stateBetDerived } from 'state-shared';
+	import { untrack } from 'svelte';
 
 	import { getSymbolInfo } from '../game/utils';
 	import type { RawSymbol } from '../game/types';
@@ -58,7 +59,15 @@
 
 	// Animate reveal for S symbol
 	$effect(() => {
-		if (props.symbolInfo?.assetKey === 'S' && props.symbolInfo.animationName?.startsWith('sword_expanding') && !hasAnimated) {
+		let animationFrameId: number | null = null;
+		
+		// Capture dependencies at effect creation - use untrack for hasAnimated to prevent re-runs
+		const assetKey = props.symbolInfo?.assetKey;
+		const animationName = props.symbolInfo?.animationName;
+		const animated = untrack(() => hasAnimated);
+		const shouldAnimate = assetKey === 'S' && animationName?.startsWith('sword_expanding') && !animated;
+		
+		if (shouldAnimate) {
 			hasAnimated = true;
 			
 			const reelPosition = props.rawSymbol.reelPosition ?? 4;
@@ -76,15 +85,25 @@
 			const animate = () => {
 				const elapsed = Date.now() - startTime;
 				const progress = Math.min(elapsed / duration, 1);
-				revealProgress = progress;
+				
+				// Use untrack to prevent revealProgress updates from re-triggering effect
+				untrack(() => {
+					revealProgress = progress;
+				});
 
 				if (progress < 1) {
-					requestAnimationFrame(animate);
+					animationFrameId = requestAnimationFrame(animate);
 				}
 			};
 
-			requestAnimationFrame(animate);
+			animationFrameId = requestAnimationFrame(animate);
 		}
+		
+		return () => {
+			if (animationFrameId !== null) {
+				cancelAnimationFrame(animationFrameId);
+			}
+		};
 	});
 
 	// Reset animation flag when leaving win state

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Sprite, Container } from 'pixi-svelte';
-	import { onMount } from 'svelte';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import type { RawSymbol, SymbolState } from '../game/types';
 	import { getSymbolInfo } from '../game/utils';
@@ -17,8 +16,11 @@
 	let containerRef: any;
 	let currentScale = $state(1.0);
 
+
 	// Use effect to watch for state changes and trigger animation
 	$effect(() => {
+		let animationFrameId: number | null = null;
+		
 		if (props.state === 'win') {
 			// Create scaling animation similar to electric_cloud_pink
 			const startScale = 1.0;
@@ -48,12 +50,18 @@
 				currentScale = scale;
 				
 				if (progress < 1) {
-					requestAnimationFrame(animate);
+					animationFrameId = requestAnimationFrame(animate);
 				}
 			};
 			
-			requestAnimationFrame(animate);
+			animationFrameId = requestAnimationFrame(animate);
 		}
+		
+		return () => {
+			if (animationFrameId !== null) {
+				cancelAnimationFrame(animationFrameId);
+			}
+		};
 	});
 </script>
 

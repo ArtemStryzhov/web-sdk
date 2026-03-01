@@ -9,6 +9,7 @@ import { stateXstateDerived } from './stateXstate';
 import { playBet, convertTorResumableBet } from './utils';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import config from './config';
+import { memoryDebugger } from './debugMemory';
 
 const primaryMachines = createPrimaryMachines<Bet>({
 	onResumeGameActive: (lastBetData) => convertTorResumableBet(lastBetData),
@@ -21,6 +22,9 @@ const primaryMachines = createPrimaryMachines<Bet>({
 		if (lastRevealEvent) stateGameDerived.enhancedBoard.settle(lastRevealEvent.board);
 	},
 	onNewGameStart: async () => {
+		// Track spin count
+		memoryDebugger.incrementSpin(10);
+		
 		// Stop win animation looping immediately when user presses spin
 		stateGame.shouldLoopWinAnimations = false;
 		stateGame.winAnimationData = null;
