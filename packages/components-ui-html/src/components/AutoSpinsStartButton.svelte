@@ -41,6 +41,11 @@
 		justify-content: center;
 		margin: 0 auto;
 
+		@media (orientation: portrait) {
+			width: 50%;
+			min-width: 67.5px;
+		}
+
 		@media (max-width: 480px) {
 			min-width: 120px;
 			width: 100%;
@@ -48,6 +53,11 @@
 
 		@media (max-width: 768px) {
 			min-width: 125px;
+		}
+
+		@media (orientation: portrait) and (max-width: 480px) {
+			width: 50%;
+			min-width: 60px;
 		}
 	}
 

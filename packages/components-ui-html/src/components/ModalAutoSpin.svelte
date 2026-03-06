@@ -17,7 +17,7 @@
 </script>
 
 {#if stateModal.modal?.name === 'autoSpin'}
-	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)} allowClickOutsideToClose>
+	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)} noFullScreenOverlay allowClickOutsideToClose>
 		<div class="autoplay-modal-container">
 			<div class="autoplay-background"></div>
 			<BaseContent width="720px" height="420px">
@@ -64,20 +64,17 @@
 		// Responsive sizing to match BaseContent
 		@media (max-width: 480px) {
 			width: 95vw;
-			height: auto;
-			min-height: auto;
+			height: 420px;
 		}
 
 		@media (max-width: 768px) {
 			width: 90vw;
-			height: auto;
-			min-height: auto;
+			height: 420px;
 		}
 
 		@media (max-width: 1024px) {
 			width: 80vw;
-			height: auto;
-			min-height: auto;
+			height: 420px;
 		}
 	}
 
@@ -114,6 +111,12 @@
 	}
 
 	// Responsive close button sizes
+	:global(.close-button-wrap) {
+		@media (orientation: portrait) {
+			transform: translate(-30px, -35px);
+		}
+	}
+
 	:global(.close-button) {
 		width: 64px !important;
 		height: 64px !important;

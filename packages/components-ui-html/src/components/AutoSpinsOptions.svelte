@@ -241,5 +241,9 @@
 		@media (max-height: 500px) {
 			font-size: 16px;
 		}
+
+		@media (orientation: portrait) and (max-width: 379px) {
+			font-size: 15.3px;
+		}
 	}
 </style>

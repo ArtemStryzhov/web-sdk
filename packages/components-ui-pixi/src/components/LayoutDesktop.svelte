@@ -3,7 +3,7 @@
 
 	import { stateUi } from 'state-shared';
 	import { MainContainer } from 'components-layout';
-	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
+	import { Container, Rectangle, Text, anchorToPivot } from 'pixi-svelte';
 
 	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
 	import { getContext } from '../context';
@@ -101,6 +101,19 @@
 			x={298}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 10}
 		>
+			<Text
+				x={675}
+				y={DESKTOP_BASE_SIZE * 0.5 - 670}
+				anchor={0.5}
+				text={i18nDerived.mainMenu()}
+				style={{
+					align: 'center',
+					fontFamily: 'Kanit, Arial, sans-serif',
+					fontWeight: '700',
+					fontSize: 55,
+					fill: 0xD8ECA6,
+				}}
+			/>
 
 			<Container scale={0.8} y={DESKTOP_BASE_SIZE * 0.5 - 550} x={450}>
 				{@render props.buttonGameRules({ anchor: 0.5 })}

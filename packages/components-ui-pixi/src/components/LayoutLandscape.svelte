@@ -3,11 +3,12 @@
 
 	import { stateUi } from 'state-shared';
 	import { MainContainer } from 'components-layout';
-	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
+	import { Container, Rectangle, Text, anchorToPivot } from 'pixi-svelte';
 
 	import { LANDSCAPE_BASE_SIZE, LANDSCAPE_BACKGROUND_WIDTH_LIST } from '../constants';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
+	import { i18nDerived } from '../i18n/i18nDerived';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -114,6 +115,20 @@
 			x={165}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - LANDSCAPE_BASE_SIZE - 130}
 		>
+			<Text
+				x={LANDSCAPE_BASE_SIZE * 5.75}
+				y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 2 - 40}
+				anchor={0.5}
+				text={i18nDerived.mainMenu()}
+				style={{
+					align: 'center',
+					fontFamily: 'Kanit, Arial, sans-serif',
+					fontWeight: '700',
+					fontSize: 55,
+					fill: 0xD8ECA6,
+				}}
+			/>
+
 			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 2} x={LANDSCAPE_BASE_SIZE * 4}>
 				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
