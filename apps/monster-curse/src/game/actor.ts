@@ -38,6 +38,12 @@ const primaryMachines = createPrimaryMachines<Bet>({
 				if (symbol.rawSymbol.isCollected) {
 					symbol.rawSymbol.isCollected = false;
 				}
+				if (symbol.rawSymbol.collectedMultiplier) {
+					symbol.rawSymbol.collectedMultiplier = undefined;
+				}
+				if (symbol.rawSymbol.multiplierOffsetY) {
+					symbol.rawSymbol.multiplierOffsetY = 0;
+				}
 			});
 		});
 		

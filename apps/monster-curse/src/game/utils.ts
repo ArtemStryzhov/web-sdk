@@ -61,11 +61,18 @@ const loopWinAnimations = async () => {
 				if (symbol.rawSymbol.collectedMultiplier) {
 					symbol.rawSymbol.collectedMultiplier = undefined;
 				}
+				if (symbol.rawSymbol.multiplierOffsetY) {
+					symbol.rawSymbol.multiplierOffsetY = 0;
+				}
 			});
 		});
 		
 	for (const win of wins) {
 		if (!stateGame.shouldLoopWinAnimations) break;
+		const winPositionsWithoutS = win.positions.filter((pos: Position) => {
+			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
+			return reelSymbol.rawSymbol.name !== 'S';
+		});
 		
 		// Set only the current win's symbols to postWinStatic first to reset them before animation
 		win.positions.forEach((pos: Position) => {
@@ -75,10 +82,12 @@ const loopWinAnimations = async () => {
 			}
 		});
 		
-		await eventEmitter.broadcastAsync({
-			type: 'boardWithAnimateSymbols',
-			symbolPositions: win.positions,
-		});
+		if (winPositionsWithoutS.length > 0) {
+			await eventEmitter.broadcastAsync({
+				type: 'boardWithAnimateSymbols',
+				symbolPositions: winPositionsWithoutS,
+			});
+		}
 	}
 		
 		if (stateGame.shouldLoopWinAnimations && sSymbols.length > 0) {

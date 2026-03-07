@@ -8,6 +8,7 @@ export type RawSymbol = {
 	scatter?: boolean;
 	wild?: boolean;
 	collectedMultiplier?: number; // For S symbols that collect W multipliers
+	multiplierOffsetY?: number; // Temporary Y offset for multiplier collection fall animation
 	reelPosition?: number; // Position on reel (0-4) for S symbols to determine expansion height
 	isCollected?: boolean; // For W symbols that have been collected by S symbols
 	expandAnimation?: string; // Custom animation name for S symbol expansion (e.g., 'sword_expanding_pos2')

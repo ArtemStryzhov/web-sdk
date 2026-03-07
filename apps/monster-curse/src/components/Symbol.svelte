@@ -93,6 +93,7 @@ type Props = {
 			multiplierScale = 1.0;
 		}
 	});
+
 </script>
 
 		{#if isSprite && (isComposite || hasSymbolConfig)}
@@ -141,8 +142,8 @@ type Props = {
 	{#if shouldShowMultiplier}
 	<Container 
 		x={props.x} 
-		y={(props.y ?? 0) + (props.rawSymbol.name === 'S' && props.state === 'expand' ? 20 : 0)} 
-		zIndex={2000}
+		y={(props.y ?? 0) + (props.rawSymbol.name === 'S' && props.state === 'expand' ? 20 : 0) + (props.rawSymbol.multiplierOffsetY || 0)} 
+		zIndex={50000}
 		scale={{ x: multiplierScale, y: multiplierScale }}
 	>
 		<!-- Gradient border background -->

@@ -87,27 +87,21 @@
 			if (reelSymbol.rawSymbol.name === 'S') {
 				// Import the calculation function
 				const { calculateSSymbolCollectedMultiplier } = await import('../game/utils');
-				
-				// Get current board state
-				const currentBoard = context.stateGameDerived.boardRaw();
-				
-				// Calculate collected multiplier
-				const collectedMultiplier = calculateSSymbolCollectedMultiplier(
-					currentBoard,
-					position.reel,
-					position.row,
-					reelSymbol.rawSymbol.multiplier || 1
-				);
-				
-				// Mark W symbols above S as collected (hide their multipliers)
-				context.stateGame.board[position.reel].reelState.symbols.forEach((symbol, rowIndex) => {
-					if (rowIndex < normalize(position.row, position.reel) && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
-						symbol.rawSymbol.isCollected = true;
-					}
-				});
-				
-				// Set the collected multiplier and position on the symbol
-				reelSymbol.rawSymbol.collectedMultiplier = collectedMultiplier;
+
+				// Keep precomputed collection state from swordExpandEvent if present.
+				// Only calculate here when no collected multiplier has been prepared yet.
+				if (!reelSymbol.rawSymbol.collectedMultiplier) {
+					const currentBoard = context.stateGameDerived.boardRaw();
+					const collectedMultiplier = calculateSSymbolCollectedMultiplier(
+						currentBoard,
+						position.reel,
+						position.row,
+						reelSymbol.rawSymbol.multiplier || 1
+					);
+					reelSymbol.rawSymbol.collectedMultiplier = collectedMultiplier;
+				}
+
+				// Set the collected multiplier position hint on the symbol
 				// reelPosition represents expansion level (0-4) based on which visible row (1-5)
 				// Visible rows: 1=top (level 0), 2 (level 1), 3 (level 2), 4 (level 3), 5=bottom (level 4)
 				reelSymbol.rawSymbol.reelPosition = position.row - 1;

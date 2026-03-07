@@ -13,6 +13,7 @@ import type { RawSymbol } from './types';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
+import { SYMBOL_SIZE } from './constants';
 
 // Convert payload row (1..5, top-based visible rows) to board array index.
 // The board contains 7 symbols; visible window is the middle 5 with startIndex = floor((len-5)/2).
@@ -56,6 +57,121 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 		type: 'boardWithAnimateSymbols',
 		symbolPositions: positions,
 	});
+};
+
+const animateMultiplierFallUntilTouch = async ({
+	symbol,
+	fromRowIndex,
+	toRowIndex,
+	duration = Math.round((220 / 0.65) * 1.2 * 1.1),
+}: {
+	symbol: any;
+	fromRowIndex: number;
+	toRowIndex: number;
+	duration?: number;
+}) => {
+	const distance = (toRowIndex - fromRowIndex) * SYMBOL_SIZE;
+	if (distance <= 0) return;
+
+	await new Promise<void>((resolve) => {
+		const start = Date.now();
+		const step = () => {
+			const elapsed = Date.now() - start;
+			const progress = Math.min(elapsed / duration, 1);
+			const currentDistance = distance * progress;
+			const remaining = distance - currentDistance;
+
+			symbol.rawSymbol.multiplierOffsetY = currentDistance;
+
+			// Consider as "touch" when symbols are within 5px.
+			if (remaining <= 5 || progress >= 1) {
+				symbol.rawSymbol.multiplierOffsetY = Math.max(0, distance - 5);
+				resolve();
+				return;
+			}
+
+			requestAnimationFrame(step);
+		};
+
+		requestAnimationFrame(step);
+	});
+};
+
+const collectSwordMultipliersAnimated = async ({
+	reel,
+	swordRow,
+	swordMultiplier,
+}: {
+	reel: number;
+	swordRow: number;
+	swordMultiplier: number;
+}) => {
+	const normalizedSwordRow = normalizeRowIndex(swordRow, reel);
+	const reelSymbols = stateGame.board[reel]?.reelState?.symbols;
+	if (!reelSymbols) return swordMultiplier;
+
+	const startIndex = Math.floor((reelSymbols.length - 5) / 2);
+	const wSymbolsAbove = _.range(startIndex, normalizedSwordRow)
+		.map((rowIndex) => ({ rowIndex, symbol: reelSymbols[rowIndex] }))
+		.filter(({ symbol }) => symbol?.rawSymbol?.name === 'W' && !!symbol.rawSymbol.multiplier)
+		.map(({ rowIndex, symbol }) => ({
+			rowIndex,
+			symbol,
+			value: symbol.rawSymbol.multiplier || 0,
+		}));
+
+	if (wSymbolsAbove.length === 0) {
+		return swordMultiplier;
+	}
+
+	// Ensure all W multipliers are visible before collection starts.
+	wSymbolsAbove.forEach(({ symbol }) => {
+		symbol.rawSymbol.isCollected = false;
+		symbol.rawSymbol.multiplierOffsetY = 0;
+		symbol.rawSymbol.collectedMultiplier = undefined;
+	});
+
+	// Pause before first falling multiplier.
+	await new Promise((resolve) => setTimeout(resolve, 1100));
+
+	let carried = {
+		...wSymbolsAbove[0],
+		summedValue: wSymbolsAbove[0].value,
+	};
+
+	// #1: Topmost W falls to next W and sums. Repeat for all Ws above S.
+	for (let i = 1; i < wSymbolsAbove.length; i++) {
+		const next = wSymbolsAbove[i];
+
+		await animateMultiplierFallUntilTouch({
+			symbol: carried.symbol,
+			fromRowIndex: carried.rowIndex,
+			toRowIndex: next.rowIndex,
+		});
+
+		carried.symbol.rawSymbol.isCollected = true;
+		carried.symbol.rawSymbol.multiplierOffsetY = 0;
+
+		const newSummedValue = carried.summedValue + next.value;
+		next.symbol.rawSymbol.collectedMultiplier = newSummedValue;
+
+		carried = {
+			...next,
+			summedValue: newSummedValue,
+		};
+	}
+
+	// #2: Last remaining W (or the already summed W) falls to S and multiplies with S value.
+	await animateMultiplierFallUntilTouch({
+		symbol: carried.symbol,
+		fromRowIndex: carried.rowIndex,
+		toRowIndex: normalizedSwordRow,
+	});
+
+	carried.symbol.rawSymbol.isCollected = true;
+	carried.symbol.rawSymbol.multiplierOffsetY = 0;
+
+	return carried.summedValue * swordMultiplier;
 };
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
@@ -143,17 +259,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			// If collected multiplier > S's own multiplier, there are W symbols above
 			if (collectedMultiplier > sOwnMultiplier) {
 				sSymbolsToExpand.push(sPosition);
-				
-				// Set the collected multiplier and expansion state
-				reelSymbol.rawSymbol.collectedMultiplier = collectedMultiplier;
-				reelSymbol.rawSymbol.reelPosition = sPosition.row - 1;
-				
-				// Mark W symbols above S as collected
-				stateGame.board[sPosition.reel].reelState.symbols.forEach((symbol, rowIndex) => {
-					if (rowIndex < normalizedRow && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
-						symbol.rawSymbol.isCollected = true;
-					}
+
+				// Run staged W->W->S collection animation before S expansion.
+				const animatedCollectedMultiplier = await collectSwordMultipliersAnimated({
+					reel: sPosition.reel,
+					swordRow: sPosition.row,
+					swordMultiplier: sOwnMultiplier,
 				});
+
+				// Set collected multiplier result and expansion state
+				reelSymbol.rawSymbol.collectedMultiplier = animatedCollectedMultiplier;
+				reelSymbol.rawSymbol.reelPosition = sPosition.row - 1;
 				
 				// Set to expand state
 				reelSymbol.symbolState = 'expand';
@@ -244,6 +360,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	for (let i = 0; i < bookEvent.wins.length; i++) {
 		const win = bookEvent.wins[i];
 		logHighlight(stateGame.round, win, i + 1, bookEvent.wins.length);
+		const winPositionsWithoutS = win.positions.filter((pos: Position) => {
+			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
+			return reelSymbol.rawSymbol.name !== 'S';
+		});
 		// Set only the current win's symbols to postWinStatic first to reset them before animation
 		// BUT: Skip S symbols - they should stay expanded throughout all win animations
 		win.positions.forEach((pos: Position) => {
@@ -253,8 +373,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			}
 		});
 		
-		// Then animate current win line
-		await animateSymbols({ positions: win.positions });
+		// Then animate current win line, excluding S symbols to avoid re-expansion.
+		if (winPositionsWithoutS.length > 0) {
+			await animateSymbols({ positions: winPositionsWithoutS });
+		}
 	}
 		
 		// After all win animations, check if bonus trigger animation should play
@@ -541,10 +663,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			return;
 		}
 		
-		// Import utility functions
-		const { calculateSSymbolCollectedMultiplier } = await import('./utils');
-		const currentBoard = stateGameDerived.boardRaw();
-		
 		// Calculate animation name based on expandedRows length
 		const animationName = expandedRows.length === 0 
 			? 'sword_expanding_pos0'
@@ -553,29 +671,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Store the custom animation name on the symbol
 		reelSymbol.rawSymbol.expandAnimation = animationName;
 		
-		// Calculate collected multiplier from W symbols above (for display before backend value)
-		const frontendCollectedMultiplier = calculateSSymbolCollectedMultiplier(
-			currentBoard,
+		// Run staged collection animation:
+		// 1) W-to-W sum merges (top-to-bottom), 2) final W-to-S multiplication.
+		const animatedCollectedMultiplier = await collectSwordMultipliersAnimated({
 			reel,
 			swordRow,
-			reelSymbol.rawSymbol.multiplier || 1
-		);
-		
-		// Show collected multipliers from W symbols above S (visual collection animation)
-		// Mark W symbols above S as collected to hide their multipliers
-		stateGame.board[reel].reelState.symbols.forEach((symbol, rowIndex) => {
-			if (rowIndex < normalizedSwordRow && symbol.rawSymbol.name === 'W' && symbol.rawSymbol.multiplier) {
-				symbol.rawSymbol.isCollected = true;
-			}
+			swordMultiplier: reelSymbol.rawSymbol.multiplier || 1,
 		});
-		
-		// Set the frontend calculated multiplier temporarily
-		reelSymbol.rawSymbol.collectedMultiplier = frontendCollectedMultiplier;
+
+		// Show animated result immediately before backend authoritative value arrives.
+		reelSymbol.rawSymbol.collectedMultiplier = animatedCollectedMultiplier;
 		// reelPosition represents expansion level (0-4) based on which visible row (1-5)
 		reelSymbol.rawSymbol.reelPosition = swordRow - 1;
-		
-		// Wait a moment for multiplier collection animation
-		await new Promise(resolve => setTimeout(resolve, 300));
 		
 		// Update to backend multiplier value (the authoritative value)
 		reelSymbol.rawSymbol.collectedMultiplier = multiplier;

@@ -14,11 +14,22 @@
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
 
+	const isWMultiplierCollectionPhase = $derived(
+		props.reelSymbol.rawSymbol.name === 'W' &&
+		!props.reelSymbol.rawSymbol.isCollected &&
+		(
+			(props.reelSymbol.rawSymbol.multiplierOffsetY || 0) > 0 ||
+			!!props.reelSymbol.rawSymbol.collectedMultiplier
+		),
+	);
+
 	// Calculate z-index for S symbols in expand state to render above all other symbols
 	const symbolZIndex = $derived(
-		props.reelSymbol.rawSymbol.name === 'S' && props.reelSymbol.symbolState === 'expand' 
-			? 10001 
-			: 0
+		isWMultiplierCollectionPhase
+			? 30000
+			: props.reelSymbol.rawSymbol.name === 'S' && props.reelSymbol.symbolState === 'expand'
+				? 10001
+				: 0
 	);
 
 	// Force reactivity when symbol state changes
