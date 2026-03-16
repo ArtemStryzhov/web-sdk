@@ -8,7 +8,9 @@
 		| {
 				type: 'boardWithAnimateSymbols';
 				symbolPositions: Position[];
-		  };
+		  }
+		| { type: 'winLineShow'; lineIndex: number; baseWin: number; totalWin: number; multiplier: number }
+		| { type: 'winLineHide' };
 </script>
 
 <script lang="ts">
@@ -21,6 +23,7 @@
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
 	import Payframes from './Payframes.svelte';
+	import WinLineOverlay from './WinLineOverlay.svelte';
 	
 	// Normalize payload row (1..5, top-based visible rows) to board array index.
 	// Board has 7 symbols; visible window is middle 5 with startIndex = floor((len-5)/2).
@@ -181,6 +184,13 @@
 	<BoardContext animate={true}>
 		<BoardContainer>
 			<Payframes />
+		</BoardContainer>
+	</BoardContext>
+
+	<!-- Win-line overlay: left-to-right draw animation, above everything else -->
+	<BoardContext animate={true}>
+		<BoardContainer>
+			<WinLineOverlay />
 		</BoardContainer>
 	</BoardContext>
 {/if}

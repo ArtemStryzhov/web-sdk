@@ -580,7 +580,11 @@
 	// Text Y position for first two blocks (raised by additional 60% from current position)
 	const frameTextYFirstTwo = $derived(frameTextY * 0.1 -20);
 	// Text Y position for first block only - positioned much higher, near the top of the frame, lowered by 15%
-	const frameTextYFirst = $derived(-frameHeight * 0.5 + 145);
+	// On tall desktop screens (height > 1300px, e.g. 3008x1384) move the text up by 50px to compensate
+	// for the smaller frameHeight caused by larger mainLayout.scale on taller viewports
+	const frameTextYFirst = $derived(
+		-frameHeight * 0.5 + 145 + (isDesktop && canvasSizes.height > 1300 ? -50 : 0)
+	);
 
 const textStyle = $derived({
 	fontFamily: 'Kanit, Arial, sans-serif',

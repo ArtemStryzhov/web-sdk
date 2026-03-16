@@ -81,13 +81,25 @@ const loopWinAnimations = async () => {
 				reelSymbol.symbolState = 'postWinStatic';
 			}
 		});
-		
+
+		// Show win-line overlay concurrently with symbol animation
+		eventEmitter.broadcast({
+			type: 'winLineShow',
+			lineIndex: win.meta?.lineIndex ?? 0,
+			baseWin: win.meta?.winWithoutMult ?? win.win,
+			totalWin: win.win,
+			multiplier: win.meta?.multiplier ?? 1,
+		});
+
 		if (winPositionsWithoutS.length > 0) {
 			await eventEmitter.broadcastAsync({
 				type: 'boardWithAnimateSymbols',
 				symbolPositions: winPositionsWithoutS,
 			});
 		}
+
+		// Hide win-line overlay after symbols finish
+		eventEmitter.broadcast({ type: 'winLineHide' });
 	}
 		
 		if (stateGame.shouldLoopWinAnimations && sSymbols.length > 0) {

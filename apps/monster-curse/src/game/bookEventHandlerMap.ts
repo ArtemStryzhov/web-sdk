@@ -372,11 +372,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				reelSymbol.symbolState = 'postWinStatic';
 			}
 		});
-		
+
+		// Show the win-line overlay concurrently with symbol animation
+		eventEmitter.broadcast({
+			type: 'winLineShow',
+			lineIndex: win.meta.lineIndex,
+			baseWin: win.meta.winWithoutMult,
+			totalWin: win.win,
+			multiplier: win.meta.multiplier,
+		});
+
 		// Then animate current win line, excluding S symbols to avoid re-expansion.
 		if (winPositionsWithoutS.length > 0) {
 			await animateSymbols({ positions: winPositionsWithoutS });
 		}
+
+		// Hide the win-line overlay after symbols finish
+		eventEmitter.broadcast({ type: 'winLineHide' });
 	}
 		
 		// After all win animations, check if bonus trigger animation should play

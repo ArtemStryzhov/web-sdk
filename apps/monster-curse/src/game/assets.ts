@@ -302,4 +302,19 @@ export default {
 		src: new URL('../../assets/sprites/autospin_mob_inactive.png', import.meta.url).href,
 		preload: true,
 	},
+	line_0: {
+		type: 'sprite',
+		src: new URL('../../assets/line_0.png', import.meta.url).href,
+		preload: true,
+	},
+	line_45: {
+		type: 'sprite',
+		src: new URL('../../assets/line_45.png', import.meta.url).href,
+		preload: true,
+	},
+	line_zigzag: {
+		type: 'sprite',
+		src: new URL('../../assets/line_zigzag.png', import.meta.url).href,
+		preload: true,
+	},
 } as const;
