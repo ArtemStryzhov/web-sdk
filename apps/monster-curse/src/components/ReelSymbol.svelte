@@ -41,12 +41,16 @@
 			// Give normal completion 3 seconds to work, then force complete
 			const timeoutId = setTimeout(() => {
 				if ((props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'expand') && props.reelSymbol.oncomplete) {
-					props.reelSymbol.oncomplete();
+					const oncomplete = props.reelSymbol.oncomplete;
+					props.reelSymbol.oncomplete = undefined as any;
+					oncomplete();
 				}
 			}, 3000);
 			
 			// Cleanup timeout if component unmounts or state changes
-			return () => clearTimeout(timeoutId);
+			return () => {
+				clearTimeout(timeoutId);
+			};
 		}
 	});
 </script>
@@ -66,7 +70,9 @@
 		loop={props.reelSymbol.symbolState === 'expand' && props.reelSymbol.rawSymbol.name === 'S' ? false : undefined}
 		oncomplete={() => {
 			// Always call oncomplete if it exists, since the promise was set up to wait for completion
-			props.reelSymbol.oncomplete?.();
+			const oncomplete = props.reelSymbol.oncomplete;
+			props.reelSymbol.oncomplete = undefined as any;
+			oncomplete?.();
 			if (props.reelSymbol.symbolState === 'land') props.reelSymbol.symbolState = 'static';
 		}}
 	/>

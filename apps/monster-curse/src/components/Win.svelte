@@ -137,13 +137,19 @@
 							for (let i = 0; i < bigWinLevels.length; i++) {
 								currentScreenIndex = i;
 								currentScreenLevel = bigWinLevels[i];
-								
+
+								// Play the BGM for this specific win level screen
+								const screenLevelData = winLevelMap[bigWinLevels[i] as keyof typeof winLevelMap];
+								if (screenLevelData?.sound?.bgm) {
+									context.eventEmitter.broadcast({ type: 'soundMusic', name: screenLevelData.sound.bgm });
+								}
+
 								const isLastScreen = i === bigWinLevels.length - 1;
 								const isLevel10 = bigWinLevels[i] === 10;
-								
+
 								// Wait for screen duration
 								await waitForTimeout(perScreenDuration);
-								
+
 								// If it's level 10, wait for user interaction
 								if (isLevel10) {
 									// Wait for user to press continue

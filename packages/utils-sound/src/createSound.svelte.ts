@@ -32,6 +32,12 @@ function createSound<TSoundName extends string>() {
 			sprite: loadedAudio.sprite,
 			volume: 1,
 		});
+			howl.on('loaderror', (_soundId, error) => {
+				console.log('[createSound] loaderror', error, loadedAudio.src);
+			});
+			howl.on('playerror', (soundId, error) => {
+				console.log('[createSound] playerror', { soundId, error });
+			});
 		// players
 		players = {
 			music: createPlayer<TSoundName, PlayMusic>({ loadedAudio, loop: true, howl, createPlay: createPlayMusic<TSoundName> }), // prettier-ignore

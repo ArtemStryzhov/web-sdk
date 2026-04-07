@@ -25,6 +25,11 @@
 	};
 
 	const closeModal = () => (props.persistent ? undefined : props.onclose());
+	const playHoverSound = () => {
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('ui-button-hover'));
+		}
+	};
 
 	let disabled = $state(true);
 
@@ -60,7 +65,7 @@
 		>
 		{#if !props.persistent}
 			<div class="close-button-wrap" style="--zIndex: {zIndexInternal.closeButton}">
-				<button class="close-button" data-test="close-button" onclick={closeModal} aria-label="Close modal"></button>
+				<button class="close-button" data-test="close-button" onclick={closeModal} onmouseenter={playHoverSound} aria-label="Close modal"></button>
 			</div>
 		{/if}
 		{@render props.children()}

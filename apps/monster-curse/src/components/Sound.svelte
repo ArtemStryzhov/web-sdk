@@ -21,6 +21,7 @@
 	import { getContext } from '../game/context';
 
 	const context = getContext();
+	const HOVER_SOUND_EVENT = 'ui-button-hover';
 
 	context.eventEmitter.subscribeOnMount({
 		// ui
@@ -48,6 +49,12 @@
 	});
 
 	onMount(() => {
+		const handleButtonHover = () => sound.players.once.play({ name: 'sfx_hover', forcePlay: true });
+
+		if (typeof window !== 'undefined') {
+			window.addEventListener(HOVER_SOUND_EVENT, handleButtonHover);
+		}
+
 		if (stateBet.activeBetModeKey === 'SUPERSPIN') {
 			// check if SUPERSPIN, when resume bet and the bet is a super spin.
 			sound.players.music.play({ name: 'bgm_freespin' });
@@ -60,5 +67,11 @@
 			//How to control rate per soundfile
 			// sound.players.music.rate({ rate: 2, name: 'bgm_main'}); // change play back rate(1: default, 0: slow, 1+ fasterm and higher pitch )
 		}
+
+		return () => {
+			if (typeof window !== 'undefined') {
+				window.removeEventListener(HOVER_SOUND_EVENT, handleButtonHover);
+			}
+		};
 	});
 </script>

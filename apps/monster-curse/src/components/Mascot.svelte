@@ -5,6 +5,7 @@
 	import * as PIXI from 'pixi.js';
 	import lottie, { type AnimationItem } from 'lottie-web';
 	import { getContext } from '../game/context';
+	import { sound } from '../game/sound';
 	import MascotSprite from './MascotSprite.svelte';
 
 	type Props = {
@@ -470,6 +471,10 @@
 
 	// Setup animation based on format and version
 	const setupAnimation = (oldVersion: number | null = null) => {
+		if (oldVersion === 1 && version === 2) {
+			sound.players?.once.play({ name: 'sfx_mascot_win_move', forcePlay: true });
+		}
+
 		// Save current texture as oldTexture if it exists and we're transitioning between versions
 		if (texture && oldVersion !== null && oldVersion !== version) {
 			// Clean up old oldTexture if it exists

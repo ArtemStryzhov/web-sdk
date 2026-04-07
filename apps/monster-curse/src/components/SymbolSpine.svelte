@@ -19,8 +19,17 @@
 
 	const props: Props = $props();
 
-	// Complete immediately to prevent hanging, regardless of spine animation
+	// Most symbols can complete immediately and rely on higher-level timeouts, but S expand
+	// must wait for its real visual animation. Completing on mount causes board logic to move on
+	// while the sword is still at revealProgress=0, which is the root of the cut/frozen bug.
 	onMount(() => {
+		const isSExpandAnimation =
+			props.rawSymbol.name === 'S' && props.symbolInfo?.animationName?.startsWith('sword_expanding');
+
+		if (isSExpandAnimation) {
+			return;
+		}
+
 		props.listener?.complete?.({} as any);
 	});
 </script>

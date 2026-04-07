@@ -47,6 +47,7 @@ export function createEventEmitter<TEmitterEvent extends EmitterEventBase>() {
 
 	const eventEmitter = {
 		subscribeOnMount,
+		subscribeHandlerMap,
 		broadcast,
 		broadcastAsync,
 	};

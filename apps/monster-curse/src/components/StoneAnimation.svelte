@@ -2,6 +2,7 @@
 	import { Container, SpineProvider, SpineTrack, getContextApp } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import { sound } from '../game/sound';
 
 	type Props = {
 		duration?: number; // Animation duration in ms
@@ -164,6 +165,11 @@
 	// Start the full animation sequence
 	const startAnimation = () => {
 		if (isAnimating || hasStarted) return;
+
+		if (sound.players) {
+			sound.players.once.play({ name: 'sfx_transition', forcePlay: true });
+		}
+
 		hasStarted = true;
 		currentCycle = 0;
 		startCycle(0);

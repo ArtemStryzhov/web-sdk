@@ -20,19 +20,53 @@ import {
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
 
-const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
+const REEL_STOP_SOUND_MAP = [
+	'sfx_reel_stop_1',
+	'sfx_reel_stop_2',
+	'sfx_reel_stop_3',
+	'sfx_reel_stop_4',
+	'sfx_reel_stop_5',
+] as const;
+
+const onSymbolLand = ({
+	rawSymbol,
+	isVisibleSymbol,
+}: {
+	rawSymbol: RawSymbol;
+	isVisibleSymbol: boolean;
+}) => {
+	if (!isVisibleSymbol) return;
+
+	if (stateGame.pendingTurboLandingSound) {
+		stateGame.pendingTurboLandingSound = false;
+		eventEmitter.broadcast({
+			type: 'soundOnce',
+			name: 'sfx_fast_spin',
+			forcePlay: true,
+		});
+	}
+
 	if (rawSymbol.name === 'S') {
 		eventEmitter.broadcast({ type: 'soundScatterCounterIncrease' });
 		eventEmitter.broadcast({
 			type: 'soundOnce',
 			name: SCATTER_LAND_SOUND_MAP[scatterLandIndex()],
 		});
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_combine_a', forcePlay: true });
 	}
 
 	if (rawSymbol.name === 'W') {
 		eventEmitter.broadcast({
 			type: 'soundOnce',
 			name: 'sfx_multiplier_landing',
+		});
+	}
+
+	if (rawSymbol.name === 'B') {
+		eventEmitter.broadcast({
+			type: 'soundOnce',
+			name: 'sfx_scroll_drop',
+			forcePlay: true,
 		});
 	}
 };
@@ -44,10 +78,12 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		initialSymbols: INITIAL_BOARD[reelIndex],
 		initialSymbolState: INITIAL_SYMBOL_STATE,
 		onReelStopping: () => {
+			if (stateGame.currentSpinIsTurbo) return;
+
 			eventEmitter.broadcast({
 				type: 'soundOnce',
-				name: 'sfx_reel_stop_1',
-				forcePlay: !stateBet.isTurbo,
+				name: REEL_STOP_SOUND_MAP[reelIndex],
+				forcePlay: true,
 			});
 		},
 		onSymbolLand,
@@ -84,6 +120,10 @@ export const stateGame = $state({
 	shouldLoopWinAnimations: false, // Flag to control win animation looping
 	isInBonusGame: false, // Track if we're currently in a bonus game (multiple reveals)
 	wasBonusGameWhenFreegameEnded: false, // Track if the freegame that just ended was a bonus game
+	currentSpinIsTurbo: false,
+	pendingTurboLandingSound: false,
+	plannedSwordExpandKeys: [] as string[], // Dedicated swordExpandEvent positions for the current reveal cycle
+	activeStickySwordKeys: [] as string[], // Sticky S positions applied to the current reveal
 	stickySwordPositions: [] as { reel: number; row: number; multiplier: number }[], // Sticky sword positions for next spin (Blades of Fate mode)
 });
 

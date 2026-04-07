@@ -83,9 +83,9 @@
 							otherIndex !== reelIndex && otherReel.reelState.anticipating
 					);
 					
-					// If there are more reels coming, stop the sound so it can restart for the next reel
-					if (hasOtherAnticipatingReels) {
-						context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_anticipation' });
+					// If there are more reels coming, stop the current sound so it can restart for the next reel
+					if (hasOtherAnticipatingReels && lastAnticipationSound) {
+						context.eventEmitter.broadcast({ type: 'soundStop', name: lastAnticipationSound });
 					}
 				}
 				completionStates.delete(reelIndex);
@@ -100,8 +100,18 @@
 		}
 	});
 
+	// Map reel index (0-based) to the correct anticipation sound name.
+	// Reel 2 (3rd) → _1, reel 3 (4th) → _2, reel 4 (5th) → _3.
+	// If only the last reel anticipates, it gets _3 regardless.
+	function getAnticipationSound(reelIndex: number): 'sfx_symbol_anticipation_1' | 'sfx_symbol_anticipation_2' | 'sfx_symbol_anticipation_3' {
+		if (reelIndex >= 4) return 'sfx_symbol_anticipation_3';
+		if (reelIndex >= 3) return 'sfx_symbol_anticipation_2';
+		return 'sfx_symbol_anticipation_1';
+	}
+
 	// Track which reels have already played their anticipation sound
 	const reelsWithSoundPlayed = $state<Set<number>>(new Set());
+	let lastAnticipationSound = $state<'sfx_symbol_anticipation_1' | 'sfx_symbol_anticipation_2' | 'sfx_symbol_anticipation_3' | null>(null);
 
 	// Play anticipation sound for each reel when it becomes the current anticipating reel
 	$effect(() => {
@@ -112,14 +122,19 @@
 				// Mark this reel as having played its sound
 				reelsWithSoundPlayed.add(currentAnticipatingReelIndex);
 
-				// Stop any existing sound first to ensure it restarts from the beginning
-				context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_anticipation' });
-				
-				// Play the anticipation sound for this reel from the beginning
-				context.eventEmitter.broadcast({ type: 'soundLoop', name: 'sfx_anticipation' });
+				const soundName = getAnticipationSound(currentAnticipatingReelIndex);
+
+				// Stop any previous anticipation sound first
+				if (lastAnticipationSound) {
+					context.eventEmitter.broadcast({ type: 'soundStop', name: lastAnticipationSound });
+				}
+				lastAnticipationSound = soundName;
+
+				// Play the reel-specific anticipation sound
+				context.eventEmitter.broadcast({ type: 'soundLoop', name: soundName });
 				context.eventEmitter.broadcast({
 					type: 'soundFade',
-					name: 'sfx_anticipation',
+					name: soundName,
 					from: 0,
 					to: 1,
 					duration: SECOND,
@@ -132,8 +147,11 @@
 	$effect(() => {
 		if (!hasAnticipation) {
 			reelsWithSoundPlayed.clear();
-			// Stop the sound when all anticipation ends
-			context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_anticipation' });
+			// Stop whichever anticipation sound was last playing
+			if (lastAnticipationSound) {
+				context.eventEmitter.broadcast({ type: 'soundStop', name: lastAnticipationSound });
+				lastAnticipationSound = null;
+			}
 		}
 	});
 </script>

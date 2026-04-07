@@ -63,6 +63,9 @@
 	pivot={anchorToPivot({ sizes, anchor })}
 	onpointerover={() => {
 		if (disabled) return;
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('ui-button-hover'));
+		}
 		hovered = true;
 	}}
 	onpointerout={() => {

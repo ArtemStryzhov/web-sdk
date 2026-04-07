@@ -11,8 +11,8 @@
 	import { Container, Sprite, Text, Graphics } from 'pixi-svelte';
 	import { FadeContainer, ResponsiveText, WinCountUpProvider } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
-	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
-	import { MainContainer, OnPressFullScreen } from 'components-layout';
+	import { waitForResolve } from 'utils-shared/wait';
+	import { MainContainer } from 'components-layout';
 	import { OnHotkey, OnMount } from 'components-shared';
 	import { FillGradient, type TextStyleOptions } from 'pixi.js';
 	import { UI_BASE_FONT_SIZE } from 'components-ui-pixi/src/constants';
@@ -31,6 +31,7 @@
 	let onCountUpComplete = $state(() => {});
 	let isHovered = $state(false);
 	let countUpCompleted = $state(false);
+	let totalWinMusicClosed = $state(false);
 
 	// Same font style as Win.svelte
 	const multiplierFontStyle = (): TextStyleOptions => {
@@ -95,6 +96,12 @@
 	};
 
 	const handlePress = () => {
+		if (!totalWinMusicClosed) {
+			totalWinMusicClosed = true;
+			context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_total_win_music_loop' });
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_total_win_music_end', forcePlay: true });
+		}
+
 		// Immediately resolve and hide without delay
 		oncomplete();
 		show = false;
@@ -104,8 +111,18 @@
 		freeSpinOutroShow: () => {
 			show = true;
 			countUpCompleted = false; // Reset when screen shows
+			totalWinMusicClosed = false;
+			context.eventEmitter.broadcast({ type: 'soundLoop', name: 'sfx_total_win_music_loop' });
 		},
-		freeSpinOutroHide: async () => (show = false),
+		freeSpinOutroHide: async () => {
+			if (!totalWinMusicClosed) {
+				totalWinMusicClosed = true;
+				context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_total_win_music_loop' });
+				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_total_win_music_end', forcePlay: true });
+			}
+
+			show = false;
+		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;

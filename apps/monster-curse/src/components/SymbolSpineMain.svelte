@@ -5,8 +5,17 @@
 	import { untrack } from 'svelte';
 
 	import { getSymbolInfo } from '../game/utils';
+	import { sound } from '../game/sound';
 	import type { RawSymbol } from '../game/types';
 	import { SYMBOL_SIZE } from '../game/constants';
+
+	const S_EXPAND_ANIMATION_END_MAP: Record<string, number> = {
+		sword_expanding_pos0: 0,
+		sword_expanding_pos1: 0.6,
+		sword_expanding_pos2: 0.8,
+		sword_expanding_pos3: 0.8,
+		sword_expanding_pos4: 0.85,
+	};
 
 	type Props = {
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
@@ -20,9 +29,32 @@
 	let spineProvider = $state<SpineProvider>();
 	let revealProgress = $state(0);
 	let hasAnimated = $state(false);
+	let lastExplicitExpandAnimation = $state<string | undefined>(undefined);
 	let crystalScale = $state(1.0);
 
 	const props: Props = $props();
+	const hasExplicitExpand = $derived(!!props.rawSymbol.expandAnimation);
+	const shouldFreezeExpandPose = $derived(
+		props.symbolInfo?.assetKey === 'S' &&
+		props.symbolInfo.animationName?.startsWith('sword_expanding') &&
+		!hasExplicitExpand,
+	);
+	const frozenExpandAnimationEnd = $derived(
+		props.symbolInfo?.animationName
+			? S_EXPAND_ANIMATION_END_MAP[props.symbolInfo.animationName] ?? 0
+			: 0,
+	);
+
+	$effect(() => {
+		const explicitExpandAnimation = props.rawSymbol.expandAnimation;
+
+		if (explicitExpandAnimation && explicitExpandAnimation !== lastExplicitExpandAnimation) {
+			hasAnimated = false;
+			revealProgress = 0;
+		}
+
+		lastExplicitExpandAnimation = explicitExpandAnimation;
+	});
 
 	// Mask drawing function for S symbol
 	function drawMask(graphics: PIXI.Graphics) {
@@ -61,14 +93,26 @@
 	$effect(() => {
 		let animationFrameId: number | null = null;
 		
-		// Capture dependencies at effect creation - use untrack for hasAnimated to prevent re-runs
+		// Capture dependencies at effect creation - use untrack for values that should not restart
+		// a currently running S animation when sticky state mutates rawSymbol.
 		const assetKey = props.symbolInfo?.assetKey;
 		const animationName = props.symbolInfo?.animationName;
 		const animated = untrack(() => hasAnimated);
-		const shouldAnimate = assetKey === 'S' && animationName?.startsWith('sword_expanding') && !animated;
+		const currentRevealProgress = untrack(() => revealProgress);
+		const explicitExpand = !!untrack(() => props.rawSymbol.expandAnimation);
+		const isSwordExpand = assetKey === 'S' && animationName?.startsWith('sword_expanding');
+		const shouldAnimate = isSwordExpand && explicitExpand && !animated;
+		const shouldSnapToExpandedPose = isSwordExpand && !explicitExpand && currentRevealProgress < 1;
+
+		if (shouldSnapToExpandedPose) {
+			hasAnimated = true;
+			revealProgress = 1;
+			return;
+		}
 		
 		if (shouldAnimate) {
 			hasAnimated = true;
+			sound.players?.once.play({ name: 'sfx_wild_explode', forcePlay: true });
 			
 			const reelPosition = props.rawSymbol.reelPosition ?? 4;
 			
@@ -141,7 +185,10 @@
 					loop={props.loop}
 					trackIndex={0}
 					animationName={props.symbolInfo.animationName}
-					timeScale={stateBetDerived.timeScale()}
+					trackTime={shouldFreezeExpandPose ? frozenExpandAnimationEnd : undefined}
+					animationLast={shouldFreezeExpandPose ? frozenExpandAnimationEnd : undefined}
+					animationEnd={shouldFreezeExpandPose ? frozenExpandAnimationEnd : undefined}
+					timeScale={shouldFreezeExpandPose ? 0 : stateBetDerived.timeScale()}
 					listener={props.listener}
 				/>
 				<!-- Always looped flame animation for S symbol -->

@@ -103,19 +103,10 @@ const loopWinAnimations = async () => {
 	}
 		
 		if (stateGame.shouldLoopWinAnimations && sSymbols.length > 0) {
-			const expansionPositions = generateSSymbolExpansionPositions(sSymbols);
-			
 			sSymbols.forEach((position: any) => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
 				reelSymbol.symbolState = 'expand';
 			});
-			
-			if (expansionPositions.length > 0) {
-				await eventEmitter.broadcastAsync({
-					type: 'boardWithAnimateSymbols',
-					symbolPositions: expansionPositions,
-				});
-			}
 		}
 		
 		if (stateGame.shouldLoopWinAnimations) {

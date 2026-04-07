@@ -111,11 +111,6 @@ type Props = {
 			showWinFrame={props.state === 'win' && !['S'].includes(props.rawSymbol.name)}
 			listener={{
 				complete: props.oncomplete,
-				event: (_, event) => {
-					if (event.data?.name === 'wildExplode') {
-						context.eventEmitter?.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
-					}
-				},
 			}}
 		/>
 	</Container>

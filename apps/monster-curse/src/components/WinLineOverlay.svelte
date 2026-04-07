@@ -179,6 +179,7 @@
 			baseWinAmount = baseWin;
 			totalWinAmount = totalWin;
 			winMultiplier = multiplier;
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_standard' });
 			startReveal();
 			startTextAnimation(multiplier);
 		},

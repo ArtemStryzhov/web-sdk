@@ -183,6 +183,7 @@
 	const isSmallDesktop = $derived(isDesktop && canvasSizes.width < 1600 && canvasSizes.height < 800);
 	const isNarrowDesktop = $derived(isDesktop && canvasSizes.width <= 1024);
 	const isNarrowDesktop1200 = $derived(isDesktop && canvasSizes.width < 1200);
+	const isBigDesktop = $derived(isDesktop && canvasSizes.width > 2700 && canvasSizes.height > 1400);
 	const isUltraNarrow = $derived(canvasSizes.width < 500);
 	const isLandscapeLayout = $derived(isLandscape);
 	const portraitTextScale = $derived(isPortrait ? 1.48 : 1); // Reduced by 20% for portrait (1.85 * 0.8 = 1.48)
@@ -475,7 +476,7 @@
 
 	// Position button above the bottom of the blocks (accounting for button center anchor)
 	// Margin reduced by 60%: 30px * 0.4 = 12px
-	const buttonY = $derived(framesY + frameHeight * 0.5 + 12 + (buttonHeight * buttonScale * 0.5));
+	const buttonY = $derived(framesY + frameHeight * 0.5 + 12 + (buttonHeight * buttonScale * 0.5) + (isSmallScreen ? 40 : 0));
 
 	// Frame text content
 	const frameTexts = [
@@ -496,6 +497,7 @@
 			(isLandscapeLayout ? 1.2 : 1) *
 			(isNarrowDesktop1200 ? 1.15 : 1) *
 			(isUltraNarrow ? 0.8 : 1) *
+			(isSmallScreen ? 0.8 : 1) * // 20% smaller on screens < 380px wide
 			portraitTextScale *
 			tabletTextScale *
 			1.15 * // Increase by 15%
@@ -520,6 +522,8 @@
 			(isLandscapeLayout ? 1.2 : 1) *
 			(isNarrowDesktop1200 ? 1.15 : 1) *
 			(isUltraNarrow ? 0.8 : 1) *
+			(isBigDesktop ? 0.9 : 1) * // 10% smaller on big desktop screens (e.g. 3008x1513)
+			(isSmallScreen ? 0.8 * 0.9 : 1) * // 20% + extra 10% smaller on screens < 380px wide
 			portraitTextScale *
 			tabletTextScale *
 			1.25 * // Increase by 15%
@@ -583,7 +587,7 @@
 	// On tall desktop screens (height > 1300px, e.g. 3008x1384) move the text up by 50px to compensate
 	// for the smaller frameHeight caused by larger mainLayout.scale on taller viewports
 	const frameTextYFirst = $derived(
-		-frameHeight * 0.5 + 145 + (isDesktop && canvasSizes.height > 1300 ? -50 : 0)
+		-frameHeight * 0.5 + 145 + (isDesktop && canvasSizes.height > 1300 ? -50 : 0) + (isSmallScreen ? -15 : 0)
 	);
 
 const textStyle = $derived({

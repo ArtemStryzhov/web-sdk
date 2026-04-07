@@ -1,4 +1,5 @@
 import type { Howl } from 'howler';
+import type { LoadedAudio } from 'pixi-svelte';
 
 import type { PlayOptions, GetSound, GetSoundMap } from './types';
 
@@ -7,8 +8,26 @@ export function createPlayMusic<TSoundName extends string>(options: {
 	newSound: (value: TSoundName) => GetSound<TSoundName>;
 	getSoundMap: () => GetSoundMap<TSoundName>;
 	initSoundVolume: (soundName: TSoundName) => void;
+	loadedAudio?: LoadedAudio<TSoundName>;
 }) {
 	type Sound = GetSound<TSoundName>;
+
+	// When a non-looping music sound ends naturally, remove it from the map
+	// so it can be replayed fresh the next time play() is called.
+	// Looping sprites (bgm_main, bgm_freespin) fire onend at the end of each
+	// cycle before restarting — we must NOT remove them, otherwise pauseAllMusic()
+	// loses track of them and can't pause them during transitions.
+	options.howl.on('end', (soundId: number) => {
+		const soundMap = options.getSoundMap();
+		const sound = (Object.values(soundMap) as Sound[]).find((s) => s.soundId === soundId);
+		if (sound) {
+			const spriteEntry = options.loadedAudio?.sprite[sound.soundName];
+			const isLoopingSprite = Array.isArray(spriteEntry) && spriteEntry[2] === true;
+			if (!isLoopingSprite) {
+				delete soundMap[sound.soundName];
+			}
+		}
+	});
 
 	const pauseAllMusic = () => {
 		(Object.values(options.getSoundMap()) as Sound[]).forEach((existingSound) => {

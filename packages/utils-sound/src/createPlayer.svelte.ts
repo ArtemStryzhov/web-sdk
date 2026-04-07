@@ -14,6 +14,7 @@ function createPlayer<TSoundName extends string, TPlay extends Function>(playerO
 		newSound: (value: TSoundName) => GetSound<TSoundName>;
 		getSoundMap: () => GetSoundMap<TSoundName>;
 		initSoundVolume: (soundName: TSoundName) => void;
+		loadedAudio?: LoadedAudio<TSoundName>;
 	}) => { play: TPlay };
 }) {
 	type Sound = GetSound<TSoundName>;
@@ -47,6 +48,7 @@ function createPlayer<TSoundName extends string, TPlay extends Function>(playerO
 		newSound,
 		getSoundMap: () => soundMap,
 		initSoundVolume: (soundName: TSoundName) => initSoundVolume(soundName),
+		loadedAudio: playerOptions.loadedAudio,
 	});
 
 	const stop = (stopOptions: StopOptions<TSoundName>) => {

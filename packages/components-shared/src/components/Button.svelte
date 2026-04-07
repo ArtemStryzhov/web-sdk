@@ -10,9 +10,16 @@
 	};
 
 	const { debug, disabled = false, onclick, children, ...rest }: Props = $props();
+
+	const onmouseenter = () => {
+		if (disabled) return;
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('ui-button-hover'));
+		}
+	};
 </script>
 
-<button class="button" class:debug class:disabled {disabled} {onclick} {...rest}>
+<button class="button" class:debug class:disabled {disabled} {onclick} {onmouseenter} {...rest}>
 	{@render children()}
 </button>
 

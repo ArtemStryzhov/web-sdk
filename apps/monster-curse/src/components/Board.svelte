@@ -70,6 +70,7 @@
 						reelSymbol.symbolState = 'postWinStatic';
 					}
 				});
+
 				await new Promise(resolve => setTimeout(resolve, 50));
 			}
 			

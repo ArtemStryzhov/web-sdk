@@ -17,6 +17,12 @@
 	const closeModal = () => {
 		stateModal.modal = null;
 	};
+
+	const playHoverSound = () => {
+		if (typeof window !== 'undefined') {
+			window.dispatchEvent(new CustomEvent('ui-button-hover'));
+		}
+	};
 </script>
 
 {#if stateModal.modal?.name === 'gameRules'}
@@ -25,7 +31,7 @@
 	
 	<!-- Custom close button matching main menu style -->
 	<div class="close-button-container">
-		<button class="custom-close-button" aria-label="Close game rules" onclick={closeModal}>
+		<button class="custom-close-button" aria-label="Close game rules" onclick={closeModal} onmouseenter={playHoverSound}>
 			<div class="close-x">
 				<div class="diagonal-line line-1"></div>
 				<div class="diagonal-line line-2"></div>

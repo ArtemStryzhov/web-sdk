@@ -48,7 +48,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		reelState.symbols.forEach((reelSymbol) => {
 			reelSymbol.symbolState = value as TSymbolState;
 			if (value === 'land') {
-				reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
+				const isVisibleSymbol = reelSymbol.symbolIndex > 0 && reelSymbol.symbolIndex < reelLength - 1;
+				reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol, isVisibleSymbol });
 			}
 		});
 	};
