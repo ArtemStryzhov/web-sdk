@@ -12,6 +12,7 @@ export function createPlayOnce<TSoundName extends string>(options: {
 
 	const playOnce = (sound: Sound) => {
 		const soundId = options.howl.play(sound.soundName);
+
 		options.getSoundMap()[sound.soundName] = {
 			...sound,
 			soundId,
@@ -31,8 +32,8 @@ export function createPlayOnce<TSoundName extends string>(options: {
 	const soundPlayMap = {
 		new: (sound: Sound) => playOnce(sound),
 		paused: (sound: Sound) => playOnce(sound),
-		playing: (sound: Sound, options: { forcePlay?: boolean }) => {
-			if (options.forcePlay) playOnce(sound);
+		playing: (sound: Sound, playOptions: { forcePlay?: boolean }) => {
+			if (playOptions.forcePlay) playOnce(sound);
 		},
 	};
 

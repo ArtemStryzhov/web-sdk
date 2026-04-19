@@ -30,9 +30,11 @@
 		gameName: Snippet;
 		logo: Snippet;
 		// Optional snippet overrides
+		amountBalance?: Snippet<[any]>;
 		amountBet?: Snippet<[any]>;
 		buttonBuyBonus?: Snippet<[any]>;
 		buttonAutoSpin?: Snippet<[any]>;
+		buttonMenu?: Snippet<[any]>;
 	};
 
 	const props: Props = $props();
@@ -124,7 +126,11 @@
 		{/snippet}
 
 		{#snippet amountBalance(labelProps)}
-			<LabelBalance {...labelProps} />
+			{#if props.amountBalance}
+				{@render props.amountBalance(labelProps)}
+			{:else}
+				<LabelBalance {...labelProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet amountWin(labelProps)}
@@ -172,7 +178,11 @@
 		{/snippet}
 
 		{#snippet buttonMenu(buttonProps)}
-			<ButtonMenu {...buttonProps} />
+			{#if props.buttonMenu}
+				{@render props.buttonMenu(buttonProps)}
+			{:else}
+				<ButtonMenu {...buttonProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet buttonClose(buttonProps)}

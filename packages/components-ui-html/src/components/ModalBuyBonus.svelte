@@ -60,4 +60,25 @@
 	:global(.pop-up-wrap:not(.no-fullscreen) .close-button) {
 		background-color: transparent !important;
 	}
+
+	@media (orientation: portrait) {
+		:global(.pop-up-wrap:has(.buy-bonus-modal-container) .top-layer) {
+			width: 100vw;
+			height: 100vh;
+		}
+
+		:global(.pop-up-wrap:has(.buy-bonus-modal-container) .close-button-wrap) {
+			position: fixed;
+			top: max(22px, calc(env(safe-area-inset-top) + 10px));
+			right: max(10px, calc(env(safe-area-inset-right) + 10px));
+			transform: none;
+			z-index: 200;
+		}
+
+		:global(.pop-up-wrap:has(.buy-bonus-modal-container) .close-button) {
+			width: 64px;
+			height: 64px;
+			margin: 0;
+		}
+	}
 </style>

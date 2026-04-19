@@ -431,6 +431,10 @@
 
 	// Track previous version to detect changes
 	let previousVersion = $state<number | null>(null);
+	let previousScale = $state<number | null>(null);
+	let previousWidth = $state<number | null>(null);
+	let previousHeight = $state<number | null>(null);
+	let previousFormat = $state<Props['format'] | null>(null);
 
 	// Cleanup function
 	const cleanup = (preserveTexture = false) => {
@@ -521,18 +525,69 @@
 		}
 	};
 
-	// Watch for version changes and reinitialize only when version actually changes
+	// Reinitialize when the rendered mascot presentation changes.
 	$effect(() => {
 		const currentVersion = version;
-		if (previousVersion === null || currentVersion !== previousVersion) {
-			const oldVersion = previousVersion;
-			previousVersion = currentVersion;
-			setupAnimation(oldVersion);
+		const currentScale = scale;
+		const currentWidth = width;
+		const currentHeight = height;
+		const currentFormat = format;
+
+		if (
+			previousVersion === null ||
+			previousScale === null ||
+			previousWidth === null ||
+			previousHeight === null ||
+			previousFormat === null
+		) {
+			return;
 		}
+
+		const versionChanged = currentVersion !== previousVersion;
+		const presentationChanged =
+			currentScale !== previousScale ||
+			currentWidth !== previousWidth ||
+			currentHeight !== previousHeight ||
+			currentFormat !== previousFormat;
+
+		if (!versionChanged && !presentationChanged) {
+			return;
+		}
+
+		const oldVersion = versionChanged ? previousVersion : null;
+		previousVersion = currentVersion;
+		previousScale = currentScale;
+		previousWidth = currentWidth;
+		previousHeight = currentHeight;
+		previousFormat = currentFormat;
+		setupAnimation(oldVersion);
 	});
 
 	onMount(() => {
+		previousVersion = version;
+		previousScale = scale;
+		previousWidth = width;
+		previousHeight = height;
+		previousFormat = format;
 		setupAnimation();
+	});
+
+	$effect(() => {
+		if (!isPortrait) return;
+
+		console.log('[MonsterCurse][MascotDebug]', {
+			version,
+			scale,
+			width,
+			height,
+			actualWidth,
+			actualHeight,
+			displayWidth,
+			displayHeight,
+			x,
+			y,
+			format,
+		});
 	});
 
 	onDestroy(() => {

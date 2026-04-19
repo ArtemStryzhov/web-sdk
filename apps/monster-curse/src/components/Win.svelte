@@ -10,9 +10,10 @@
 <script lang="ts">
 	import { Container, Sprite } from 'pixi-svelte';
 	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
+	import { createInterruptible } from 'utils-shared/interruptible';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
-	import { OnMount } from 'components-shared';
+	import { OnHotkey, OnMount } from 'components-shared';
 	import { SECOND } from 'constants-shared/time';
 	import { bookEventAmountToNormalisedAmount } from 'utils-shared/amount';
 
@@ -31,6 +32,27 @@
 	let onCountUpComplete = $state(() => {});
 	let currentScreenIndex = $state(0);
 	let currentScreenLevel = $state<number>(6);
+	const bigWinScreenInterruptible = createInterruptible();
+
+	const clearBigWinScreenInterruptible = () => {
+		bigWinScreenInterruptible.interrupt();
+		bigWinScreenInterruptible.clear();
+	};
+
+	const waitForSkippableBigWinTimeout = async (duration: number) => {
+		const { interrupted } = await bigWinScreenInterruptible.add(() => waitForTimeout(duration));
+		bigWinScreenInterruptible.clear();
+
+		return interrupted;
+	};
+
+	const skipCurrentBigWinLevel = () => {
+		if (!show || winLevelData?.type !== 'big' || currentScreenLevel === 10) {
+			return;
+		}
+
+		bigWinScreenInterruptible.interrupt();
+	};
 
 	// Ensure Dokdo font is loaded before rendering Pixi text to avoid fallback fonts.
 	const dokdoFontReady =
@@ -95,13 +117,17 @@
 	context.eventEmitter.subscribeOnMount({
 		winShow: () => (show = true),
 		winHide: () => {
+			clearBigWinScreenInterruptible();
 			show = false;
 			currentScreenIndex = 0;
+			currentScreenLevel = 6;
 		},
 		winUpdate: async (emitterEvent) => {
+			clearBigWinScreenInterruptible();
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
 			currentScreenIndex = 0;
+			currentScreenLevel = 6;
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
@@ -120,6 +146,10 @@
 		
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
+				{#if isBigWin}
+					<OnHotkey hotkey="Space" disabled={currentScreenLevel === 10} onpress={() => skipCurrentBigWinLevel()} />
+				{/if}
+
 				<!-- Background with opacity only for win levels >= 6 -->
 				{#if winLevelData && winLevelData.level >= 6}
 					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.7} zIndex={0} />
@@ -148,7 +178,7 @@
 								const isLevel10 = bigWinLevels[i] === 10;
 
 								// Wait for screen duration
-								await waitForTimeout(perScreenDuration);
+								const screenSkipped = await waitForSkippableBigWinTimeout(perScreenDuration);
 
 								// If it's level 10, wait for user interaction
 								if (isLevel10) {
@@ -159,11 +189,16 @@
 									break;
 								} else if (!isLastScreen) {
 									// Add fade transition delay between screens (auto-advance)
-									await waitForTimeout(300);
+									if (!screenSkipped) {
+										await waitForSkippableBigWinTimeout(300);
+									}
 								} else {
 									// Last screen but not level 10: auto-advance
-									await waitForTimeout(300);
+									if (!screenSkipped) {
+										await waitForSkippableBigWinTimeout(300);
+									}
 									oncomplete();
+									break;
 								}
 							}
 						} else {
@@ -222,7 +257,13 @@
 							<!-- Show PressToContinue only on level 10 -->
 							{#if level === 10}
 								<Container zIndex={1}>
-									<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
+									<PressToContinue onpress={() => {
+										if (!countUpCompleted) {
+											finishCountUp();
+										}
+
+										oncomplete();
+									}} />
 								</Container>
 							{/if}
 						</FadeContainer>

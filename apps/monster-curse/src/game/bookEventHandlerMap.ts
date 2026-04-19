@@ -29,6 +29,45 @@ const normalizeRowIndex = (row: number, reel: number) => {
 
 const getPositionKey = (reel: number, row: number) => `${reel}:${row}`;
 
+const playPendingBonusTriggerAnimation = async () => {
+	if (!stateGame.pendingBonusTriggerAnimation) {
+		return false;
+	}
+
+	// Find all B symbol positions on the board (only visible symbols at indices 1-5)
+	const bSymbolPositions: Position[] = [];
+	stateGame.board.forEach((reel, reelIndex) => {
+		reel.reelState.symbols.forEach((reelSymbol, arrayIndex) => {
+			if (arrayIndex >= 1 && arrayIndex <= 5 && reelSymbol.rawSymbol.name === 'B') {
+				const row = arrayIndex;
+				bSymbolPositions.push({ reel: reelIndex, row });
+			}
+		});
+	});
+
+	eventEmitter.broadcast({
+		type: 'soundOnce',
+		name: 'sfx_symbol_anticipation_played',
+		forcePlay: true,
+	});
+
+	bSymbolPositions.forEach((position) => {
+		const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
+		reelSymbol.symbolState = 'win';
+	});
+
+	await new Promise(resolve => setTimeout(resolve, 2000));
+
+	bSymbolPositions.forEach((position) => {
+		const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
+		reelSymbol.symbolState = 'static';
+	});
+
+	stateGame.pendingBonusTriggerAnimation = false;
+
+	return true;
+};
+
 const getRevealScopedBookEvents = (bookEvents: BookEvent[], revealIndex: number) => {
 	const nextRevealIndex = bookEvents.find(
 		(bookEvent) => bookEvent.index > revealIndex && bookEvent.type === 'reveal',
@@ -232,16 +271,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			const visibleSymbols = reel.slice(startIndex, startIndex + 5);
 			
 			visibleSymbols.forEach((symbol) => {
-				if (symbol.name === 'B') bSymbolCount++;
+				if (symbol.name === 'B') {
+					bSymbolCount++;
+				}
 			});
 		});
 
 		// Check if 3+ B symbols landed for bonus trigger animation
-		if (bSymbolCount >= 3) {
-			stateGame.pendingBonusTriggerAnimation = true;
-		} else {
-			stateGame.pendingBonusTriggerAnimation = false;
-		}
+		stateGame.pendingBonusTriggerAnimation = bSymbolCount >= 3;
 
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 		
@@ -461,46 +498,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Hide the win-line overlay after symbols finish
 		eventEmitter.broadcast({ type: 'winLineHide' });
 	}
-		if (stateGame.pendingBonusTriggerAnimation) {
-			// Find all B symbol positions on the board (only visible symbols at indices 1-5)
-			const bSymbolPositions: Position[] = [];
-			stateGame.board.forEach((reel, reelIndex) => {
-				reel.reelState.symbols.forEach((reelSymbol, arrayIndex) => {
-					// Only collect visible symbols (indices 1-5 in a 7-symbol reel)
-					if (arrayIndex >= 1 && arrayIndex <= 5 && reelSymbol.rawSymbol.name === 'B') {
-						// Convert array index to 1-based row number for consistency with Position type
-						// For 7-symbol reel: arrayIndex 1→row 1, arrayIndex 2→row 2, etc.
-						const row = arrayIndex;
-						bSymbolPositions.push({ reel: reelIndex, row });
-					}
-				});
-			});
-
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_symbol_anticipation_played', forcePlay: true });
-			
-			// Set all B symbols to 'win' state (triggers B_animation win animation)
-			bSymbolPositions.forEach(position => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
-				reelSymbol.symbolState = 'win';
-			});
-			
-			// Wait for animation to complete (B_animation win is ~1.3 seconds, wait 2 seconds to be safe)
-			await new Promise(resolve => setTimeout(resolve, 2000));
-			
-			// Return B symbols to static state
-			bSymbolPositions.forEach(position => {
-				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
-				reelSymbol.symbolState = 'static';
-			});
-			
-			// Clear the flag
-			stateGame.pendingBonusTriggerAnimation = false;
-		}
+		await playPendingBonusTriggerAnimation();
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+		await playPendingBonusTriggerAnimation();
+
 		// animate scatters
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		await animateSymbols({ positions: bookEvent.positions });

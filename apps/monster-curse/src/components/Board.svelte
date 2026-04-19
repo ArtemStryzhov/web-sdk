@@ -16,6 +16,7 @@
 <script lang="ts">
 	import { waitForResolve } from 'utils-shared/wait';
 	import { BoardContext } from 'components-shared';
+	import { stateBet, stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { WIN_ANIMATION_SYMBOLS } from '../game/constants';
@@ -40,8 +41,39 @@
 
 	let show = $state(true);
 
+	// Timestamp of the last successful anticipation skip.
+	// Prevents rapid-fire calls (from ButtonBet's OnHotkey repeating onpress on held keys
+	// AND from our own svelte:window handler firing on the same event) from skipping
+	// multiple reels in one physical keypress/click.
+	let lastSkipTime = 0;
+	const SKIP_COOLDOWN_MS = 300;
+
+	// Returns true and skips the currently anticipating reel if one is spinning.
+	const skipAnticipatingReel = () => {
+		const now = Date.now();
+		if (now - lastSkipTime < SKIP_COOLDOWN_MS) return false;
+
+		const reel = context.stateGame.board.find(
+			(r) => r.reelState.motion === 'spinning' && (r.reelState.anticipating || r.reelState.spinType === 'anticipated'),
+		);
+		if (reel) {
+			lastSkipTime = now;
+			// Reset isTurbo so that other (non-anticipated) reels that are still spinning
+			// don't instant-land due to the turbo flag set by ButtonBetProvider before stopButtonClick.
+			if (stateBet.isTurbo) {
+				stateBetDerived.updateIsTurbo(false, { persistent: false });
+			}
+			reel.forceStop();
+			return true;
+		}
+		return false;
+	};
+
 	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => context.stateGameDerived.enhancedBoard.stop(),
+		stopButtonClick: () => {
+			if (skipAnticipatingReel()) return;
+			context.stateGameDerived.enhancedBoard.stop();
+		},
 		boardSettle: ({ board }) => context.stateGameDerived.enhancedBoard.settle(board),
 		boardShow: () => (show = true),
 		boardHide: () => (show = false),
@@ -165,6 +197,18 @@
 
 	context.stateGameDerived.enhancedBoard.readyToSpinEffect();
 </script>
+
+<svelte:window onkeydown={(e) => {
+	if (e.code === 'Space' && !e.repeat) {
+		const hasAnticipatingReel = context.stateGame.board.some(
+			(r) => r.reelState.motion === 'spinning' && (r.reelState.anticipating || r.reelState.spinType === 'anticipated'),
+		);
+		if (hasAnticipatingReel) {
+			e.preventDefault();
+			skipAnticipatingReel();
+		}
+	}
+}} />
 
 {#if show}
 	<BoardContext animate={false}>

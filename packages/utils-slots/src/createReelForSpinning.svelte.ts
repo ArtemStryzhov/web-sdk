@@ -60,6 +60,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	// interruptible
 	const interruptible = createInterruptible();
+	const forceInterruptible = createInterruptible();
 
 	// reactive states
 	const reelY = new Tween(defaultY);
@@ -233,7 +234,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		// Q: When to skip the slideDown?
 		// A: When it's preSpinning(isSpinning) and stop button is clicked(isTurbo) and is noStop is false
 		if (noStop) {
-			await slideDown();
+			await forceInterruptible.add(slideDown);
 		} else if (stateBet.isTurbo && isSpinning) {
 			// skip
 		} else {
@@ -332,6 +333,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await SPIN_MAP[reelState.spinType]();
 
 		interruptible.clear();
+		forceInterruptible.clear();
 	};
 
 	const setSymbolsWithReelSymbols = (reelSymbols?: ReelSymbol[]) => {
@@ -352,6 +354,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	const stop = () => {
 		interruptible.interrupt();
+	};
+
+	const forceStop = () => {
+		forceInterruptible.interrupt();
 	};
 
 	const readyToSpinEffect = () => {
@@ -375,6 +381,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		prepareToSpin,
 		spin,
 		stop,
+		forceStop,
 		setSymbolsWithRawSymbols,
 		readyToSpinEffect,
 	};

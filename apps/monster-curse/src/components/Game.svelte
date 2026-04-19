@@ -7,7 +7,8 @@
 	import { App, Text, REM, Container, Sprite, Graphics } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
-	import { UI } from 'components-ui-pixi';
+	import { UI, LabelBalance, ButtonMenu } from 'components-ui-pixi';
+	import { UI_BASE_FONT_SIZE } from 'components-ui-pixi/src/constants';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -47,6 +48,8 @@
 	// Layout type for logging
 const layoutType = $derived(context.stateLayoutDerived.layoutType());
 const isPortraitLayout = $derived(layoutType === 'portrait');
+	const isTabletLayout = $derived(layoutType === 'tablet');
+	const isDesktopLayout = $derived(layoutType === 'desktop');
 const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
 const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 const mainLayoutStandard = $derived(context.stateLayoutDerived.mainLayoutStandard());
@@ -54,15 +57,96 @@ const shouldUsePortraitStyle = $derived(
 	isPortraitLayout || canvasSizes.width < 800
 );
 const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
+	const portraitLogoScale = $derived(logoScale * 1.05);
+	const nonPortraitLogoScale = $derived(
+		isDesktopLayout ? logoScale * 1.21 : isTabletLayout ? logoScale * 1.6 : logoScale
+	);
+	const buyBonusScale = $derived(
+		canvasSizes.width < 380
+			? 0.85 * 0.96 * 0.95
+			: isPortraitLayout && canvasSizes.width < 450
+				? 0.85 * 0.96
+			: isPortraitLayout && canvasSizes.width < 600
+				? 0.85
+				: 1
+	);
+	const isPortraitCompactScreen = $derived(
+		isPortraitLayout && (canvasSizes.width < 450 || canvasSizes.height < 600)
+	);
+	const portraitMenuScale = $derived(isPortraitCompactScreen ? 1.2 : 1);
+	const portraitLabelScale = $derived(isPortraitCompactScreen ? 0.85 : 1);
+	const portraitUiUnitPerScreenPixel = $derived(mainLayoutStandard.scale ? 1 / mainLayoutStandard.scale : 1);
+	const portraitStandardLeftScreenX = $derived(
+		canvasSizes.width * 0.5 - mainLayoutStandard.width * mainLayoutStandard.scale * 0.5
+	);
+	const portraitLogoY = $derived(
+		isPortraitLayout && (canvasSizes.width < 350 || canvasSizes.height < 570) ? 30 : 65
+	);
+	const portraitBalanceBaseX = $derived(mainLayoutStandard.width * 0.5 - 440 + 50 + 30);
+	const portraitBalanceBaseY = $derived(mainLayoutStandard.height - 170);
+	const narrowPortraitBetOffset = $derived(
+		isPortraitLayout && canvasSizes.width < 450 ? -30 * portraitUiUnitPerScreenPixel : 0
+	);
+	const narrowPortraitMascotYOffset = $derived(
+		isPortraitLayout && canvasSizes.width < 450 ? 10 * portraitUiUnitPerScreenPixel : 0
+	);
+	const narrowPortraitMenuYOffset = $derived(
+		isPortraitLayout && canvasSizes.width < 450 ? -3 * portraitUiUnitPerScreenPixel : 0
+	);
+	const portraitMenuBaseX = $derived(mainLayoutStandard.width * 0.01 + 60);
+	const portraitMenuBaseY = $derived(mainLayoutStandard.height - 260);
+	const portraitMenuGapScreenPx = $derived(Math.max(15, Math.min(24, canvasSizes.width * 0.05)));
+	const portraitLeftPaddingScreenPx = $derived(
+		isPortraitCompactScreen ? 0 : Math.max(8, Math.min(20, canvasSizes.width * 0.025))
+	);
+	const portraitMenuHalfWidthScreenPx = $derived(
+		60 * 1.5 * portraitMenuScale * mainLayoutStandard.scale
+	);
+	const portraitBalanceApproxHalfWidthScreenPx = $derived(
+		Math.max(22, Math.min(36, canvasSizes.width * 0.09)) * portraitLabelScale
+	);
+	const portraitMenuAlignScreenOffsetPx = $derived(
+		Math.max(12, Math.min(18, UI_BASE_FONT_SIZE * portraitLabelScale * mainLayoutStandard.scale * 1.3))
+	);
+	const narrowPortraitLabelOffset = $derived(
+		isPortraitLayout && canvasSizes.width < 450 ? 30 * portraitUiUnitPerScreenPixel : 0
+	);
+	const portraitBalanceX = $derived(portraitBalanceBaseX + narrowPortraitLabelOffset);
+	const portraitBalanceScreenX = $derived(
+		portraitStandardLeftScreenX + portraitBalanceX * mainLayoutStandard.scale
+	);
+	const portraitMenuTargetScreenX = $derived(
+		Math.max(
+			portraitLeftPaddingScreenPx + portraitMenuHalfWidthScreenPx,
+			portraitBalanceScreenX -
+				portraitBalanceApproxHalfWidthScreenPx -
+				portraitMenuHalfWidthScreenPx -
+				portraitMenuGapScreenPx - 16,
+		)
+	);
+	const portraitMenuTargetX = $derived(
+		(portraitMenuTargetScreenX - portraitStandardLeftScreenX) * portraitUiUnitPerScreenPixel
+	);
+	const portraitMenuHorizontalOffset = $derived(
+		isPortraitLayout ? portraitMenuTargetX - portraitMenuBaseX : 0
+	);
+	const portraitMenuVerticalOffset = $derived(
+		isPortraitLayout
+			? portraitBalanceBaseY - portraitMenuBaseY + portraitMenuAlignScreenOffsetPx * portraitUiUnitPerScreenPixel + narrowPortraitMenuYOffset
+			: 0
+	);
+	const portraitMenuX = $derived(portraitMenuBaseX + portraitMenuHorizontalOffset);
+	const portraitMenuY = $derived(portraitMenuBaseY + portraitMenuVerticalOffset);
 
 	// Mascot positioning
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 	const mascotWidth = 500;
 	const mascotHeight = 550;
-	const mascotScalePortrait = 0.55; // 20% smaller on portrait
+	const mascotScalePortrait = 0.55 * 1.1 * 1.18;
 	const mascotScaleSmall = $derived(
-		canvasSizes.width < 380 ? mascotScalePortrait * 0.8 : mascotScalePortrait
+		canvasSizes.width < 380 ? mascotScalePortrait * 1.2 : mascotScalePortrait
 	);
+	const mascotScaleDesktopOrTablet = $derived(isTabletLayout ? 1.2 : 1);
 	
 	// Desktop/Landscape position: left side of board, 20px to the left
 	const mascotXDesktop = $derived(
@@ -71,13 +155,13 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 	const mascotYDesktop = $derived(boardLayout.y);
 	
 	// Portrait position: below board, 15px above menu button
-	const menuButtonX = $derived(mainLayoutStandard.width * 0.01 + 60);
-	const menuButtonY = $derived(mainLayoutStandard.height - 260);
+	const menuButtonX = $derived(portraitMenuX);
+	const menuButtonY = $derived(portraitMenuY);
 	const mascotXPortrait = $derived(
 		menuButtonX + (canvasSizes.width > 480 && canvasSizes.width < 530 ? 15 : 0)
 	);
 	const mascotYPortrait = $derived(
-		menuButtonY - 15 - (mascotHeight * mascotScalePortrait) / 2 - (canvasSizes.width < 380 ? 15 : 0)
+		menuButtonY - 20 - 20 * portraitUiUnitPerScreenPixel - (mascotHeight * mascotScalePortrait) / 2 - (canvasSizes.width < 380 ? 15 : 0) + narrowPortraitMascotYOffset
 	);
 
 	// Force reactivity by accessing derived values when resizeTrigger changes
@@ -113,16 +197,8 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 
 	// Handle resize - trigger reactivity updates
 	const handleResize = () => {
-		// Access derived values to trigger reactivity
-		const size = canvasSizes;
-		const layout = layoutType;
-		const main = mainLayout;
-		
 		// Update resize trigger to force re-evaluation of all dependent components
 		resizeTrigger++;
-		
-		// Log layout type
-		console.log(`[Layout] Type: ${layout}, Size: ${size.width}x${size.height}`);
 	};
 
 	onMount(() => {
@@ -184,14 +260,14 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 		<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
 	{:else}
 		{#if isPortraitLayout}
-			<Container zIndex={9} x={canvasSizes.width / 2} y={45}>
+			<Container zIndex={9} x={canvasSizes.width / 2} y={portraitLogoY}>
 				<Sprite
 					key="logo_s.png"
 					anchor={{ x: 0.5, y: 0 }}
 					x={0}
 					y={0}
-					width={250 * logoScale}
-					height={129 * logoScale}
+					width={250 * portraitLogoScale}
+					height={129 * portraitLogoScale}
 					zIndex={9}
 				/>
 			</Container>
@@ -243,6 +319,7 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 					format="lottie"
 					loop={true}
 					autoplay={true}
+					scale={mascotScaleDesktopOrTablet}
 					version={winScreenShowing ? 2 : 1}
 				/>
 			</MainContainer>
@@ -255,9 +332,11 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 		<UI
 			gameName={gameNameSnippet}
 			logo={logoSnippet}
+			amountBalance={amountBalanceSnippet}
 			amountBet={amountBetSnippet}
 			buttonBuyBonus={buttonBuyBonusSnippet}
 			buttonAutoSpin={buttonAutoSpinSnippet}
+			buttonMenu={buttonMenuSnippet}
 		/>
 	</Container>
 
@@ -283,10 +362,11 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 	{@const frameTopCanvasY = mainLayout.y + (frameTopMainY - mainLayout.height / 2) * mainLayout.scale}
 	{@const containerX = canvasSizes.width - 20}
 	{@const shouldCenterLogo = canvasSizes.width < 650}
-	{@const logoHeight = 129 * logoScale}
-	{@const logoY = frameTopCanvasY + logoHeight}
+	{@const logoWidth = 250 * nonPortraitLogoScale}
+	{@const logoHeight = 129 * nonPortraitLogoScale}
+	{@const logoY = frameTopCanvasY + logoHeight - (isTabletLayout ? 60 : 0)}
 	{@const logoXCenteredCanvas = canvasSizes.width / 2}
-	{@const logoXRightCanvas = frameRightCanvasX}
+	{@const logoXRightCanvas = frameRightCanvasX + (isDesktopLayout ? 30 : 0)}
 	{@const logoXCentered = logoXCenteredCanvas - containerX}
 	{@const logoXRight = logoXRightCanvas - containerX}
 	{@const logoXFinal = shouldCenterLogo ? logoXCentered : logoXRight}
@@ -298,18 +378,32 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 			y={logoY}
 			anchor={logoAnchor}
 			key="logo_s.png"
-			width={250 * logoScale}
+			width={logoWidth}
 			height={logoHeight}
 		/>
 	{/if}
 {/snippet}
 
+{#snippet amountBalanceSnippet(labelProps: any)}
+	<Container x={narrowPortraitLabelOffset} scale={portraitLabelScale}>
+		<LabelBalance {...labelProps} />
+	</Container>
+{/snippet}
+
 {#snippet amountBetSnippet(labelProps: any)}
-	<LabelBet {...labelProps} />
+	<Container x={narrowPortraitBetOffset} scale={portraitLabelScale}>
+		<LabelBet {...labelProps} />
+	</Container>
+{/snippet}
+
+{#snippet buttonMenuSnippet(buttonProps: any)}
+	<Container x={portraitMenuHorizontalOffset} y={portraitMenuVerticalOffset} scale={portraitMenuScale}>
+		<ButtonMenu {...buttonProps} />
+	</Container>
 {/snippet}
 
 {#snippet buttonBuyBonusSnippet(buttonProps: any)}
-	<ButtonBuyBonus {...buttonProps} />
+	<ButtonBuyBonus {...buttonProps} scale={buyBonusScale} />
 {/snippet}
 
 {#snippet buttonAutoSpinSnippet(buttonProps: any)}
