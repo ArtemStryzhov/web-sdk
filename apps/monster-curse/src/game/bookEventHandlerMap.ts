@@ -282,9 +282,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 		
-		// Handle S symbols that should expand even without wins (when W symbols are above them)
-		// Import utility functions
-		const { calculateSSymbolCollectedMultiplier, generateSSymbolExpansionPositions } = await import('./utils');
+		// Animate W collection for S symbols that have W above them (no dedicated swordExpandEvent).
+		// S expansion is deferred to winInfo — S only expands when it participates in a win.
+		const { calculateSSymbolCollectedMultiplier } = await import('./utils');
 		const currentBoard = stateGameDerived.boardRaw();
 		
 		// Find all S symbols on the board
@@ -302,8 +302,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			});
 		});
 		
-		// For each S symbol, check if it should expand (has W symbols above it)
-		const sSymbolsToExpand: Position[] = [];
+		// For each S symbol with W above it (and no dedicated swordExpandEvent), animate W collection
 		for (const sPosition of sSymbolPositions) {
 			const positionKey = getPositionKey(sPosition.reel, sPosition.row);
 			if (
@@ -328,40 +327,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				sOwnMultiplier
 			);
 			
-			// If collected multiplier > S's own multiplier, there are W symbols above
+			// If collected multiplier > S's own multiplier, there are W symbols above — animate collection
 			if (collectedMultiplier > sOwnMultiplier) {
-				sSymbolsToExpand.push(sPosition);
-
-				// Run staged W->W->S collection animation before S expansion.
+				// Run staged W->W->S collection animation
 				const animatedCollectedMultiplier = await collectSwordMultipliersAnimated({
 					reel: sPosition.reel,
 					swordRow: sPosition.row,
 					swordMultiplier: sOwnMultiplier,
 				});
 
-				// Set collected multiplier result and expansion state
+				// Store multiplier result and expansion metadata for winInfo to use
 				reelSymbol.rawSymbol.collectedMultiplier = animatedCollectedMultiplier;
 				reelSymbol.rawSymbol.reelPosition = sPosition.row - 1;
 				reelSymbol.rawSymbol.expandAnimation = sPosition.row - 1 === 0
 					? 'sword_expanding_pos0'
 					: `sword_expanding_pos${sPosition.row - 1}`;
-				
-				// Set to expand state
-				reelSymbol.symbolState = 'expand';
-			}
-		}
-		
-		// Animate S symbol expansion if any should expand
-		if (sSymbolsToExpand.length > 0) {
-			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsToExpand);
-			if (expansionPositions.length > 0) {
-				await animateSymbols({ positions: expansionPositions });
-				sSymbolsToExpand.forEach((position) => {
-					const reelSymbol = stateGame.board[position.reel]?.reelState?.symbols?.[normalizeRowIndex(position.row, position.reel)];
-					if (reelSymbol?.rawSymbol?.name === 'S') {
-						reelSymbol.rawSymbol.expandAnimation = undefined;
-					}
-				});
+				// Do NOT expand S here — expansion is deferred to winInfo (only on win participation)
 			}
 		}
 		
@@ -399,8 +380,28 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const { checkSSymbolsInWins, generateSSymbolExpansionPositions } = await import('./utils');
 		const { waitForResolve } = await import('utils-shared/wait');
 		
-		// Check if any S symbols participate in wins
+		// Check if any S symbols participate in wins (direct raw-board match)
 		const sSymbolsInWins = checkSSymbolsInWins(bookEvent.wins, currentBoard);
+		
+		// Also find S symbols whose expansion covers a win position.
+		// When S has swordExpandEvent-applied expandedRows, the win position lands on a covered row
+		// (e.g. S at row 5 with expandedRows=[1,2,3,4] participates in a win at row 1).
+		// In that case, checkSSymbolsInWins won't find S at the win position (raw board shows H/L there).
+		const winRows = new Set(bookEvent.wins.flatMap(w => w.positions.map(p => `${p.reel}:${p.row}`)));
+		stateGame.board.forEach((reel, reelIndex) => {
+			reel.reelState.symbols.forEach((sym, arrayIndex) => {
+				if (sym.rawSymbol.name !== 'S' || !sym.rawSymbol.expandedRows?.length) return;
+				// Convert array index to 1-based visible row
+				const startIndex = Math.floor((reel.reelState.symbols.length - 5) / 2);
+				const symRow = arrayIndex - startIndex + 1;
+				if (symRow < 1 || symRow > 5) return;
+				const coversAWinPosition = sym.rawSymbol.expandedRows.some(r => winRows.has(`${reelIndex}:${r}`));
+				if (coversAWinPosition) {
+					const alreadyAdded = sSymbolsInWins.some(p => p.reel === reelIndex && p.row === symRow);
+					if (!alreadyAdded) sSymbolsInWins.push({ reel: reelIndex, row: symRow });
+				}
+			});
+		});
 		
 		// Store win data for potential looping with logging and round increment
 		stateGame.round += 1;
@@ -415,11 +416,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			const sSymbolsToAnimate = sSymbolsInWins.filter((position) => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
 				const positionKey = getPositionKey(position.reel, position.row);
-				const hasDedicatedSwordExpand = stateGame.plannedSwordExpandKeys.includes(positionKey);
 				const isStickyCarryOver = stateGame.activeStickySwordKeys.includes(positionKey);
 				const isAlreadyExpanded = reelSymbol.symbolState === 'expand';
 
-				return !hasDedicatedSwordExpand && !isStickyCarryOver && !isAlreadyExpanded;
+				return !isStickyCarryOver && !isAlreadyExpanded;
 			});
 
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsToAnimate);
@@ -739,8 +739,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			? 'sword_expanding_pos0'
 			: `sword_expanding_pos${expandedRows.length}`;
 		
-		// Store the custom animation name on the symbol
+		// Store the custom animation name and covered rows on the symbol
 		reelSymbol.rawSymbol.expandAnimation = animationName;
+		reelSymbol.rawSymbol.expandedRows = expandedRows;
 		
 		// Run staged collection animation:
 		// 1) W-to-W sum merges (top-to-bottom), 2) final W-to-S multiplication.
@@ -758,29 +759,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Update to backend multiplier value (the authoritative value)
 		reelSymbol.rawSymbol.collectedMultiplier = multiplier;
 		
-		// Do NOT set symbolState = 'expand' here — boardWithAnimateSymbols handles the state
-		// transition. Setting it here first causes boardWithAnimateSymbols to reset it to
-		// postWinStatic (its needsReset path), which fires SymbolSpineMain's reset $effect
-		// and starts the animation twice.
-		
-		// Wait for expansion animation to complete with timeout protection
-		// Use a race between animation complete and timeout to prevent infinite hangs
-		const animationPromise = eventEmitter.broadcastAsync({
-			type: 'boardWithAnimateSymbols',
-			symbolPositions: [{ reel, row: swordRow }]
-		});
-		let timeoutId: ReturnType<typeof setTimeout> | undefined;
-		const timeoutPromise = new Promise(resolve => {
-			timeoutId = setTimeout(() => {
-				resolve(undefined);
-			}, 5000);
-		});
-		
-		try {
-			await Promise.race([animationPromise, timeoutPromise]);
-		} finally {
-			reelSymbol.rawSymbol.expandAnimation = undefined;
-			if (timeoutId) clearTimeout(timeoutId);
-		}
+		// Expansion is deferred to winInfo — S only expands when it participates in a win.
+		// expandAnimation stays set on rawSymbol so winInfo can use the correct animation name.
 	},
 };
