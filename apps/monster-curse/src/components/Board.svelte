@@ -41,6 +41,28 @@
 
 	let show = $state(true);
 
+	// Track reels that have actually entered anticipation this spin (anticipating went true).
+	// This covers both the "during border" window (anticipating=true) and the "after border,
+	// still spinning" window (anticipating=false but reel still has long padding to exhaust).
+	// Using spinType=anticipated alone is wrong — it's set at prepareToSpin time, before any
+	// border shows, and would match all non-stop reels prematurely.
+	const reelsWhichHaveAnticipated = new Set<number>();
+
+	$effect(() => {
+		context.stateGame.board.forEach((reel) => {
+			if (reel.reelState.anticipating) {
+				reelsWhichHaveAnticipated.add(reel.reelIndex);
+			}
+		});
+	});
+
+	$effect(() => {
+		const allStopped = context.stateGame.board.every((r) => r.reelState.motion === 'stopped');
+		if (allStopped) {
+			reelsWhichHaveAnticipated.clear();
+		}
+	});
+
 	// Timestamp of the last successful anticipation skip.
 	// Prevents rapid-fire calls (from ButtonBet's OnHotkey repeating onpress on held keys
 	// AND from our own svelte:window handler firing on the same event) from skipping
@@ -54,7 +76,7 @@
 		if (now - lastSkipTime < SKIP_COOLDOWN_MS) return false;
 
 		const reel = context.stateGame.board.find(
-			(r) => r.reelState.motion === 'spinning' && (r.reelState.anticipating || r.reelState.spinType === 'anticipated'),
+			(r) => r.reelState.motion === 'spinning' && (r.reelState.anticipating || reelsWhichHaveAnticipated.has(r.reelIndex)),
 		);
 		if (reel) {
 			lastSkipTime = now;
@@ -201,7 +223,7 @@
 <svelte:window onkeydown={(e) => {
 	if (e.code === 'Space' && !e.repeat) {
 		const hasAnticipatingReel = context.stateGame.board.some(
-			(r) => r.reelState.motion === 'spinning' && (r.reelState.anticipating || r.reelState.spinType === 'anticipated'),
+			(r) => r.reelState.motion === 'spinning' && (r.reelState.anticipating || reelsWhichHaveAnticipated.has(r.reelIndex)),
 		);
 		if (hasAnticipatingReel) {
 			e.preventDefault();

@@ -31,6 +31,7 @@
 		logo: Snippet;
 		// Optional snippet overrides
 		amountBalance?: Snippet<[any]>;
+		amountWin?: Snippet<[any]>;
 		amountBet?: Snippet<[any]>;
 		buttonBuyBonus?: Snippet<[any]>;
 		buttonAutoSpin?: Snippet<[any]>;
@@ -134,7 +135,11 @@
 		{/snippet}
 
 		{#snippet amountWin(labelProps)}
-			<LabelWin {...labelProps} />
+			{#if props.amountWin}
+				{@render props.amountWin(labelProps)}
+			{:else}
+				<LabelWin {...labelProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet amountBet(labelProps)}

@@ -5,9 +5,10 @@
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
 	import { App, Text, REM, Container, Sprite, Graphics } from 'pixi-svelte';
-	import { stateModal } from 'state-shared';
+	import { stateModal, stateBet } from 'state-shared';
 
 	import { UI, LabelBalance, ButtonMenu } from 'components-ui-pixi';
+	import LabelWin from 'components-ui-pixi/src/components/LabelWin.svelte';
 	import { UI_BASE_FONT_SIZE } from 'components-ui-pixi/src/constants';
 	import { GameVersion, Modals } from 'components-ui-html';
 
@@ -333,6 +334,7 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 			gameName={gameNameSnippet}
 			logo={logoSnippet}
 			amountBalance={amountBalanceSnippet}
+			amountWin={amountWinSnippet}
 			amountBet={amountBetSnippet}
 			buttonBuyBonus={buttonBuyBonusSnippet}
 			buttonAutoSpin={buttonAutoSpinSnippet}
@@ -388,6 +390,12 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 	<Container x={narrowPortraitLabelOffset} scale={portraitLabelScale}>
 		<LabelBalance {...labelProps} />
 	</Container>
+{/snippet}
+
+{#snippet amountWinSnippet(labelProps: any)}
+	{#if context.stateGame.gameType !== 'basegame' || stateBet.winBookEventAmount > 0}
+		<LabelWin {...labelProps} />
+	{/if}
 {/snippet}
 
 {#snippet amountBetSnippet(labelProps: any)}
