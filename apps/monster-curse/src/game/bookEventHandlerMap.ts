@@ -83,6 +83,32 @@ const getPlannedSwordExpandKeys = (bookEvents: BookEvent[], revealIndex: number)
 		.filter((bookEvent): bookEvent is BookEventOfType<'swordExpandEvent'> => bookEvent.type === 'swordExpandEvent')
 		.map((bookEvent) => getPositionKey(bookEvent.reel, bookEvent.swordRow));
 
+const doesSParticipateInWin = (
+	bookEvents: BookEvent[],
+	revealIndex: number,
+	sReel: number,
+	sRow: number,
+	expandedRows?: number[],
+): boolean => {
+	const scopedEvents = getRevealScopedBookEvents(bookEvents, revealIndex);
+	const winInfoEvents = scopedEvents.filter(
+		(e): e is BookEventOfType<'winInfo'> => e.type === 'winInfo',
+	);
+	if (winInfoEvents.length === 0) return false;
+
+	const coveredPositions = new Set<string>();
+	coveredPositions.add(getPositionKey(sReel, sRow));
+	if (expandedRows) {
+		expandedRows.forEach(row => coveredPositions.add(getPositionKey(sReel, row)));
+	}
+
+	return winInfoEvents.some(winInfo =>
+		winInfo.wins.some(win =>
+			win.positions.some(pos => coveredPositions.has(getPositionKey(pos.reel, pos.row))),
+		),
+	);
+};
+
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	if (winLevelData?.alias === 'max') eventEmitter.broadcastAsync({ type: 'uiHide' });
 	if (winLevelData?.sound?.sfx) {
@@ -309,6 +335,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				stateGame.plannedSwordExpandKeys.includes(positionKey) ||
 				stateGame.activeStickySwordKeys.includes(positionKey)
 			) {
+				continue;
+			}
+
+			// Skip W collection if S doesn't participate in any win combination
+			if (!doesSParticipateInWin(bookEvents, bookEvent.index, sPosition.reel, sPosition.row)) {
 				continue;
 			}
 
@@ -722,7 +753,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			reelSymbol.symbolState = 'expand';
 		}
 	},
-	swordExpandEvent: async (bookEvent: BookEventOfType<'swordExpandEvent'>) => {
+	swordExpandEvent: async (bookEvent: BookEventOfType<'swordExpandEvent'>, { bookEvents }: BookEventContext) => {
 		const { reel, swordRow, expandedRows, multiplier } = bookEvent;
 		
 		// swordRow is 1-based (1-5), normalize to array index
@@ -742,6 +773,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Store the custom animation name and covered rows on the symbol
 		reelSymbol.rawSymbol.expandAnimation = animationName;
 		reelSymbol.rawSymbol.expandedRows = expandedRows;
+		reelSymbol.rawSymbol.reelPosition = swordRow - 1;
+		
+		// Skip W collection animation if S doesn't participate in any win combination
+		const lastReveal = _.findLast(bookEvents, (e: BookEvent) => e.type === 'reveal' && e.index <= bookEvent.index);
+		const revealIndex = lastReveal?.index ?? 0;
+		if (!doesSParticipateInWin(bookEvents, revealIndex, reel, swordRow, expandedRows)) {
+			return;
+		}
 		
 		// Run staged collection animation:
 		// 1) W-to-W sum merges (top-to-bottom), 2) final W-to-S multiplication.
@@ -753,8 +792,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// Show animated result immediately before backend authoritative value arrives.
 		reelSymbol.rawSymbol.collectedMultiplier = animatedCollectedMultiplier;
-		// reelPosition represents expansion level (0-4) based on which visible row (1-5)
-		reelSymbol.rawSymbol.reelPosition = swordRow - 1;
 		
 		// Update to backend multiplier value (the authoritative value)
 		reelSymbol.rawSymbol.collectedMultiplier = multiplier;
