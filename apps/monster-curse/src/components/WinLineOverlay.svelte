@@ -63,10 +63,10 @@
 			return { spriteKey: 'line_0', containerY: row * SYMBOL_SIZE, height: SYMBOL_SIZE, flipY: false, textY };
 		}
 		if (lineIndex === 6) {
-			return { spriteKey: 'line_45', containerY: 0, height: BOARD_WIDTH, flipY: false, textY };
+			return { spriteKey: 'line_45', containerY: BOARD_WIDTH, height: BOARD_WIDTH, flipY: true, textY };
 		}
 		if (lineIndex === 7) {
-			return { spriteKey: 'line_45', containerY: BOARD_WIDTH, height: BOARD_WIDTH, flipY: true, textY };
+			return { spriteKey: 'line_45', containerY: 0, height: BOARD_WIDTH, flipY: false, textY };
 		}
 		const isInverted = lineIndex >= 12;
 		const minRow = isInverted ? lineIndex - 12 : lineIndex - 8;
@@ -104,112 +104,191 @@
 
 	const context = getContext();
 
-	// ── Line reveal ───────────────────────────────────────────────────────
-	let visible = $state(false);
-	let layout = $state<LineLayout | null>(null);
-	let maskWidth = $state(0);
-	let revealRafId: number | null = null;
+	// ── Multi-line concurrent state ─────────────────────────────────────────
+	type ActiveLine = {
+		lineIndex: number;
+		layout: LineLayout;
+		adjustedTextX: number; // collision-free horizontal position for the amount label
+		maskWidth: number;
+		baseWinAmount: number;
+		totalWinAmount: number;
+		winMultiplier: number;
+		showBase: boolean;
+		baseScale: number;
+		baseAlpha: number;
+		showTotal: boolean;
+		totalScale: number;
+		totalAlpha: number;
+	};
 
-	// ── Win data ────────────────────────────────────────────────────────────
-	let baseWinAmount = $state(0);
-	let totalWinAmount = $state(0);
-	let winMultiplier = $state(1);
+	// Minimum vertical distance between two lines' textY to consider them "close" (same or adjacent row)
+	const CLOSE_ROW_THRESHOLD = SYMBOL_SIZE; // 120px — within one symbol height
+	// Horizontal step when nudging a label to avoid overlap (label width + padding)
+	const LABEL_X_STEP = LABEL_W + 20; // 170px
 
-	// ── Text phase state ─────────────────────────────────────────────────
-	let showBase = $state(false);
-	let baseScale = $state(0);
-	let baseAlpha = $state(1);
+	/**
+	 * Find an X position for the amount label that avoids overlapping with already-active
+	 * lines whose win rows are close (same or adjacent row).
+	 * Lines on well-separated rows get the default TEXT_X.
+	 */
+	function computeAdjustedTextX(textY: number): number {
+		// Collect X positions already taken by lines whose textY is "close" to ours
+		const occupiedX = activeLines
+			.filter(l => Math.abs(l.layout.textY - textY) < CLOSE_ROW_THRESHOLD)
+			.map(l => l.adjustedTextX);
 
-	let showTotal = $state(false);
-	let totalScale = $state(0);
-	let totalAlpha = $state(0);
+		if (occupiedX.length === 0) return TEXT_X;
 
-	let phase2Timer: ReturnType<typeof setTimeout> | null = null;
+		// Try nudging right in steps until we find a clear spot
+		const offsets = [0, LABEL_X_STEP, LABEL_X_STEP * 2, -LABEL_X_STEP];
+		for (const offset of offsets) {
+			const candidate = TEXT_X + offset;
+			if (!occupiedX.some(x => Math.abs(x - candidate) < LABEL_X_STEP)) {
+				return candidate;
+			}
+		}
+		return TEXT_X + LABEL_X_STEP * occupiedX.length;
+	}
 
-	// Phase 1 text: "0.50x2" when multiplier > 1, otherwise just the total win
-	const phase1Text = $derived(
-		winMultiplier > 1
-			? `${formatWin(baseWinAmount)}x${winMultiplier}`
-			: formatWin(totalWinAmount),
-	);
-	// Phase 2 text: total win after applying the multiplier
-	const phase2Text = $derived(formatWin(totalWinAmount));
+	let activeLines = $state<ActiveLine[]>([]);
 
-	function startReveal() {
-		maskWidth = 0;
-		if (revealRafId !== null) { cancelAnimationFrame(revealRafId); revealRafId = null; }
+	// Non-reactive timer/RAF tracking keyed by lineIndex
+	const lineRafIds = new Map<number, number>();
+	const linePhase2Timers = new Map<number, ReturnType<typeof setTimeout>>();
+
+	function cancelLineTimers(lineIndex: number): void {
+		const rafId = lineRafIds.get(lineIndex);
+		if (rafId !== undefined) { cancelAnimationFrame(rafId); lineRafIds.delete(lineIndex); }
+		const timer = linePhase2Timers.get(lineIndex);
+		if (timer !== undefined) { clearTimeout(timer); linePhase2Timers.delete(lineIndex); }
+	}
+
+	function startRevealForLine(lineIndex: number): void {
+		cancelLineTimers(lineIndex);
 		const t0 = performance.now();
 		const step = (now: number) => {
-			if (!visible) return;
-			maskWidth = Math.min(((now - t0) / REVEAL_DURATION) * BOARD_WIDTH, BOARD_WIDTH);
-			revealRafId = maskWidth < BOARD_WIDTH ? requestAnimationFrame(step) : null;
+			const line = activeLines.find(l => l.lineIndex === lineIndex);
+			if (!line) return;
+			line.maskWidth = Math.min(((now - t0) / REVEAL_DURATION) * BOARD_WIDTH, BOARD_WIDTH);
+			if (line.maskWidth < BOARD_WIDTH) {
+				lineRafIds.set(lineIndex, requestAnimationFrame(step));
+			} else {
+				lineRafIds.delete(lineIndex);
+			}
 		};
-		revealRafId = requestAnimationFrame(step);
+		lineRafIds.set(lineIndex, requestAnimationFrame(step));
 	}
 
-	function startTextAnimation(multiplier: number) {
-		showBase = true; showTotal = false;
-		baseScale = 0; baseAlpha = 1;
-		totalScale = 0; totalAlpha = 0;
+	function startTextAnimationForLine(lineIndex: number, multiplier: number): void {
+		const line = activeLines.find(l => l.lineIndex === lineIndex);
+		if (!line) return;
+
+		line.showBase = true; line.showTotal = false;
+		line.baseScale = 0; line.baseAlpha = 1;
+		line.totalScale = 0; line.totalAlpha = 0;
 
 		// Phase 1 – pop-in
-		animateValue((v) => (baseScale = v), 0, 1, TEXT_POPUP_DURATION, easeOutBack);
+		animateValue(
+			(v) => { const l = activeLines.find(x => x.lineIndex === lineIndex); if (l) l.baseScale = v; },
+			0, 1, TEXT_POPUP_DURATION, easeOutBack,
+		);
 
 		if (multiplier > 1) {
-			phase2Timer = setTimeout(() => {
-				animateValue((v) => (baseAlpha = v), 1, 0, 150, undefined, () => { showBase = false; });
-				showTotal = true;
-				animateValue((v) => (totalScale = v), 0, 1, TEXT_POPUP_DURATION, easeOutBack);
-				animateValue((v) => (totalAlpha = v), 0, 1, 150);
+			const timer = setTimeout(() => {
+				linePhase2Timers.delete(lineIndex);
+				animateValue(
+					(v) => { const l = activeLines.find(x => x.lineIndex === lineIndex); if (l) l.baseAlpha = v; },
+					1, 0, 150, undefined,
+					() => { const l = activeLines.find(x => x.lineIndex === lineIndex); if (l) l.showBase = false; },
+				);
+				const l = activeLines.find(x => x.lineIndex === lineIndex);
+				if (l) {
+					l.showTotal = true;
+					animateValue(
+						(v) => { const m = activeLines.find(x => x.lineIndex === lineIndex); if (m) m.totalScale = v; },
+						0, 1, TEXT_POPUP_DURATION, easeOutBack,
+					);
+					animateValue(
+						(v) => { const m = activeLines.find(x => x.lineIndex === lineIndex); if (m) m.totalAlpha = v; },
+						0, 1, 150,
+					);
+				}
 			}, PHASE2_DELAY);
+			linePhase2Timers.set(lineIndex, timer);
 		}
-	}
-
-	function reset() {
-		visible = false; layout = null; maskWidth = 0;
-		showBase = false; showTotal = false;
-		if (revealRafId !== null) { cancelAnimationFrame(revealRafId); revealRafId = null; }
-		if (phase2Timer !== null) { clearTimeout(phase2Timer); phase2Timer = null; }
 	}
 
 	context.eventEmitter.subscribeOnMount({
 		winLineShow: ({ lineIndex, baseWin, totalWin, multiplier }) => {
-			layout = getLineLayout(lineIndex);
-			visible = true;
-			baseWinAmount = baseWin;
-			totalWinAmount = totalWin;
-			winMultiplier = multiplier;
+			// Replace existing line with same index if already showing
+			const existingIdx = activeLines.findIndex(l => l.lineIndex === lineIndex);
+			if (existingIdx !== -1) {
+				cancelLineTimers(lineIndex);
+				activeLines.splice(existingIdx, 1);
+			}
+
+			const layout = getLineLayout(lineIndex);
+			activeLines.push({
+				lineIndex,
+				layout,
+				adjustedTextX: computeAdjustedTextX(layout.textY),
+				maskWidth: 0,
+				baseWinAmount: baseWin,
+				totalWinAmount: totalWin,
+				winMultiplier: multiplier,
+				showBase: false,
+				baseScale: 0,
+				baseAlpha: 1,
+				showTotal: false,
+				totalScale: 0,
+				totalAlpha: 0,
+			});
+
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_standard' });
-			startReveal();
-			startTextAnimation(multiplier);
+			startRevealForLine(lineIndex);
+			startTextAnimationForLine(lineIndex, multiplier);
 		},
-		winLineHide: reset,
+		winLineHide: ({ lineIndex }) => {
+			if (lineIndex !== undefined) {
+				cancelLineTimers(lineIndex);
+				const idx = activeLines.findIndex(l => l.lineIndex === lineIndex);
+				if (idx !== -1) activeLines.splice(idx, 1);
+			} else {
+				activeLines.forEach(l => cancelLineTimers(l.lineIndex));
+				activeLines.splice(0, activeLines.length);
+			}
+		},
 	});
 </script>
 
-{#if visible && layout}
+{#each activeLines as line (line.lineIndex)}
+	{@const phase1Text = line.winMultiplier > 1
+		? `${formatWin(line.baseWinAmount)}x${line.winMultiplier}`
+		: formatWin(line.totalWinAmount)}
+	{@const phase2Text = formatWin(line.totalWinAmount)}
+
 	<!-- ── Line sprite with animated left-to-right mask reveal ── -->
 	<Container
 		x={0}
-		y={layout.containerY}
-		scale={{ x: 1, y: layout.flipY ? -1 : 1 }}
+		y={line.layout.containerY}
+		scale={{ x: 1, y: line.layout.flipY ? -1 : 1 }}
 		zIndex={60000}
 		alpha={0.85}
 	>
-		<Rectangle isMask x={0} y={0} width={maskWidth} height={layout.height} />
+		<Rectangle isMask x={0} y={0} width={line.maskWidth} height={line.layout.height} />
 		<Sprite
-			key={layout.spriteKey}
+			key={line.layout.spriteKey}
 			x={0}
 			y={0}
 			width={BOARD_WIDTH}
-			height={layout.height}
+			height={line.layout.height}
 			anchor={{ x: 0, y: 0 }}
 		/>
 	</Container>
 
 	<!-- ── Phase 1: "0.50x2" (baseWin × multiplier equation) ── -->
-	{#if showBase}
-		<Container x={TEXT_X} y={layout.textY} zIndex={60001} scale={baseScale} alpha={baseAlpha}>
+	{#if line.showBase}
+		<Container x={line.adjustedTextX} y={line.layout.textY} zIndex={60001} scale={line.baseScale} alpha={line.baseAlpha}>
 			<!-- Border matching Symbol.svelte gradient stroke -->
 			<Graphics
 				x={0} y={0}
@@ -227,8 +306,8 @@
 	{/if}
 
 	<!-- ── Phase 2: total win (result of equation) ── -->
-	{#if showTotal}
-		<Container x={TEXT_X} y={layout.textY} zIndex={60001} scale={totalScale} alpha={totalAlpha}>
+	{#if line.showTotal}
+		<Container x={line.adjustedTextX} y={line.layout.textY} zIndex={60001} scale={line.totalScale} alpha={line.totalAlpha}>
 			<Graphics
 				x={0} y={0}
 				draw={(g) => {
@@ -241,4 +320,4 @@
 			<Text text={phase2Text} anchor={0.5} x={0} y={0} style={mainStyle} />
 		</Container>
 	{/if}
-{/if}
+{/each}

@@ -38,14 +38,14 @@
 		// Force the symbol to complete after a delay if it doesn't complete normally
 		// This prevents infinite hangs for both 'win' and 'expand' states
 		if ((currentState === 'win' || currentState === 'expand') && props.reelSymbol.oncomplete) {
-			// Give normal completion 3 seconds to work, then force complete
+			// Give normal completion 1200ms to work, then force complete (reduced from 1688ms for faster line hiding)
 			const timeoutId = setTimeout(() => {
 				if ((props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'expand') && props.reelSymbol.oncomplete) {
 					const oncomplete = props.reelSymbol.oncomplete;
 					props.reelSymbol.oncomplete = undefined as any;
 					oncomplete();
 				}
-			}, 3000);
+			}, 1200);
 			
 			// Cleanup timeout if component unmounts or state changes
 			return () => {

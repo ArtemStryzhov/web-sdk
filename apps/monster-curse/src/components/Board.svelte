@@ -10,7 +10,7 @@
 				symbolPositions: Position[];
 		  }
 		| { type: 'winLineShow'; lineIndex: number; baseWin: number; totalWin: number; multiplier: number }
-		| { type: 'winLineHide' };
+	| { type: 'winLineHide'; lineIndex?: number };
 </script>
 
 <script lang="ts">

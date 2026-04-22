@@ -27,6 +27,56 @@ const normalizeRowIndex = (row: number, reel: number) => {
 	return row;
 };
 
+const getWinLineSMultiplier = (positions: Position[]) => {
+	const contributions: Array<{
+		reel: number;
+		winRow: number;
+		sourceRow: number;
+		source: 'direct' | 'expanded';
+		multiplier: number;
+	}> = [];
+
+	positions.forEach((pos) => {
+		const reelSymbols = stateGame.board[pos.reel]?.reelState?.symbols;
+		if (!reelSymbols?.length) return;
+
+		const hitSymbol = reelSymbols[normalizeRowIndex(pos.row, pos.reel)];
+		if (hitSymbol?.rawSymbol?.name === 'S') {
+			contributions.push({
+				reel: pos.reel,
+				winRow: pos.row,
+				sourceRow: pos.row,
+				source: 'direct',
+				multiplier: hitSymbol.rawSymbol.collectedMultiplier ?? hitSymbol.rawSymbol.multiplier ?? 1,
+			});
+			return;
+		}
+
+		for (let arrayIndex = 0; arrayIndex < reelSymbols.length; arrayIndex++) {
+			const candidate = reelSymbols[arrayIndex];
+			if (candidate?.rawSymbol?.name !== 'S' || !candidate.rawSymbol.expandedRows?.includes(pos.row)) {
+				continue;
+			}
+
+			const startIndex = Math.floor((reelSymbols.length - 5) / 2);
+			const sourceRow = arrayIndex - startIndex + 1;
+			if (sourceRow < 1 || sourceRow > 5) continue;
+
+			contributions.push({
+				reel: pos.reel,
+				winRow: pos.row,
+				sourceRow,
+				source: 'expanded',
+				multiplier: candidate.rawSymbol.collectedMultiplier ?? candidate.rawSymbol.multiplier ?? 1,
+			});
+			return;
+		}
+	});
+
+	const sum = contributions.reduce((acc, item) => acc + item.multiplier, 0);
+	return { sum, contributions };
+};
+
 const getPositionKey = (reel: number, row: number) => `${reel}:${row}`;
 
 const playPendingBonusTriggerAnimation = async () => {
@@ -486,49 +536,54 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			}
 		}
 		
-		// Animate each win line sequentially
-	for (let i = 0; i < bookEvent.wins.length; i++) {
-		const win = bookEvent.wins[i];
-		logHighlight(stateGame.round, win, i + 1, bookEvent.wins.length);
-		const winPositionsWithoutS = win.positions.filter((pos: Position) => {
-			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
-			return reelSymbol.rawSymbol.name !== 'S';
+		// Reset ALL wins' symbols upfront before starting staggered parallel animations
+		bookEvent.wins.forEach((win) => {
+			win.positions.forEach((pos: Position) => {
+				const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
+				if (reelSymbol.rawSymbol.name !== 'S') {
+					reelSymbol.symbolState = 'postWinStatic';
+				}
+			});
 		});
-		// Set only the current win's symbols to postWinStatic first to reset them before animation
-		// BUT: Skip S symbols - they should stay expanded throughout all win animations
-		win.positions.forEach((pos: Position) => {
-			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
-			if (reelSymbol.rawSymbol.name !== 'S') {
-				reelSymbol.symbolState = 'postWinStatic';
+
+		// Animate all win lines in parallel with a 500ms stagger between each
+		const WIN_LINE_STAGGER_MS = 500;
+		await Promise.all(bookEvent.wins.map((win, i) => (async () => {
+			logHighlight(stateGame.round, win, i + 1, bookEvent.wins.length);
+			if (i > 0) await new Promise(r => setTimeout(r, WIN_LINE_STAGGER_MS * i));
+
+			const winPositionsWithoutS = win.positions.filter((pos: Position) => {
+				const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
+				return reelSymbol.rawSymbol.name !== 'S';
+			});
+
+			// Show the win-line overlay concurrently with symbol animation
+			const effectiveMultiplier = win.meta.multiplier;
+			eventEmitter.broadcast({
+				type: 'winLineShow',
+				lineIndex: win.meta.lineIndex,
+				baseWin: win.meta.winWithoutMult,
+				totalWin: win.win,
+				multiplier: effectiveMultiplier,
+			});
+
+			// Play explosion sound if a W symbol participates in this win combination
+			const winHasWild = win.positions.some((pos: Position) => {
+				const reelSymbol = stateGame.board[pos.reel]?.reelState?.symbols?.[normalizeRowIndex(pos.row, pos.reel)];
+				return reelSymbol?.rawSymbol?.name === 'W';
+			});
+			if (winHasWild) {
+				eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_explosion' });
 			}
-		});
 
-		// Show the win-line overlay concurrently with symbol animation
-		eventEmitter.broadcast({
-			type: 'winLineShow',
-			lineIndex: win.meta.lineIndex,
-			baseWin: win.meta.winWithoutMult,
-			totalWin: win.win,
-			multiplier: win.meta.multiplier,
-		});
+			// Animate current win line, excluding S symbols to avoid re-expansion.
+			if (winPositionsWithoutS.length > 0) {
+				await animateSymbols({ positions: winPositionsWithoutS });
+			}
 
-		// Play explosion sound if a W symbol participates in this win combination
-		const winHasWild = win.positions.some((pos: Position) => {
-			const reelSymbol = stateGame.board[pos.reel]?.reelState?.symbols?.[normalizeRowIndex(pos.row, pos.reel)];
-			return reelSymbol?.rawSymbol?.name === 'W';
-		});
-		if (winHasWild) {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_explosion' });
-		}
-
-		// Then animate current win line, excluding S symbols to avoid re-expansion.
-		if (winPositionsWithoutS.length > 0) {
-			await animateSymbols({ positions: winPositionsWithoutS });
-		}
-
-		// Hide the win-line overlay after symbols finish
-		eventEmitter.broadcast({ type: 'winLineHide' });
-	}
+			// Hide this win-line overlay after its symbols finish
+			eventEmitter.broadcast({ type: 'winLineHide', lineIndex: win.meta.lineIndex });
+		})()));
 		await playPendingBonusTriggerAnimation();
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {

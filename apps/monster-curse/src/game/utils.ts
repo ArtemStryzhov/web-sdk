@@ -22,12 +22,64 @@ const normalizeRowIndex = (row: number, reel: number) => {
 	return row;
 };
 
+const getWinLineSMultiplier = (positions: Position[]) => {
+	const contributions: Array<{
+		reel: number;
+		winRow: number;
+		sourceRow: number;
+		source: 'direct' | 'expanded';
+		multiplier: number;
+	}> = [];
+
+	positions.forEach((pos) => {
+		const reelSymbols = stateGame.board[pos.reel]?.reelState?.symbols;
+		if (!reelSymbols?.length) return;
+
+		const hitSymbol = reelSymbols[normalizeRowIndex(pos.row, pos.reel)];
+		if (hitSymbol?.rawSymbol?.name === 'S') {
+			contributions.push({
+				reel: pos.reel,
+				winRow: pos.row,
+				sourceRow: pos.row,
+				source: 'direct',
+				multiplier: hitSymbol.rawSymbol.collectedMultiplier ?? hitSymbol.rawSymbol.multiplier ?? 1,
+			});
+			return;
+		}
+
+		for (let arrayIndex = 0; arrayIndex < reelSymbols.length; arrayIndex++) {
+			const candidate = reelSymbols[arrayIndex];
+			if (candidate?.rawSymbol?.name !== 'S' || !candidate.rawSymbol.expandedRows?.includes(pos.row)) {
+				continue;
+			}
+
+			const startIndex = Math.floor((reelSymbols.length - 5) / 2);
+			const sourceRow = arrayIndex - startIndex + 1;
+			if (sourceRow < 1 || sourceRow > 5) continue;
+
+			contributions.push({
+				reel: pos.reel,
+				winRow: pos.row,
+				sourceRow,
+				source: 'expanded',
+				multiplier: candidate.rawSymbol.collectedMultiplier ?? candidate.rawSymbol.multiplier ?? 1,
+			});
+			return;
+		}
+	});
+
+	const sum = contributions.reduce((acc, item) => acc + item.multiplier, 0);
+	return { sum, contributions };
+};
+
 // general utils
 export const { getEmptyBoard } = createGetEmptyPaddedBoard({ reelsDimensions: BOARD_DIMENSIONS });
 export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEventHandlerMap });
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
 	stateGame.shouldLoopWinAnimations = false;
+	// Clear any lingering win line overlays before starting a new bet
+	eventEmitter.broadcast({ type: 'winLineHide' });
 	
 	try {
 		await playBookEvents(bet.state);
@@ -67,41 +119,57 @@ const loopWinAnimations = async () => {
 			});
 		});
 		
-	for (const win of wins) {
-		if (!stateGame.shouldLoopWinAnimations) break;
-		const winPositionsWithoutS = win.positions.filter((pos: Position) => {
-			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
-			return reelSymbol.rawSymbol.name !== 'S';
-		});
-		
-		// Set only the current win's symbols to postWinStatic first to reset them before animation
-		win.positions.forEach((pos: Position) => {
-			const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
-			if (reelSymbol.rawSymbol.name !== 'S') {
-				reelSymbol.symbolState = 'postWinStatic';
-			}
-		});
-
-		// Show win-line overlay concurrently with symbol animation
-		eventEmitter.broadcast({
-			type: 'winLineShow',
-			lineIndex: win.meta?.lineIndex ?? 0,
-			baseWin: win.meta?.winWithoutMult ?? win.win,
-			totalWin: win.win,
-			multiplier: win.meta?.multiplier ?? 1,
-		});
-
-		if (winPositionsWithoutS.length > 0) {
-			await eventEmitter.broadcastAsync({
-				type: 'boardWithAnimateSymbols',
-				symbolPositions: winPositionsWithoutS,
+		// Reset ALL wins' symbols upfront before starting staggered parallel animations
+		wins.forEach((win: any) => {
+			win.positions.forEach((pos: Position) => {
+				const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
+				if (reelSymbol.rawSymbol.name !== 'S') {
+					reelSymbol.symbolState = 'postWinStatic';
+				}
 			});
+		});
+
+		// Animate all win lines in parallel with a 500ms stagger between each
+		const WIN_LINE_STAGGER_MS = 500;
+		if (stateGame.shouldLoopWinAnimations) {
+			await Promise.all(wins.map((win: any, i: number) => (async () => {
+				if (!stateGame.shouldLoopWinAnimations) return;
+				if (i > 0) await new Promise(r => setTimeout(r, WIN_LINE_STAGGER_MS * i));
+				if (!stateGame.shouldLoopWinAnimations) return;
+
+				const winPositionsWithoutS = win.positions.filter((pos: Position) => {
+					const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
+					return reelSymbol.rawSymbol.name !== 'S';
+				});
+
+				// Show win-line overlay concurrently with symbol animation
+				const effectiveMultiplier = win.meta?.multiplier ?? 1;
+				eventEmitter.broadcast({
+					type: 'winLineShow',
+					lineIndex: win.meta?.lineIndex ?? 0,
+					baseWin: win.meta?.winWithoutMult ?? win.win,
+					totalWin: win.win,
+					multiplier: effectiveMultiplier,
+				});
+
+				if (winPositionsWithoutS.length > 0) {
+					await eventEmitter.broadcastAsync({
+						type: 'boardWithAnimateSymbols',
+						symbolPositions: winPositionsWithoutS,
+					});
+				}
+
+				// Hide this win-line overlay after its symbols finish
+				eventEmitter.broadcast({ type: 'winLineHide', lineIndex: win.meta?.lineIndex ?? 0 });
+			})()));
 		}
 
-		// Hide win-line overlay after symbols finish
-		eventEmitter.broadcast({ type: 'winLineHide' });
-	}
-		
+		// Don't loop in bonus game (freegame) - show each line just once
+		if (stateGame.gameType === 'freegame') {
+			stateGame.shouldLoopWinAnimations = false;
+			break;
+		}
+
 		if (stateGame.shouldLoopWinAnimations && sSymbols.length > 0) {
 			sSymbols.forEach((position: any) => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
@@ -110,7 +178,7 @@ const loopWinAnimations = async () => {
 		}
 		
 		if (stateGame.shouldLoopWinAnimations) {
-			await new Promise(resolve => setTimeout(resolve, 500));
+			await new Promise(resolve => setTimeout(resolve, 1800));
 		}
 	}
 };

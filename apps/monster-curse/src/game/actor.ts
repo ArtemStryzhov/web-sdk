@@ -8,6 +8,7 @@ import type { Bet } from './typesBookEvent';
 import { stateXstateDerived } from './stateXstate';
 import { playBet, convertTorResumableBet } from './utils';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { eventEmitter } from './eventEmitter';
 import config from './config';
 import { memoryDebugger } from './debugMemory';
 
@@ -24,7 +25,10 @@ const primaryMachines = createPrimaryMachines<Bet>({
 	onNewGameStart: async () => {
 		// Track spin count
 		memoryDebugger.incrementSpin(10);
-		
+
+		// Clear any lingering win line overlays (e.g. when buying bonus while lines are showing)
+		eventEmitter.broadcast({ type: 'winLineHide' });
+
 		// Stop win animation looping immediately when user presses spin
 		stateGame.shouldLoopWinAnimations = false;
 		stateGame.winAnimationData = null;
