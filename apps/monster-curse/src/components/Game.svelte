@@ -110,7 +110,7 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 		Math.max(12, Math.min(18, UI_BASE_FONT_SIZE * portraitLabelScale * mainLayoutStandard.scale * 1.3))
 	);
 	const narrowPortraitLabelOffset = $derived(
-		isPortraitLayout && canvasSizes.width < 450 ? 30 * portraitUiUnitPerScreenPixel : 0
+		isPortraitLayout && canvasSizes.width < 850 ? 30 * portraitUiUnitPerScreenPixel : 0
 	);
 	const portraitBalanceX = $derived(portraitBalanceBaseX + narrowPortraitLabelOffset);
 	const portraitBalanceScreenX = $derived(

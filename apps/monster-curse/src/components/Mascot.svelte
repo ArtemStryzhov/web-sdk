@@ -572,24 +572,6 @@
 		setupAnimation();
 	});
 
-	$effect(() => {
-		if (!isPortrait) return;
-
-		console.log('[MonsterCurse][MascotDebug]', {
-			version,
-			scale,
-			width,
-			height,
-			actualWidth,
-			actualHeight,
-			displayWidth,
-			displayHeight,
-			x,
-			y,
-			format,
-		});
-	});
-
 	onDestroy(() => {
 		cleanup();
 		if (oldTexture) {
