@@ -184,6 +184,37 @@
 	const isNarrowDesktop = $derived(isDesktop && canvasSizes.width <= 1024);
 	const isNarrowDesktop1200 = $derived(isDesktop && canvasSizes.width < 1200);
 	const isBigDesktop = $derived(isDesktop && canvasSizes.width > 2700 && canvasSizes.height > 1400);
+	const isWidth1050OrLess = $derived(canvasSizes.width <= 1050);
+	const isWidth1124OrLess = $derived(canvasSizes.width <= 1124);
+	const widthBasedTextScale = $derived(
+		isWidth1050OrLess ? 0.85 : isWidth1124OrLess ? 0.9 : 1
+	);
+	const isViewport800x450Like = $derived.by(() => {
+		const similarity = Math.min(canvasSizes.width / 800, canvasSizes.height / 450);
+		return similarity >= 0.95 && similarity <= 1.05;
+	});
+	const isViewport425x812Like = $derived.by(() => {
+		const similarity = Math.min(canvasSizes.width / 425, canvasSizes.height / 812);
+		return similarity >= 0.95 && similarity <= 1.05;
+	});
+	const isViewport375x667Like = $derived.by(() => {
+		const similarity = Math.min(canvasSizes.width / 375, canvasSizes.height / 667);
+		return similarity >= 0.95 && similarity <= 1.05;
+	});
+	const viewport425x812TextScale = $derived(isViewport425x812Like ? 1.15 : 1);
+	const viewport375x667BlockScale = $derived(isViewport375x667Like ? 1.15 : 1);
+	const firstBlockExtraLeftPadding = $derived(isViewport800x450Like ? 20 : 0);
+	const firstBlockExtraTopPadding = $derived(
+		(isViewport800x450Like ? 30 : 0) + (isViewport425x812Like ? 15 : 0)
+	);
+	const isMidDesktopViewport = $derived.by(() => {
+		if (!isDesktop) {
+			return false;
+		}
+
+		const similarity = Math.min(canvasSizes.width / 1200, canvasSizes.height / 675);
+		return similarity >= 0.9 && similarity <= 1.2;
+	});
 	const isUltraNarrow = $derived(canvasSizes.width < 500);
 	const isLandscapeLayout = $derived(isLandscape);
 	const portraitTextScale = $derived(isPortrait ? 1.48 : 1); // Reduced by 20% for portrait (1.85 * 0.8 = 1.48)
@@ -501,8 +532,12 @@
 			portraitTextScale *
 			tabletTextScale *
 			1.15 * // Increase by 15%
+			(isMidDesktopViewport ? 1.15 : 1) * // Increase by 15% on 1200x675-like desktop screens
 			portraitNarrowTextScale * // Additional 15% for portrait screens with width < 500
-			ultraNarrowTextScale, // Additional 15% for all screens with width < 500
+			ultraNarrowTextScale * // Additional 15% for all screens with width < 500
+			1.07 * // Additional 7% increase for welcome box text
+			viewport425x812TextScale * // 15% larger on 425x812-like screens
+			widthBasedTextScale, // Width-based reduction tier for 1124 and 1050 breakpoints
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -527,16 +562,20 @@
 			portraitTextScale *
 			tabletTextScale *
 			1.25 * // Increase by 15%
+			(isMidDesktopViewport ? 1.15 : 1) * // Increase by 15% on 1200x675-like desktop screens
 			portraitNarrowTextScale * // Additional 15% for portrait screens with width < 500
-			ultraNarrowTextScale, // Additional 15% for all screens with width < 500
+			ultraNarrowTextScale * // Additional 15% for all screens with width < 500
+			1.07 * // Additional 7% increase for welcome box text
+			viewport425x812TextScale * // 15% larger on 425x812-like screens
+			widthBasedTextScale, // Width-based reduction tier for 1124 and 1050 breakpoints
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
 		wordWrap: true,
-		wordWrapWidth: frameWidth * 0.8 - 15, // Reduced width by 15px for left padding
+		wordWrapWidth: frameWidth * 0.8 - 40 - firstBlockExtraLeftPadding, // Extra left padding on 800x450-like screens
 	});
 
-	const frameTextXFirst = $derived(15 * 0.5); // Shift right by half of the padding to maintain visual balance
+	const frameTextXFirst = $derived((40 + firstBlockExtraLeftPadding) * 0.5); // Shift right by half of the padding to maintain visual balance
 
 	// Image dimensions from spritesheet (original sizes)
 	const imageSizes = {
@@ -587,7 +626,7 @@
 	// On tall desktop screens (height > 1300px, e.g. 3008x1384) move the text up by 50px to compensate
 	// for the smaller frameHeight caused by larger mainLayout.scale on taller viewports
 	const frameTextYFirst = $derived(
-		-frameHeight * 0.5 + 145 + (isDesktop && canvasSizes.height > 1300 ? -50 : 0) + (isSmallScreen ? -15 : 0)
+		-frameHeight * 0.5 + 145 + (isDesktop && canvasSizes.height > 1300 ? -50 : 0) + (isSmallScreen ? -15 : 0) + firstBlockExtraTopPadding
 	);
 
 const textStyle = $derived({
@@ -638,6 +677,7 @@ const textStyle = $derived({
 						<Container
 							x={offset}
 							y={0}
+							scale={viewport375x667BlockScale}
 							eventMode="none"
 						>
 							<!-- Inner background (behind frame) -->
@@ -748,6 +788,7 @@ const textStyle = $derived({
 				<Container
 					x={frameX}
 					y={framesY}
+					scale={viewport375x667BlockScale}
 					eventMode="none"
 				>
 					<!-- Inner background (behind frame) -->

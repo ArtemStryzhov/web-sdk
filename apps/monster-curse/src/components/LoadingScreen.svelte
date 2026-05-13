@@ -17,47 +17,65 @@
 	// Calculate logo scale based on layout and screen height
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const logoGlobalScale = 0.95;
+	const isWidth1124OrLess = $derived(canvasSizes.width <= 1124);
+	const isMidDesktopViewport = $derived.by(() => {
+		if (layoutType !== 'desktop') {
+			return false;
+		}
+
+		const similarity = Math.min(canvasSizes.width / 1200, canvasSizes.height / 675);
+		return similarity >= 0.9 && similarity <= 1.2;
+	});
 const logoScale = $derived(
 	(() => {
 		if (layoutType === 'desktop') {
-		let scale = 0.4;
+			let scale = 0.4;
 
 			if (canvasSizes.height < 550) {
-			scale = 0.3 * 0.7; // 30% smaller (base 0.3 * 0.7 = 0.21)
+				scale = 0.3 * 0.7; // 30% smaller (base 0.3 * 0.7 = 0.21)
 			}
 			if (canvasSizes.height < 650) {
-			scale = 0.3 * 0.8; // 20% smaller (base 0.3 * 0.8 = 0.24)
+				scale = 0.3 * 0.8; // 20% smaller (base 0.3 * 0.8 = 0.24)
 			}
 			if (canvasSizes.height < 800) {
-			scale = 0.3;
+				scale = 0.3;
 			}
 
-		// Width <= 1024: shrink logo an additional 20%
-		if (canvasSizes.width <= 1024) {
-			scale *= 0.8;
-		}
+			// Width <= 1024: shrink logo an additional 20%
+			if (canvasSizes.width <= 1024) {
+				scale *= 0.8;
+			}
 
-		return scale;
+			if (isMidDesktopViewport) {
+				scale *= 0.85;
+			}
+
+			if (isWidth1124OrLess) {
+				scale *= 0.85;
+			}
+
+			return scale * logoGlobalScale;
 		}
 
 		if (layoutType === 'tablet') {
-			return 0.4 / 2 * 1.2; // 2 times smaller on tablet, then increased by 20%
+			return (0.4 / 2) * 1.2 * logoGlobalScale; // 2 times smaller on tablet, then increased by 20%
 		}
 
 		if (layoutType === 'portrait') {
-			return (0.4 / 3) * 1.3 * 1.5; // 30% larger on portrait, then increased by 50%
+			return (0.4 / 3) * 1.3 * 1.5 * logoGlobalScale; // 30% larger on portrait, then increased by 50%
 		}
 
 		if (layoutType === 'landscape') {
 			const baseScale = 0.4 / 3; // 3 times smaller on landscape
 			// On small landscape screens (<=450px width), make logo 2x smaller
 			if (canvasSizes.width <= 450) {
-				return baseScale / 2;
+				return (baseScale / 2) * logoGlobalScale;
 			}
-			return baseScale;
+			return baseScale * logoGlobalScale;
 		}
 
-		return 0.4;
+		return 0.4 * logoGlobalScale;
 	})()
 );
 

@@ -177,51 +177,47 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 		// This ensures all components depending on these values will update
 	});
 
-	// Throttle function for resize logging
-	const throttle = (func: () => void, delay: number) => {
+	// Debounce resize recalculation to avoid excessive rerenders
+	const debounce = (func: () => void, delay: number) => {
 		let timeoutId: ReturnType<typeof setTimeout> | null = null;
-		let lastExecTime = 0;
 		return () => {
-			const currentTime = Date.now();
-			if (currentTime - lastExecTime > delay) {
-				func();
-				lastExecTime = currentTime;
-			} else {
-				if (timeoutId) clearTimeout(timeoutId);
-				timeoutId = setTimeout(() => {
-					func();
-					lastExecTime = Date.now();
-				}, delay - (currentTime - lastExecTime));
+			if (timeoutId) {
+				clearTimeout(timeoutId);
 			}
+
+			timeoutId = setTimeout(() => {
+				func();
+			}, delay);
 		};
 	};
 
-	// Handle resize - trigger reactivity updates
-	const handleResize = () => {
-		// Update resize trigger to force re-evaluation of all dependent components
+	// Central recalculation hook for loading page, menu, and main game layout
+	const recalculateAndRerender = () => {
 		resizeTrigger++;
 	};
 
 	onMount(() => {
 		context.stateLayout.showLoadingScreen = true;
 
-		// Log layout type on load
-		handleResize();
+		// Initial calculation on mount
+		recalculateAndRerender();
 
-		// Throttled resize handler (300ms throttle)
-		const throttledResize = throttle(() => {
-			handleResize();
-		}, 300);
+		// Debounced resize handler (500ms)
+		const debouncedResize = debounce(() => {
+			recalculateAndRerender();
+		}, 500);
 
-		// Add resize listener
+		// Add resize/orientation listeners
 		if (typeof window !== 'undefined') {
-			window.addEventListener('resize', throttledResize);
+			window.addEventListener('resize', debouncedResize);
+			window.addEventListener('orientationchange', debouncedResize);
 		}
 
-		// Cleanup resize listener
+		// Cleanup listeners
 		return () => {
 			if (typeof window !== 'undefined') {
-				window.removeEventListener('resize', throttledResize);
+				window.removeEventListener('resize', debouncedResize);
+				window.removeEventListener('orientationchange', debouncedResize);
 			}
 		};
 	});
