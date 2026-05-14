@@ -129,7 +129,7 @@
 					<h2>EXPANDING SILVER SWORD SYMBOLS</h2>
 					<ul class="special_symbols">
 						<li class="img_sword">
-							<img src="/assets/sprites/sword.png" alt="Silver Sword" class="sword-img" />
+							<img src="assets/sprites/sword.png" alt="Silver Sword" class="sword-img" />
 							<p>Silver Sword symbols land with a random multiplier value of <b>2x, 3x, 4x, 5x, 10x, 15x</b>, or <b>20x</b>. Upon landing, if a Silver Sword symbol participates in a winning combination, it expands upward to the top of the grid. All positions covered by an expanded Silver Sword symbol count as Wild. Each reel can hold only 1 Silver Sword symbol at a time. During upward expansion, Silver Sword symbols absorb any Elixir Flask symbols in their path, adding the flask's multiplier value to their own. If a winning combination contains more than one Silver Sword or Elixir Flask symbol carrying a multiplier, all multiplier values are summed before being applied to the total win. Silver Sword symbols become sticky upon landing and can expand on each subsequent spin, provided they form part of a winning combination. If a new Silver Sword symbol lands on a reel that already contains one, the upper symbol is removed.</p>
 						</li>
 					</ul>
@@ -137,8 +137,8 @@
 					<h1>WAYS TO WIN</h1>
 					<p>A winning combination is formed by landing at least 3 matching symbols on adjacent reels, beginning from the leftmost reel, across any of the 15 fixed paylines. Only the single highest win per payline is awarded.</p>
 
-					<img class="paylines-img paylines-desktop" src="/assets/sprites/paylines/paylines.png" alt="Paylines" />
-					<img class="paylines-img paylines-mobile" src="/assets/sprites/paylines/paylines_mob.png" alt="Paylines" />
+					<img class="paylines-img paylines-desktop" src="assets/sprites/paylines/paylines.png" alt="Paylines" />
+					<img class="paylines-img paylines-mobile" src="assets/sprites/paylines/paylines_mob.png" alt="Paylines" />
 
 					<h1>BONUS FEATURES</h1>
 					<h2>MONSTER CONTRACT</h2>
@@ -318,7 +318,7 @@
 		width: 120px;
 		height: 120px;
 		margin: 0 auto 10px;
-		background-image: url('/assets/sprites/symbolsStatic/symbolsStatic.png');
+		background-image: url('assets/sprites/symbolsStatic/symbolsStatic.png');
 		background-repeat: no-repeat;
 		background-size: 600px 360.6px;
 	}
