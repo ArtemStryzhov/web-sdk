@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Container, Sprite } from 'pixi-svelte';
 	import { FadeContainer, LoadingProgress } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
@@ -13,12 +14,38 @@
 
 	const props: Props = $props();
 	const context = getContext();
+	let resizeTick = $state(0);
+
+	const debounce = (func: () => void, delay: number) => {
+		let timeoutId: ReturnType<typeof setTimeout> | null = null;
+		return () => {
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
+
+			timeoutId = setTimeout(() => {
+				func();
+			}, delay);
+		};
+	};
+
+	const refreshViewport = () => {
+		resizeTick++;
+	};
 
 	// Calculate logo scale based on layout and screen height
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const logoGlobalScale = 0.95;
 	const isWidth1124OrLess = $derived(canvasSizes.width <= 1124);
+	const isViewport1200x675Like = $derived.by(() => {
+		if (layoutType !== 'desktop') {
+			return false;
+		}
+
+		const similarity = Math.min(canvasSizes.width / 1200, canvasSizes.height / 675);
+		return similarity >= 0.97 && similarity <= 1.03;
+	});
 	const isMidDesktopViewport = $derived.by(() => {
 		if (layoutType !== 'desktop') {
 			return false;
@@ -27,8 +54,11 @@
 		const similarity = Math.min(canvasSizes.width / 1200, canvasSizes.height / 675);
 		return similarity >= 0.9 && similarity <= 1.2;
 	});
+	const logoYOffset1200x675 = $derived(isViewport1200x675Like ? -5 : 0);
 const logoScale = $derived(
 	(() => {
+		resizeTick;
+
 		if (layoutType === 'desktop') {
 			let scale = 0.4;
 
@@ -47,8 +77,12 @@ const logoScale = $derived(
 				scale *= 0.8;
 			}
 
-			if (isMidDesktopViewport) {
+			if (isMidDesktopViewport && !isViewport1200x675Like) {
 				scale *= 0.85;
+			}
+
+			if (isViewport1200x675Like) {
+				scale *= 0.85 * 0.85 * 0.95;
 			}
 
 			if (isWidth1124OrLess) {
@@ -79,6 +113,30 @@ const logoScale = $derived(
 	})()
 );
 
+	onMount(() => {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		const onResize = debounce(() => {
+			refreshViewport();
+		}, 300);
+		const onResizeImmediate = () => {
+			refreshViewport();
+			onResize();
+		};
+
+		window.addEventListener('resize', onResizeImmediate);
+		window.addEventListener('orientationchange', onResizeImmediate);
+		window.visualViewport?.addEventListener('resize', onResizeImmediate);
+
+		return () => {
+			window.removeEventListener('resize', onResizeImmediate);
+			window.removeEventListener('orientationchange', onResizeImmediate);
+			window.visualViewport?.removeEventListener('resize', onResizeImmediate);
+		};
+	});
+
 	let stonesFalling = $state(false);
 
 	const onPressToContinue = () => {
@@ -97,7 +155,7 @@ const logoScale = $derived(
 		key="logo_v.png"
 		anchor={{ x: 0.5, y: 0 }}
 		x={canvasSizes.width * 0.5}
-		y={20}
+		y={20 + logoYOffset1200x675}
 		width={719 * logoScale}
 		height={628 * logoScale}
 	/>
@@ -129,7 +187,7 @@ const logoScale = $derived(
 		key="logo_v.png"
 		anchor={{ x: 0.5, y: 0 }}
 		x={canvasSizes.width * 0.5}
-		y={20}
+		y={20 + logoYOffset1200x675}
 		width={719 * logoScale}
 		height={628 * logoScale}
 		zIndex={10002}

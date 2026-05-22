@@ -31,6 +31,24 @@
 
 	// Font loading state
 	let fontLoaded = $state(false);
+	let resizeTick = $state(0);
+
+	const debounce = (func: () => void, delay: number) => {
+		let timeoutId: ReturnType<typeof setTimeout> | null = null;
+		return () => {
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+			}
+
+			timeoutId = setTimeout(() => {
+				func();
+			}, delay);
+		};
+	};
+
+	const refreshViewport = () => {
+		resizeTick++;
+	};
 
 	// Helper function to convert screen coordinates to PIXI world coordinates
 	const screenToWorldX = (clientX: number): number => {
@@ -158,11 +176,25 @@
 			window.addEventListener('pointerup', handleGlobalPointerUp, { passive: false });
 			window.addEventListener('pointercancel', handleGlobalPointerCancel, { passive: false });
 
+			const debouncedResize = debounce(() => {
+				refreshViewport();
+			}, 300);
+			const onResizeImmediate = () => {
+				refreshViewport();
+				debouncedResize();
+			};
+			window.addEventListener('resize', onResizeImmediate);
+			window.addEventListener('orientationchange', onResizeImmediate);
+			window.visualViewport?.addEventListener('resize', onResizeImmediate);
+
 			return () => {
 				window.removeEventListener('pointerdown', handleGlobalPointerDown);
 				window.removeEventListener('pointermove', handleGlobalPointerMove);
 				window.removeEventListener('pointerup', handleGlobalPointerUp);
 				window.removeEventListener('pointercancel', handleGlobalPointerCancel);
+				window.removeEventListener('resize', onResizeImmediate);
+				window.removeEventListener('orientationchange', onResizeImmediate);
+				window.visualViewport?.removeEventListener('resize', onResizeImmediate);
 			};
 		}
 	});
@@ -183,7 +215,21 @@
 	const isSmallDesktop = $derived(isDesktop && canvasSizes.width < 1600 && canvasSizes.height < 800);
 	const isNarrowDesktop = $derived(isDesktop && canvasSizes.width <= 1024);
 	const isNarrowDesktop1200 = $derived(isDesktop && canvasSizes.width < 1200);
-	const isBigDesktop = $derived(isDesktop && canvasSizes.width > 2700 && canvasSizes.height > 1400);
+	const firstBlockLargeDesktopScale = $derived.by(() => {
+		if (canvasSizes.width > 2900) {
+			return 0.82;
+		}
+
+		if (canvasSizes.width > 2500) {
+			return 0.85;
+		}
+
+		if (canvasSizes.width > 2250) {
+			return 0.9;
+		}
+
+		return 1;
+	});
 	const isWidth1050OrLess = $derived(canvasSizes.width <= 1050);
 	const isWidth1124OrLess = $derived(canvasSizes.width <= 1124);
 	const widthBasedTextScale = $derived(
@@ -201,11 +247,44 @@
 		const similarity = Math.min(canvasSizes.width / 375, canvasSizes.height / 667);
 		return similarity >= 0.95 && similarity <= 1.05;
 	});
+	const isViewport1200x675Like = $derived.by(() => {
+		resizeTick;
+
+		if (!isDesktop) {
+			return false;
+		}
+
+		const similarity = Math.min(canvasSizes.width / 1200, canvasSizes.height / 675);
+		return similarity >= 0.97 && similarity <= 1.03;
+	});
+	const isViewport1024x576Like = $derived.by(() => {
+		resizeTick;
+
+		if (!isDesktop) {
+			return false;
+		}
+
+		const similarity = Math.min(canvasSizes.width / 1024, canvasSizes.height / 576);
+		return similarity >= 0.97 && similarity <= 1.03;
+	});
 	const viewport425x812TextScale = $derived(isViewport425x812Like ? 1.15 : 1);
 	const viewport375x667BlockScale = $derived(isViewport375x667Like ? 1.15 : 1);
+	const firstBlockResolutionTextScale = $derived.by(() => {
+		if (isViewport1024x576Like) {
+			// Keep the first block at exactly 20% smaller on this viewport (10% more than before).
+			return 0.8 / widthBasedTextScale;
+		}
+
+		return 1;
+	});
+	const buttonYOffset1200x675 = $derived(isViewport1200x675Like ? 40 : 0);
 	const firstBlockExtraLeftPadding = $derived(isViewport800x450Like ? 20 : 0);
+	const firstBlockLargeDesktopTopPadding = $derived(canvasSizes.width > 2250 ? 10 : 0);
 	const firstBlockExtraTopPadding = $derived(
-		(isViewport800x450Like ? 30 : 0) + (isViewport425x812Like ? 15 : 0)
+		(isViewport800x450Like ? 30 : 0) +
+		(isViewport425x812Like ? 15 : 0) +
+		(isViewport1200x675Like ? 10 : 0) +
+		firstBlockLargeDesktopTopPadding
 	);
 	const isMidDesktopViewport = $derived.by(() => {
 		if (!isDesktop) {
@@ -508,6 +587,7 @@
 	// Position button above the bottom of the blocks (accounting for button center anchor)
 	// Margin reduced by 60%: 30px * 0.4 = 12px
 	const buttonY = $derived(framesY + frameHeight * 0.5 + 12 + (buttonHeight * buttonScale * 0.5) + (isSmallScreen ? 40 : 0));
+	const buttonYWithViewportOffset = $derived(buttonY + buttonYOffset1200x675);
 
 	// Frame text content
 	const frameTexts = [
@@ -557,7 +637,7 @@
 			(isLandscapeLayout ? 1.2 : 1) *
 			(isNarrowDesktop1200 ? 1.15 : 1) *
 			(isUltraNarrow ? 0.8 : 1) *
-			(isBigDesktop ? 0.9 : 1) * // 10% smaller on big desktop screens (e.g. 3008x1513)
+			firstBlockLargeDesktopScale * // Width-based large-screen reduction for first block text
 			(isSmallScreen ? 0.8 * 0.9 : 1) * // 20% + extra 10% smaller on screens < 380px wide
 			portraitTextScale *
 			tabletTextScale *
@@ -567,7 +647,8 @@
 			ultraNarrowTextScale * // Additional 15% for all screens with width < 500
 			1.07 * // Additional 7% increase for welcome box text
 			viewport425x812TextScale * // 15% larger on 425x812-like screens
-			widthBasedTextScale, // Width-based reduction tier for 1124 and 1050 breakpoints
+			widthBasedTextScale * // Width-based reduction tier for 1124 and 1050 breakpoints
+			firstBlockResolutionTextScale, // Viewport-specific first-block adjustments
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -897,7 +978,7 @@ const textStyle = $derived({
 	<MainContainer alignVertical="bottom" zIndex={10000}>
 		<Container
 			x={buttonX}
-			y={buttonY}
+			y={buttonYWithViewportOffset}
 			eventMode="static"
 			cursor="pointer"
 			interactive={true}
