@@ -157,18 +157,22 @@
 			const ctx = canvas.getContext('2d');
 			if (!ctx) return;
 
-			// Create PIXI texture from canvas
+			// Create PIXI texture from canvas — created ONCE, then pixels are re-uploaded via
+			// texture.source.update() each frame instead of destroy+Texture.from every frame.
+			// The old destroy+from pattern allocated a new GPU texture 60 fps, filling VRAM.
 			const updateTexture = () => {
 				if (canvas && lottieCanvas && ctx && pixiContext) {
 					// Copy Lottie canvas to our canvas
 					ctx.clearRect(0, 0, canvas.width, canvas.height);
 					ctx.drawImage(lottieCanvas, 0, 0, actualWidth, actualHeight);
 
-					// Always create/update texture - even if empty, it will update when Lottie renders
-					if (texture) {
-						texture.destroy();
+					if (!texture) {
+						// First frame: create the GPU texture once
+						texture = PIXI.Texture.from(canvas);
+					} else {
+						// Subsequent frames: re-upload changed pixels into the SAME GPU allocation
+						texture.source.update();
 					}
-					texture = PIXI.Texture.from(canvas);
 					
 					// If we were transitioning and now have a new texture, clean up oldTexture
 					if (isTransitioning && oldTexture && texture) {
@@ -295,10 +299,11 @@
 					ctx.clearRect(0, 0, canvas.width, canvas.height);
 					ctx.drawImage(videoElement, drawX, drawY, drawWidth, drawHeight);
 
-					if (texture) {
-						texture.destroy();
+					if (!texture) {
+						texture = PIXI.Texture.from(canvas);
+					} else {
+						texture.source.update();
 					}
-					texture = PIXI.Texture.from(canvas);
 					
 					// If we were transitioning and now have a new texture, clean up oldTexture
 					if (isTransitioning && oldTexture && texture) {
@@ -373,10 +378,11 @@
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				ctx.drawImage(img, 0, 0, actualWidth, actualHeight);
 
-				if (texture) {
-					texture.destroy();
+				if (!texture) {
+					texture = PIXI.Texture.from(canvas);
+				} else {
+					texture.source.update();
 				}
-				texture = PIXI.Texture.from(canvas);
 				
 				// If we were transitioning and now have a new texture, clean up oldTexture
 				if (isTransitioning && oldTexture && texture) {

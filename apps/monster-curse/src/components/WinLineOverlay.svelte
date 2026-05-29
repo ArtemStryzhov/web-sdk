@@ -91,15 +91,17 @@
 		duration: number,
 		easing: (t: number) => number = (t) => t,
 		onDone?: () => void,
-	) {
+	): number {
 		const start = performance.now();
+		let rafId: number;
 		const tick = (now: number) => {
 			const t = Math.min((now - start) / duration, 1);
 			setter(from + (to - from) * easing(t));
-			if (t < 1) requestAnimationFrame(tick);
+			if (t < 1) rafId = requestAnimationFrame(tick);
 			else onDone?.();
 		};
-		requestAnimationFrame(tick);
+		rafId = requestAnimationFrame(tick);
+		return rafId;
 	}
 
 	const context = getContext();
@@ -155,12 +157,23 @@
 	// Non-reactive timer/RAF tracking keyed by lineIndex
 	const lineRafIds = new Map<number, number>();
 	const linePhase2Timers = new Map<number, ReturnType<typeof setTimeout>>();
+	// Extra RAF IDs spawned by animateValue calls (text scale/alpha transitions)
+	const lineAnimateValueRafIds = new Map<number, number[]>();
+
+	function addAnimateValueRaf(lineIndex: number, rafId: number): void {
+		const ids = lineAnimateValueRafIds.get(lineIndex) ?? [];
+		ids.push(rafId);
+		lineAnimateValueRafIds.set(lineIndex, ids);
+	}
 
 	function cancelLineTimers(lineIndex: number): void {
 		const rafId = lineRafIds.get(lineIndex);
 		if (rafId !== undefined) { cancelAnimationFrame(rafId); lineRafIds.delete(lineIndex); }
 		const timer = linePhase2Timers.get(lineIndex);
 		if (timer !== undefined) { clearTimeout(timer); linePhase2Timers.delete(lineIndex); }
+		// Cancel any in-flight animateValue RAF loops for this line
+		const avIds = lineAnimateValueRafIds.get(lineIndex);
+		if (avIds) { avIds.forEach(id => cancelAnimationFrame(id)); lineAnimateValueRafIds.delete(lineIndex); }
 	}
 
 	function startRevealForLine(lineIndex: number): void {
@@ -188,30 +201,30 @@
 		line.totalScale = 0; line.totalAlpha = 0;
 
 		// Phase 1 – pop-in
-		animateValue(
+		addAnimateValueRaf(lineIndex, animateValue(
 			(v) => { const l = activeLines.find(x => x.lineIndex === lineIndex); if (l) l.baseScale = v; },
 			0, 1, TEXT_POPUP_DURATION, easeOutBack,
-		);
+		));
 
 		if (multiplier > 1) {
 			const timer = setTimeout(() => {
 				linePhase2Timers.delete(lineIndex);
-				animateValue(
+				addAnimateValueRaf(lineIndex, animateValue(
 					(v) => { const l = activeLines.find(x => x.lineIndex === lineIndex); if (l) l.baseAlpha = v; },
 					1, 0, 150, undefined,
 					() => { const l = activeLines.find(x => x.lineIndex === lineIndex); if (l) l.showBase = false; },
-				);
+				));
 				const l = activeLines.find(x => x.lineIndex === lineIndex);
 				if (l) {
 					l.showTotal = true;
-					animateValue(
+					addAnimateValueRaf(lineIndex, animateValue(
 						(v) => { const m = activeLines.find(x => x.lineIndex === lineIndex); if (m) m.totalScale = v; },
 						0, 1, TEXT_POPUP_DURATION, easeOutBack,
-					);
-					animateValue(
+					));
+					addAnimateValueRaf(lineIndex, animateValue(
 						(v) => { const m = activeLines.find(x => x.lineIndex === lineIndex); if (m) m.totalAlpha = v; },
 						0, 1, 150,
-					);
+					));
 				}
 			}, PHASE2_DELAY);
 			linePhase2Timers.set(lineIndex, timer);

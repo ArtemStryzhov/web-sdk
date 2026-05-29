@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { memoryDebugger } from '../game/debugMemory';
+	import { getContext } from '../game/context';
+
+	const context = getContext();
 
 	let stats = $state({
 		spinCount: 0,
@@ -8,6 +11,9 @@
 		activeComponents: 0,
 		textureCount: 0,
 		memoryMB: 0,
+		heapUsagePct: 0,
+		gpuTextures: 0,
+		gpuSceneObjects: 0,
 	});
 
 	let updateInterval: number;
@@ -31,12 +37,33 @@
 				memory = (performance as any).memory.usedJSHeapSize / 1048576; // Convert to MB
 			}
 
+			// Count GPU-managed textures via PixiJS renderer (tracks VRAM pressure)
+			let gpuTextures = 0;
+			let gpuSceneObjects = 0;
+			try {
+				const renderer = context.stateApp.pixiApplication?.renderer as any;
+				if (renderer) {
+					// PixiJS v8: renderer.texture tracks all GPU-uploaded textures
+					gpuTextures = renderer.texture?.managedTextures?.length ?? 0;
+					// Count total display objects in the scene graph
+					const countObjects = (container: any): number => {
+						let n = 1;
+						if (container.children) for (const c of container.children) n += countObjects(c);
+						return n;
+					};
+					gpuSceneObjects = countObjects(context.stateApp.pixiApplication?.stage);
+				}
+			} catch (_) { /* renderer internals not always available */ }
+
 			stats = {
 				spinCount: report.spinCount,
 				activeAnimations: totalAnimations,
 				activeComponents: totalComponents,
 				textureCount: report.textureCount,
 				memoryMB: memory,
+				heapUsagePct: report.heapUsagePct,
+				gpuTextures,
+				gpuSceneObjects,
 			};
 		}, 2000);
 	});
@@ -79,6 +106,26 @@
 				</span>
 			</div>
 		{/if}
+		{#if stats.heapUsagePct > 0}
+			<div class="debug-stat">
+				<span class="label">Heap %:</span>
+				<span class="value" class:warning={stats.heapUsagePct > 60} class:critical={stats.heapUsagePct > 80}>
+					{stats.heapUsagePct.toFixed(1)}%
+				</span>
+			</div>
+		{/if}
+		<div class="debug-stat">
+			<span class="label">GPU tex:</span>
+			<span class="value" class:warning={stats.gpuTextures > 80} class:critical={stats.gpuTextures > 150}>
+				{stats.gpuTextures}
+			</span>
+		</div>
+		<div class="debug-stat">
+			<span class="label">Scene obj:</span>
+			<span class="value" class:warning={stats.gpuSceneObjects > 500} class:critical={stats.gpuSceneObjects > 1000}>
+				{stats.gpuSceneObjects}
+			</span>
+		</div>
 		<div class="debug-footer">
 			Press F12 for details
 		</div>
@@ -132,6 +179,11 @@
 	.value.warning {
 		color: #ff9900;
 		animation: pulse 1s ease-in-out infinite;
+	}
+
+	.value.critical {
+		color: #ff3333;
+		animation: pulse 0.5s ease-in-out infinite;
 	}
 
 	.debug-footer {

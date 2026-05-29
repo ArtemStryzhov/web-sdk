@@ -60,6 +60,7 @@ type Props = {
 			const peakTime = 1200; // 1.2 seconds
 			
 			const startTime = Date.now();
+			let rafId: number;
 			
 			const animate = () => {
 				const elapsed = Date.now() - startTime;
@@ -80,14 +81,19 @@ type Props = {
 				multiplierScale = scale;
 				
 				if (progress < 1) {
-					requestAnimationFrame(animate);
+					rafId = requestAnimationFrame(animate);
 				} else {
 					// Ensure we end at exactly 1.0
 					multiplierScale = 1.0;
 				}
 			};
 			
-			requestAnimationFrame(animate);
+			rafId = requestAnimationFrame(animate);
+
+			// Cancel the RAF loop when the effect re-runs (state changes) or component unmounts
+			return () => {
+				cancelAnimationFrame(rafId);
+			};
 		} else if (props.state !== 'land' && props.state !== 'win') {
 			// Reset scale when not in land or win state
 			multiplierScale = 1.0;

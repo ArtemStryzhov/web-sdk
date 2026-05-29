@@ -35,17 +35,26 @@
 		if (props.emit) emitter.init(updatedConfig);
 	});
 
+	// Keep a reference to the ticker function so it can be removed on destroy.
+	// Previously the listener was added but never removed, accumulating on each mount.
+	let tickerFn: (() => void) | null = null;
+
 	if (context.stateApp.pixiApplication) {
-		context.stateApp.pixiApplication.ticker.add(() => {
+		const ticker = context.stateApp.pixiApplication.ticker;
+		tickerFn = () => {
 			if (context.stateApp.pixiApplication) {
 				const deltaUpdate =
 					context.stateApp.pixiApplication.ticker.deltaMS * (props.emitSpeed || 0.00234);
 				emitter.update(deltaUpdate);
 			}
-		});
+		};
+		ticker.add(tickerFn);
 	}
 
 	onDestroy(() => {
+		if (tickerFn && context.stateApp.pixiApplication) {
+			context.stateApp.pixiApplication.ticker.remove(tickerFn);
+		}
 		emitter.emit = false;
 		emitter.destroy();
 	});

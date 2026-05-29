@@ -6,6 +6,15 @@
  * - Call trackAnimation() when creating animations
  * - Call logMemorySnapshot() periodically (e.g., every 10 spins)
  * - Call getMemoryReport() to see current state
+ *
+ * Enable via URL: ?debugMemory=true
+ * Enable at runtime: window.memoryDebugger.enable()
+ *
+ * Known leak areas to watch:
+ *  - Howler 'end' listeners (fixed: now uses once())
+ *  - StoneAnimation RAF loops (fixed: cancelled on unmount)
+ *  - StoneFXOverlay event emitter subscription (fixed: unsubscribed on destroy)
+ *  - WinLineOverlay animateValue RAF loops (fixed: tracked and cancelled)
  */
 
 interface ComponentTracker {
@@ -147,12 +156,31 @@ class MemoryDebugger {
 		// Log browser memory if available
 		if (typeof performance !== 'undefined' && (performance as any).memory) {
 			const memory = (performance as any).memory;
+			const usagePct = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
 			console.log('Browser Memory:', {
 				usedJSHeapSize: `${(memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
 				totalJSHeapSize: `${(memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
 				jsHeapSizeLimit: `${(memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`,
-				usage: `${((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100).toFixed(2)}%`,
+				usage: `${usagePct.toFixed(2)}%`,
 			});
+			if (usagePct > 70) {
+				console.warn(`[MemoryDebug] ⚠️ Heap usage is ${usagePct.toFixed(1)}% — risk of OOM on low-memory devices!`);
+			}
+		}
+
+		// Log Howler global listener count as a proxy for createPlayOnce leak
+		try {
+			// @ts-ignore – Howler internal
+			const howlerList = (globalThis as any).Howler?._howls as unknown[];
+			if (Array.isArray(howlerList)) {
+				const totalHandlers = howlerList.reduce((sum: number, h: any) => {
+					const evts = h?._sounds ?? [];
+					return sum + evts.length;
+				}, 0);
+				console.log(`Howler active sounds across all Howl instances: ${totalHandlers}`);
+			}
+		} catch (_) {
+			// Howler internals may not be accessible
 		}
 
 		// Log component statistics
@@ -199,12 +227,19 @@ class MemoryDebugger {
 		textureCount: number;
 		components: ComponentTracker[];
 		animations: AnimationTracker[];
+		heapUsagePct: number;
 	} {
+		let heapUsagePct = 0;
+		if (typeof performance !== 'undefined' && (performance as any).memory) {
+			const mem = (performance as any).memory;
+			heapUsagePct = (mem.usedJSHeapSize / mem.jsHeapSizeLimit) * 100;
+		}
 		return {
 			spinCount: this.spinCount,
 			textureCount: this.textureCount,
 			components: Array.from(this.components.values()),
 			animations: Array.from(this.animations.values()),
+			heapUsagePct,
 		};
 	}
 

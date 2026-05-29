@@ -27,6 +27,7 @@
 	// Animation state
 	let isAnimating = $state(false);
 	let stoneYPositions = $state<number[]>([]); // Y positions for each stone
+	let activeAnimationId: number | null = null; // Tracked at component scope so cleanup can cancel it
 	let stoneDimensions = $state({ width: 0, height: 0, offsetX: 0, useTiled: false, tilesCount: 1, scale: 1 });
 	let currentCycle = $state(0); // Track which cycle we're on (0 to CYCLES-1)
 	let hasStarted = $state(false); // Track if animation sequence has been initiated
@@ -108,7 +109,7 @@
 			-stoneDimensions.height - (i * stoneDimensions.height)
 		);
 		
-		let animationId: number | null = null;
+		activeAnimationId = null;
 		let animationStartTime = Date.now();
 		let lastTime = Date.now();
 		// Track when each stone should start (in seconds from cycle start)
@@ -139,7 +140,7 @@
 				// Cycle complete - clean up
 				isAnimating = false;
 				stoneYPositions = [];
-				animationId = null;
+				activeAnimationId = null;
 
 				// Check if we have more cycles to play
 				if (cycleIndex < CYCLES - 1) {
@@ -155,11 +156,11 @@
 					}
 				}
 			} else {
-				animationId = requestAnimationFrame(animate);
+				activeAnimationId = requestAnimationFrame(animate);
 			}
 		};
 
-		animationId = requestAnimationFrame(animate);
+		activeAnimationId = requestAnimationFrame(animate);
 	};
 
 	// Start the full animation sequence
@@ -182,10 +183,13 @@
 		}
 	});
 
-	// Cleanup animation when component unmounts
+	// Cancel any running RAF loop when the component is destroyed to prevent memory leaks.
 	$effect(() => {
 		return () => {
-			// Any cleanup if needed
+			if (activeAnimationId !== null) {
+				cancelAnimationFrame(activeAnimationId);
+				activeAnimationId = null;
+			}
 		};
 	});
 </script>

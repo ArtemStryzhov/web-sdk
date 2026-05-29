@@ -11,6 +11,7 @@
 </script>
 
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { propsSyncEffect } from '../utils.svelte';
 	import { setContextSpine, getContextParent } from '../context.svelte';
 
@@ -26,7 +27,19 @@
 
 	propsSyncEffect({ props, target: spine, ignore: ['children'] });
 
-	parentContext.addToParent(spine);
+	// Manually manage parent add/remove so we can call destroy({ children: true }).
+	// The generic addToParent helper calls node.destroy() with no options, which only
+	// removes the container from the scene graph but does NOT free the internal slot
+	// meshes (MeshGeometry GPU VBOs) that Spine creates. Over many spins those GPU
+	// buffers accumulate in VRAM until the driver kills the WebGL context.
+	onMount(() => {
+		parentContext.parent.addChild(spine);
+		parentContext.parent.sortChildren();
+		return () => {
+			if (spine) spine.destroy({ children: true });
+		};
+	});
+
 	setContextSpine(spine);
 </script>
 

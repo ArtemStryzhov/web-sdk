@@ -21,7 +21,10 @@ export function createPlayOnce<TSoundName extends string>(options: {
 
 		options.initSoundVolume(sound.soundName);
 
-		options.howl.on('end', (soundIdOnEnd) => {
+		// Use once() instead of on() to avoid accumulating end-listeners on every play call.
+		// howl.on('end') never removes the handler, causing thousands of orphaned listeners
+		// after extended play sessions (major memory leak).
+		options.howl.once('end', (soundIdOnEnd) => {
 			if (soundIdOnEnd === soundId) {
 				options.howl.stop(soundId);
 				delete options.getSoundMap()[sound.soundName];

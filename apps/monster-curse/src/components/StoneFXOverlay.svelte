@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { eventEmitter } from '../game/eventEmitter';
 	import { getContext } from '../game/context';
@@ -24,8 +25,10 @@
 		sound.players.once.play({ name: 'sfx_transition', forcePlay: true });
 	};
 
-	// Listen for freeSpinOutroHide to trigger stones animation after total win
-	eventEmitter.subscribeHandlerMap({
+	// Listen for freeSpinOutroHide to trigger stones animation after total win.
+	// Store the unsubscribe function so we can clean up on component destroy and
+	// prevent orphaned handlers accumulating in the global event emitter.
+	const unsubscribe = eventEmitter.subscribeHandlerMap({
 		freeSpinIntroShow: async () => {
 			// Base to free: play immediately when freespin intro shows
 			if (!show) {
@@ -79,6 +82,8 @@
 			}
 		},
 	});
+
+	onDestroy(unsubscribe);
 </script>
 
 <FadeContainer show={show} zIndex={props.zIndex ?? 10050}>
