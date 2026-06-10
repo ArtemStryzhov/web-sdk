@@ -137,9 +137,11 @@
 	{#if winLevelData}
 		{@const isBigWin = winLevelData.type === 'big'}
 		{@const bigWinLevels = isBigWin ? calculateBigWinLevels(winLevelData.level) : [winLevelData.level]}
-		{@const duration = winLevelData.presentDuration <= 1 * SECOND
-			? Math.max(winLevelData.presentDuration, 1.8 * SECOND)
-			: Math.max(winLevelData.presentDuration, 2.2 * SECOND)}
+		{@const duration = isBigWin
+			? winLevelData.presentDuration <= 1 * SECOND
+				? Math.max(winLevelData.presentDuration, 1.8 * SECOND)
+				: Math.max(winLevelData.presentDuration, 2.2 * SECOND)
+			: 0}
 		{@const perScreenDuration = bigWinLevels.length > 0 ? duration / bigWinLevels.length : duration}
 		{@const normalisedAmount = bookEventAmountToNormalisedAmount(amount)}
 		{@const shouldShowCoins = normalisedAmount > 3}
@@ -209,8 +211,10 @@
 					}}
 				/>
 
-				<!-- Persistent counter -->
-				<WinCounter {countUpAmount} />
+				<!-- Show win amount only for big wins -->
+				{#if isBigWin}
+					<WinCounter {countUpAmount} />
+				{/if}
 
 				<!-- Sequential win level screens -->
 				{#if isBigWin && bigWinLevels.length > 0}

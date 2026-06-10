@@ -546,11 +546,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			});
 		});
 
-		// Animate all win lines in parallel with a 500ms stagger between each
+		// Animate win lines sequentially.
+		// Parallel processing can race on shared symbols when one symbol participates in multiple lines.
 		const WIN_LINE_STAGGER_MS = 500;
-		await Promise.all(bookEvent.wins.map((win, i) => (async () => {
+		for (const [i, win] of bookEvent.wins.entries()) {
 			logHighlight(stateGame.round, win, i + 1, bookEvent.wins.length);
-			if (i > 0) await new Promise(r => setTimeout(r, WIN_LINE_STAGGER_MS * i));
+			if (i > 0) await new Promise(r => setTimeout(r, WIN_LINE_STAGGER_MS));
 
 			const winPositionsWithoutS = win.positions.filter((pos: Position) => {
 				const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
@@ -583,7 +584,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 			// Hide this win-line overlay after its symbols finish
 			eventEmitter.broadcast({ type: 'winLineHide', lineIndex: win.meta.lineIndex });
-		})()));
+		}
 		await playPendingBonusTriggerAnimation();
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {

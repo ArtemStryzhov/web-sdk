@@ -129,13 +129,14 @@ const loopWinAnimations = async () => {
 			});
 		});
 
-		// Animate all win lines in parallel with a 500ms stagger between each
+		// Animate win lines sequentially.
+		// Parallel processing can race on shared symbols when one symbol participates in multiple lines.
 		const WIN_LINE_STAGGER_MS = 500;
 		if (stateGame.shouldLoopWinAnimations) {
-			await Promise.all(wins.map((win: any, i: number) => (async () => {
-				if (!stateGame.shouldLoopWinAnimations) return;
-				if (i > 0) await new Promise(r => setTimeout(r, WIN_LINE_STAGGER_MS * i));
-				if (!stateGame.shouldLoopWinAnimations) return;
+			for (const [i, win] of wins.entries()) {
+				if (!stateGame.shouldLoopWinAnimations) break;
+				if (i > 0) await new Promise(r => setTimeout(r, WIN_LINE_STAGGER_MS));
+				if (!stateGame.shouldLoopWinAnimations) break;
 
 				const winPositionsWithoutS = win.positions.filter((pos: Position) => {
 					const reelSymbol = stateGame.board[pos.reel].reelState.symbols[normalizeRowIndex(pos.row, pos.reel)];
@@ -161,7 +162,7 @@ const loopWinAnimations = async () => {
 
 				// Hide this win-line overlay after its symbols finish
 				eventEmitter.broadcast({ type: 'winLineHide', lineIndex: win.meta?.lineIndex ?? 0 });
-			})()));
+			}
 		}
 
 		// Don't loop in bonus game (freegame) - show each line just once
