@@ -496,11 +496,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (sSymbolsInWins.length > 0) {
 			const sSymbolsToAnimate = sSymbolsInWins.filter((position) => {
 				const reelSymbol = stateGame.board[position.reel].reelState.symbols[normalizeRowIndex(position.row, position.reel)];
-				const positionKey = getPositionKey(position.reel, position.row);
-				const isStickyCarryOver = stateGame.activeStickySwordKeys.includes(positionKey);
 				const isAlreadyExpanded = reelSymbol.symbolState === 'expand';
-
-				return !isStickyCarryOver && !isAlreadyExpanded;
+				// Note: do NOT exclude sticky carry-overs here — after each bonus spin the reel
+				// landing resets sticky S symbols from 'expand' back to 'static', so they need
+				// to be re-expanded with animation every spin. The isAlreadyExpanded guard is
+				// sufficient to prevent double-expansion.
+				return !isAlreadyExpanded;
 			});
 
 			const expansionPositions = generateSSymbolExpansionPositions(sSymbolsToAnimate);
@@ -589,6 +590,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
+		// After all win processing, ensure sticky sword symbols are in 'expand' state.
+		// This handles: (a) swords that expanded this spin but had no wins (winInfo skipped them),
+		// and (b) any symbol that stickySwordEvent couldn't pre-set because expandAnimation was pending.
+		stateGame.stickySwordPositions.forEach(position => {
+			const reelSymbol = stateGame.board[position.reel]?.reelState?.symbols?.[normalizeRowIndex(position.row, position.reel)];
+			if (reelSymbol && reelSymbol.rawSymbol.name === 'S' && reelSymbol.symbolState !== 'expand') {
+				reelSymbol.rawSymbol.expandAnimation = undefined;
+				reelSymbol.symbolState = 'expand';
+			}
+		});
 	},
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
 		await playPendingBonusTriggerAnimation();
@@ -791,9 +802,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				continue;
 			}
 			
-			// Preserve existing rawSymbol fields but clear explicit expandAnimation when sticky state
-			// takes over. The real swordExpandEvent animation should already have finished before we
-			// get here, and from this point on the symbol should just hold its final expanded pose.
 			reelSymbol.rawSymbol = {
 				...reelSymbol.rawSymbol, // Preserve existing fields like collectedMultiplier
 				name: 'S',
@@ -801,12 +809,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				// reelPosition represents expansion level (0-4) based on which visible row (1-5)
 				reelPosition: position.row - 1,
 				multiplier: position.multiplier,
-				expandAnimation: undefined, // Always clear — prevents stale animation in subsequent spins
+				// Preserve expandAnimation if swordExpandEvent already set it this spin.
+				// Do NOT set it ourselves — winInfo will compute it from reelPosition.
+				expandAnimation: reelSymbol.rawSymbol.expandAnimation,
 			} as any;
 
-			// Keep sticky S symbols in 'expand' state to maintain visual expansion
-			// even when they don't participate in win combinations
-			reelSymbol.symbolState = 'expand';
+			// Never set symbolState='expand' here.
+			// winInfo animates and sets 'expand' for positions in a win line.
+			// setTotalWin snaps to 'expand' for positions not in any win line.
 		}
 	},
 	swordExpandEvent: async (bookEvent: BookEventOfType<'swordExpandEvent'>, { bookEvents }: BookEventContext) => {

@@ -217,7 +217,7 @@
 	const isNarrowDesktop1200 = $derived(isDesktop && canvasSizes.width < 1200);
 	const firstBlockLargeDesktopScale = $derived.by(() => {
 		if (canvasSizes.width > 2900) {
-			return 0.82;
+			return 0.74;
 		}
 
 		if (canvasSizes.width > 2500) {

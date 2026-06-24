@@ -225,8 +225,8 @@
 					</Container>
 				</MainContainer>
 
-				<!-- Coins animation - only render when counter is not completed -->
-				{#if !countUpCompletedParam}
+				<!-- Coins animation - only render when counter is not completed and win is big -->
+				{#if !countUpCompletedParam && winLevelData?.type === 'big'}
 					<WinCoins emit={true} levelAlias={winLevelData?.alias} />
 				{/if}
 

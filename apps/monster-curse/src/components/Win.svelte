@@ -144,7 +144,7 @@
 			: 0}
 		{@const perScreenDuration = bigWinLevels.length > 0 ? duration / bigWinLevels.length : duration}
 		{@const normalisedAmount = bookEventAmountToNormalisedAmount(amount)}
-		{@const shouldShowCoins = normalisedAmount > 3}
+		{@const shouldShowCoins = winLevelData?.type === 'big'}
 		
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
