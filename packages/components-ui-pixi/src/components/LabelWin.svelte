@@ -16,10 +16,18 @@
 	const winBookEventAmountTween = new Tween(stateBet.winBookEventAmount);
 	const label = $derived(i18nDerived.win());
 	const value = $derived(bookEventAmountToCurrencyString(winBookEventAmountTween.current));
+	const numericAmount = $derived(stateBet.balanceAmount);
 
 	$effect(() => {
 		winBookEventAmountTween.set(stateBet.winBookEventAmount);
 	});
 </script>
 
-<UiLabel tiled {label} {value} spacing={UI_BASE_FONT_SIZE * 3.9} stacked={props.stacked} />
+<UiLabel
+	tiled
+	{label}
+	{value}
+	{numericAmount}
+	spacing={UI_BASE_FONT_SIZE * 3.9}
+	stacked={props.stacked}
+/>

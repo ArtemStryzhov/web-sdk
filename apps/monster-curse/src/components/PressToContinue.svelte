@@ -247,6 +247,18 @@
 		const similarity = Math.min(canvasSizes.width / 375, canvasSizes.height / 667);
 		return similarity >= 0.95 && similarity <= 1.05;
 	});
+	const isViewport400x225Like = $derived.by(() => {
+		const widthClose = Math.abs(canvasSizes.width - 400) <= 40;
+		const heightClose = Math.abs(canvasSizes.height - 225) <= 30;
+		const ratioClose = Math.abs(canvasSizes.width / canvasSizes.height - 16 / 9) <= 0.05;
+		return isLandscape && widthClose && heightClose && ratioClose;
+	});
+	const isUltraShortLandscape = $derived(
+		isLandscape && canvasSizes.width <= 420 && canvasSizes.height <= 260
+	);
+	const isShortLandscapeLike = $derived(
+		isLandscape && canvasSizes.width <= 1200 && canvasSizes.height <= 600
+	);
 	const isViewport1200x675Like = $derived.by(() => {
 		resizeTick;
 
@@ -269,6 +281,18 @@
 	});
 	const viewport425x812TextScale = $derived(isViewport425x812Like ? 1.15 : 1);
 	const viewport375x667BlockScale = $derived(isViewport375x667Like ? 1.15 : 1);
+	const viewport400x225BlockScale = $derived(isViewport400x225Like ? 0.72 : 1);
+	const viewport400x225TextScale = $derived(isViewport400x225Like ? 1.6632 : 1);
+	const shouldUseCompactBlockGap = $derived(isViewport400x225Like || isUltraShortLandscape);
+	const viewport400x225GapScale = $derived(shouldUseCompactBlockGap ? 0.3 : 1);
+	const compactSpacingOffset = $derived(shouldUseCompactBlockGap ? 40 : 0);
+	const compactSpacingMultiplier = $derived(shouldUseCompactBlockGap ? 0.55 : 1);
+	const shortLandscapeRenderScale = $derived(isShortLandscapeLike ? 0.8 : 1);
+	const compactCenterSpacingCompression = $derived(shouldUseCompactBlockGap ? 0.88 : 1);
+	const frameRenderScale = $derived(
+		viewport375x667BlockScale * shortLandscapeRenderScale * viewport400x225BlockScale
+	);
+	const targetCompactVisibleGap = $derived(shouldUseCompactBlockGap ? 5 : 0);
 	const firstBlockResolutionTextScale = $derived.by(() => {
 		if (isViewport1024x576Like) {
 			// Keep the first block at exactly 20% smaller on this viewport (10% more than before).
@@ -278,7 +302,7 @@
 		return 1;
 	});
 	const buttonYOffset1200x675 = $derived(isViewport1200x675Like ? 40 : 0);
-	const firstBlockExtraLeftPadding = $derived(isViewport800x450Like ? 20 : 0);
+	const firstBlockExtraLeftPadding = $derived((isViewport800x450Like ? 20 : 0) + (isViewport400x225Like ? 25 : 0));
 	const firstBlockLargeDesktopTopPadding = $derived(canvasSizes.width > 2250 ? 10 : 0);
 	const firstBlockExtraTopPadding = $derived(
 		(isViewport800x450Like ? 30 : 0) +
@@ -300,8 +324,8 @@
 	const tabletTextScale = $derived(isTablet ? 1.02 : 1); // Reduced by 40% then additional 15% for tablets (2 * 0.6 * 0.85 = 1.02)
 	const portraitNarrowTextScale = $derived(isPortrait && canvasSizes.width < 500 ? 1.15 : 1); // Increase by 15% for portrait screens with width < 500
 	const ultraNarrowTextScale = $derived(canvasSizes.width < 500 ? 1.15 : 1); // Increase by 15% for all screens with width < 500
-	// Use slider mode for all portrait and tablet screen sizes
-	const isSliderMode = $derived(isPortrait || isTablet);
+	// Use slider mode for portrait/tablet and short landscape screens
+	const isSliderMode = $derived(isPortrait || isTablet || isShortLandscapeLike);
 	const isSmallScreen = $derived(canvasSizes.width < 380);
 
 	const buttonX = $derived(mainLayout.width * 0.5);
@@ -361,7 +385,16 @@
 			// Landscape: shrink frames by 30%
 			const landscapeScale = isLandscapeLayout ? 0.7 : 1;
 
-			return base * extraScale * smallDesktopScale * narrowDesktopScale * landscapeScale;
+			const shortLandscapeBlockScale = isShortLandscapeLike ? 0.8 : 1;
+
+			return (
+				base *
+				extraScale *
+				smallDesktopScale *
+				narrowDesktopScale *
+				landscapeScale *
+				shortLandscapeBlockScale
+			);
 		})()
 	);
 
@@ -378,7 +411,17 @@
 	let dragStartSlideIndex = $state(0); // Track which slide we started dragging from
 	let activePointerId = $state<number | null>(null); // Track the active pointer ID for multi-touch
 
-	const frameSpacing = $derived(frameWidth + frameGap);
+	const frameGapEffective = $derived(frameGap * viewport400x225GapScale);
+	const frameSpacingBase = $derived(frameWidth + frameGapEffective - compactSpacingOffset);
+	const frameSpacing = $derived.by(() => {
+		if (!shouldUseCompactBlockGap) {
+			return frameSpacingBase * compactSpacingMultiplier;
+		}
+
+		const safeRenderScale = Math.max(frameRenderScale, 0.0001);
+		const spacingFromTargetGap = frameWidth + targetCompactVisibleGap / safeRenderScale;
+		return spacingFromTargetGap * compactCenterSpacingCompression;
+	});
 	const sliderFrameOffsets = $derived(
 		Array.from({ length: numFrames }, (_, i) => i * frameSpacing)
 	);
@@ -400,7 +443,7 @@
 	// Normal mode positions (non-slider)
 	const normalFramePositions = $derived(
 		(() => {
-			const framesGroupWidth = frameWidth * numFrames + frameGap * (numFrames - 1);
+			const framesGroupWidth = frameWidth * numFrames + frameGapEffective * (numFrames - 1);
 			const framesGroupStartX = (mainLayout.width - framesGroupWidth) * 0.5;
 			// Shift right by 10% of mainLayout width, but adjust for different layouts
 			let rightShift = mainLayout.width * 0.1;
@@ -412,7 +455,7 @@
 			}
 			return Array.from(
 				{ length: numFrames },
-				(_, i) => framesGroupStartX + i * (frameWidth + frameGap) + frameWidth * 0.5 + rightShift
+				(_, i) => framesGroupStartX + i * (frameWidth + frameGapEffective) + frameWidth * 0.5 + rightShift
 			);
 		})()
 	);
@@ -617,7 +660,9 @@
 			ultraNarrowTextScale * // Additional 15% for all screens with width < 500
 			1.07 * // Additional 7% increase for welcome box text
 			viewport425x812TextScale * // 15% larger on 425x812-like screens
-			widthBasedTextScale, // Width-based reduction tier for 1124 and 1050 breakpoints
+			widthBasedTextScale * // Width-based reduction tier for 1124 and 1050 breakpoints
+			viewport400x225TextScale * // 20% larger on 400x225-like screens
+			(isShortLandscapeLike ? 1.2 : 1), // Increase by 20% on short landscape screens
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -648,7 +693,9 @@
 			1.07 * // Additional 7% increase for welcome box text
 			viewport425x812TextScale * // 15% larger on 425x812-like screens
 			widthBasedTextScale * // Width-based reduction tier for 1124 and 1050 breakpoints
-			firstBlockResolutionTextScale, // Viewport-specific first-block adjustments
+			firstBlockResolutionTextScale *
+			viewport400x225TextScale * // 20% larger on 400x225-like screens
+			(isShortLandscapeLike ? 1.2 : 1), // Increase by 20% on short landscape screens
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
@@ -707,7 +754,12 @@
 	// On tall desktop screens (height > 1300px, e.g. 3008x1384) move the text up by 50px to compensate
 	// for the smaller frameHeight caused by larger mainLayout.scale on taller viewports
 	const frameTextYFirst = $derived(
-		-frameHeight * 0.5 + 145 + (isDesktop && canvasSizes.height > 1300 ? -50 : 0) + (isSmallScreen ? -15 : 0) + firstBlockExtraTopPadding
+		-frameHeight * 0.5 +
+			145 +
+			(isDesktop && canvasSizes.height > 1300 ? -50 : 0) +
+			(isSmallScreen ? -15 : 0) +
+			firstBlockExtraTopPadding +
+			(isShortLandscapeLike ? frameHeight * 0.2 : 0)
 	);
 
 const textStyle = $derived({
@@ -744,7 +796,7 @@ const textStyle = $derived({
 					draw={(graphics) => {
 						graphics.clear();
 						// Make mask wide enough to show all 3 frames plus sliding space
-						const totalFramesWidth = frameWidth * numFrames + frameGap * (numFrames - 1);
+						const totalFramesWidth = frameWidth * numFrames + frameGapEffective * (numFrames - 1);
 						const maxSlideDistance = (numFrames - 1) * frameSpacing;
 						const maskWidth = Math.max(mainLayout.width, totalFramesWidth + maxSlideDistance);
 						graphics.rect(-maskWidth * 0.5, -mainLayout.height * 0.5, maskWidth, mainLayout.height);
@@ -758,7 +810,7 @@ const textStyle = $derived({
 						<Container
 							x={offset}
 							y={0}
-							scale={viewport375x667BlockScale}
+							scale={viewport375x667BlockScale * shortLandscapeRenderScale * viewport400x225BlockScale}
 							eventMode="none"
 						>
 							<!-- Inner background (behind frame) -->
@@ -869,7 +921,7 @@ const textStyle = $derived({
 				<Container
 					x={frameX}
 					y={framesY}
-					scale={viewport375x667BlockScale}
+					scale={viewport375x667BlockScale * shortLandscapeRenderScale * viewport400x225BlockScale}
 					eventMode="none"
 				>
 					<!-- Inner background (behind frame) -->

@@ -12,6 +12,11 @@
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isViewport400x225Like = $derived.by(() => {
+		const similarity = Math.min(canvasSizes.width / 400, canvasSizes.height / 225);
+		return similarity >= 0.97 && similarity <= 1.03;
+	});
 </script>
 
 <Container x={20}>
@@ -117,7 +122,7 @@
 		>
 			<Text
 				x={LANDSCAPE_BASE_SIZE * 5.75}
-				y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 2 - 40}
+				y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 2 - 40 - (isViewport400x225Like ? 25 : 0)}
 				anchor={0.5}
 				text={i18nDerived.mainMenu()}
 				style={{
@@ -146,9 +151,9 @@
 
 	<!-- Close button at top right corner -->
 	<Container
-		x={context.stateLayoutDerived.canvasSizes().width - 80}
-		y={80}
-		scale={0.8}
+		x={isViewport400x225Like ? context.stateLayoutDerived.canvasSizes().width - 20 : context.stateLayoutDerived.canvasSizes().width - 80}
+		y={isViewport400x225Like ? 20 : 80}
+		scale={isViewport400x225Like ? 0.32 : 0.8}
 	>
 		{@render props.buttonClose({ anchor: 0.5 })}
 	</Container>

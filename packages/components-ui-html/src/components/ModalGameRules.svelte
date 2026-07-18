@@ -1,18 +1,33 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { onMount } from 'svelte';
 
 	import { Popup } from 'components-shared';
 	import { zIndex } from 'constants-shared/zIndex';
 	import { stateModal } from 'state-shared';
 
-	import BaseContent from './BaseContent.svelte';
-	import BaseScrollable from './BaseScrollable.svelte';
+	let useShortLandscapePadding = $state(false);
 
-	type Props = {
-		children: Snippet;
+	const updateShortLandscapePadding = () => {
+		if (typeof window === 'undefined') {
+			useShortLandscapePadding = false;
+			return;
+		}
+
+		const nextValue =
+			window.matchMedia('(orientation: landscape)').matches &&
+			window.innerWidth <= 1200 &&
+			window.innerHeight <= 600;
+
+		if (nextValue !== useShortLandscapePadding) {
+			console.info('[ModalGameRules] short landscape padding mode', {
+				enabled: nextValue,
+				width: window.innerWidth,
+				height: window.innerHeight,
+			});
+		}
+
+		useShortLandscapePadding = nextValue;
 	};
-
-	const props: Props = $props();
 
 	const closeModal = () => {
 		stateModal.modal = null;
@@ -23,6 +38,26 @@
 			window.dispatchEvent(new CustomEvent('ui-button-hover'));
 		}
 	};
+
+	onMount(() => {
+		updateShortLandscapePadding();
+
+		const onResize = () => {
+			updateShortLandscapePadding();
+		};
+
+		if (typeof window !== 'undefined') {
+			window.addEventListener('resize', onResize);
+			window.addEventListener('orientationchange', onResize);
+		}
+
+		return () => {
+			if (typeof window !== 'undefined') {
+				window.removeEventListener('resize', onResize);
+				window.removeEventListener('orientationchange', onResize);
+			}
+		};
+	});
 
 </script>
 
@@ -39,8 +74,14 @@
 	</div>
 
 	<Popup zIndex={zIndex.modal} persistent={true} onclose={() => (stateModal.modal = null)}>
-		<BaseContent maxWidth="100%">
-			<BaseScrollable type="column">
+		<div
+			class="rules-scale-wrapper"
+			style={useShortLandscapePadding ? '--rules-content-scale: 1;' : undefined}
+		>
+			<div
+				class="rules-scroll-container"
+				style={useShortLandscapePadding ? 'padding-left: 20px; padding-right: 20px; padding-bottom: 30px;' : undefined}
+			>
 				<div class="rules">
 					<h1>ABOUT THE GAME</h1>
 					<p>Monster Hunt is a 5-reel, 5-row payline slot. The Silver Sword symbol expands upward on each spin. If the Silver Sword passes through an Elixir Flask during its expansion, the flask's multiplier value is applied to the Silver Sword's own multiplier.</p>
@@ -162,8 +203,8 @@
 					<h1>LEGAL NOTICE</h1>
 					<p>Any malfunction renders all bets and payouts void. A stable internet connection is required at all times. Should a disconnection occur, please reload the game to complete any unfinished bets. The theoretical expected return is calculated across a large number of spins. Reel animations are purely illustrative and do not represent any physical device.</p>
 				</div>
-			</BaseScrollable>
-		</BaseContent>
+			</div>
+		</div>
 	</Popup>
 {/if}
 
@@ -184,7 +225,7 @@
 	.close-button-container {
 		position: fixed;
 		top: 40px;
-		right: 40px;
+		right: 0px;
 		z-index: 51;
 		pointer-events: auto;
 	}
@@ -243,14 +284,32 @@
 	}
 
 	// ─── Rules content ───────────────────────────────────────────────────────────
+	.rules-scale-wrapper {
+		--rules-content-scale: 1;
+		width: 100vw;
+		height: 100dvh;
+		min-height: 100vh;
+		transform: scale(var(--rules-content-scale));
+		transform-origin: top center;
+	}
+
+	.rules-scroll-container {
+		width: 100%;
+		height: 100%;
+		overflow-y: auto;
+		overflow-x: hidden;
+		box-sizing: border-box;
+		padding: 40px 30px 60px;
+	}
+
 	.rules {
 		font-family: 'Kanit', Arial, sans-serif;
 		color: #ffffff;
 		font-size: 23px;
 		line-height: 1.35;
 		width: 100%;
-		max-width: 960px;
-		padding: 40px 6px 60px 0;
+		max-width: none;
+		padding: 0;
 		box-sizing: border-box;
 		text-align: left;
 		align-self: stretch;
@@ -418,10 +477,6 @@
 	}
 
 	@media (orientation: portrait) {
-		.rules {
-			padding: 40px 20px 60px;
-		}
-
 		.symbol-rows {
 			flex-direction: row;
 			flex-wrap: wrap;
@@ -448,6 +503,21 @@
 			display: block;
 			margin-left: auto;
 			margin-right: auto;
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.rules-scroll-container {
+			padding-bottom: 12px;
+			padding-left: 12px;
+			padding-right: 12px;
+		}
+	}
+
+	@media (max-width: 799px) {
+		.rules-scroll-container {
+			padding-left: 10px;
+			padding-right: 10px;
 		}
 	}
 
@@ -513,8 +583,24 @@
 		.sword-img { height: 224px; }
 	}
 
+	@media (max-width: 1023px) {
+		.rules-scale-wrapper {
+			--rules-content-scale: 0.8;
+		}
+	}
+
+	@media (max-width: 749px) {
+		.rules-scale-wrapper {
+			--rules-content-scale: 0.68;
+		}
+	}
+
 	// < 450px: 50% of base size
 	@media (max-width: 449px) {
+		.rules-scale-wrapper {
+			--rules-content-scale: 0.578;
+		}
+
 		.symbol-icon {
 			width: 60px;
 			height: 60px;
@@ -534,5 +620,47 @@
 		.img_B .symbol-icon { background-position: 0 -120px; }
 
 		.sword-img { height: 187px; }
+	}
+
+	// Keep tall narrow phones from looking vertically compressed by the <=449 scale rule
+	@media (max-width: 449px) and (min-height: 800px) {
+		.rules-scale-wrapper {
+			--rules-content-scale: 0.95;
+		}
+
+		.rules-scroll-container {
+			padding-bottom: 30px;
+		}
+	}
+
+	// Short narrow phones (e.g. 375x667)
+	@media (max-width: 390px) and (max-height: 700px) {
+		.rules-scale-wrapper {
+			--rules-content-scale: 1;
+		}
+
+		.rules-scroll-container {
+			padding-left: 27px;
+			padding-right: 27px;
+			padding-bottom: 30px;
+		}
+	}
+
+	// Ultra-short landscape screens (e.g. 400x225)
+	@media (max-width: 420px) and (max-height: 260px) {
+		.rules-scroll-container {
+			padding-left: 20px;
+			padding-right: 20px;
+			padding-bottom: 30px;
+		}
+	}
+
+	// High-DPR equivalent of ultra-short landscape screens (e.g. 800x450 CSS viewport)
+	@media (max-width: 840px) and (max-height: 520px) and (orientation: landscape) {
+		.rules-scroll-container {
+			padding-left: 20px !important;
+			padding-right: 20px !important;
+			padding-bottom: 30px !important;
+		}
 	}
 </style>

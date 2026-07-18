@@ -54,13 +54,20 @@ const isPortraitLayout = $derived(layoutType === 'portrait');
 const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
 const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 const mainLayoutStandard = $derived(context.stateLayoutDerived.mainLayoutStandard());
+	const isUltraShortScreen = $derived(canvasSizes.width <= 420 && canvasSizes.height <= 260);
 const shouldUsePortraitStyle = $derived(
 	isPortraitLayout || canvasSizes.width < 800
 );
-const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
+
+	const isLogoMidWidthScreen = $derived(
+		canvasSizes.width > 769 && canvasSizes.width < 1100
+	);
+	const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
+	const logoResponsiveScaleFactor = $derived(isLogoMidWidthScreen ? 0.9 : 1);
 	const portraitLogoScale = $derived(logoScale * 1.05);
 	const nonPortraitLogoScale = $derived(
-		isDesktopLayout ? logoScale * 1.21 : isTabletLayout ? logoScale * 1.6 : logoScale
+		(isDesktopLayout ? logoScale * 1.21 : isTabletLayout ? logoScale * 1.6 : logoScale) *
+			logoResponsiveScaleFactor
 	);
 	const buyBonusScale = $derived(
 		canvasSizes.width < 380
@@ -81,8 +88,13 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 		canvasSizes.width * 0.5 - mainLayoutStandard.width * mainLayoutStandard.scale * 0.5
 	);
 	const portraitLogoY = $derived(
-		isPortraitLayout && (canvasSizes.width < 350 || canvasSizes.height < 570) ? 30 : 65
+		isPortraitLayout && (canvasSizes.width < 350 || canvasSizes.height < 570)
+			? 30
+			: canvasSizes.width <= 375 && canvasSizes.height <= 667
+				? 45
+				: 65
 	);
+	const portraitLogoScaledSize = $derived(portraitLogoScale * logoResponsiveScaleFactor);
 	const portraitBalanceBaseX = $derived(mainLayoutStandard.width * 0.5 - 440 + 50 + 30);
 	const portraitBalanceBaseY = $derived(mainLayoutStandard.height - 170);
 	const narrowPortraitBetOffset = $derived(
@@ -159,10 +171,15 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 	const menuButtonX = $derived(portraitMenuX);
 	const menuButtonY = $derived(portraitMenuY);
 	const mascotXPortrait = $derived(
-		menuButtonX + (canvasSizes.width > 480 && canvasSizes.width < 530 ? 15 : 0)
+		menuButtonX +
+			(canvasSizes.width > 480 && canvasSizes.width < 530 ? 15 : 0) +
+			(isUltraShortScreen ? 40 * portraitUiUnitPerScreenPixel : 0)
 	);
 	const mascotYPortrait = $derived(
 		menuButtonY - 20 - 20 * portraitUiUnitPerScreenPixel - (mascotHeight * mascotScalePortrait) / 2 - (canvasSizes.width < 380 ? 15 : 0) + narrowPortraitMascotYOffset
+	);
+	const mascotScalePortraitAdjusted = $derived(
+		isUltraShortScreen ? mascotScaleSmall * 1.3 : mascotScaleSmall
 	);
 
 	// Force reactivity by accessing derived values when resizeTrigger changes
@@ -263,8 +280,8 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 					anchor={{ x: 0.5, y: 0 }}
 					x={0}
 					y={0}
-					width={250 * portraitLogoScale}
-					height={129 * portraitLogoScale}
+					width={250 * portraitLogoScaledSize}
+					height={129 * portraitLogoScaledSize}
 					zIndex={9}
 				/>
 			</Container>
@@ -300,7 +317,7 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 					format="lottie"
 					loop={true}
 					autoplay={true}
-					scale={mascotScaleSmall}
+					scale={mascotScalePortraitAdjusted}
 					version={winScreenShowing ? 2 : 1}
 				/>
 			</MainContainer>
@@ -360,15 +377,19 @@ const logoScale = $derived(canvasSizes.width < 950 ? 0.5 : 1);
 	{@const frameTopCanvasY = mainLayout.y + (frameTopMainY - mainLayout.height / 2) * mainLayout.scale}
 	{@const containerX = canvasSizes.width - 20}
 	{@const shouldCenterLogo = canvasSizes.width < 650}
-	{@const logoWidth = 250 * nonPortraitLogoScale}
-	{@const logoHeight = 129 * nonPortraitLogoScale}
+	{@const shouldUseUltraShortLogoLayout = !isPortraitLayout && canvasSizes.width <= 420 && canvasSizes.height <= 260}
+	{@const logoSizeMultiplier = shouldUseUltraShortLogoLayout ? 0.6 : 1}
+	{@const logoWidth = 250 * nonPortraitLogoScale * logoSizeMultiplier}
+	{@const logoHeight = 129 * nonPortraitLogoScale * logoSizeMultiplier}
 	{@const logoY = frameTopCanvasY + logoHeight - (isTabletLayout ? 60 : 0)}
 	{@const logoXCenteredCanvas = canvasSizes.width / 2}
-	{@const logoXRightCanvas = frameRightCanvasX + (isDesktopLayout ? 30 : 0)}
+	{@const logoXRightCanvas = shouldUseUltraShortLogoLayout
+		? frameRightCanvasX + 15
+		: frameRightCanvasX + (isDesktopLayout ? 30 : 0)}
 	{@const logoXCentered = logoXCenteredCanvas - containerX}
 	{@const logoXRight = logoXRightCanvas - containerX}
-	{@const logoXFinal = shouldCenterLogo ? logoXCentered : logoXRight}
-	{@const logoAnchor = shouldCenterLogo ? { x: 0.5, y: 1 } : { x: 0, y: 1 }}
+	{@const logoXFinal = shouldUseUltraShortLogoLayout ? logoXRight : shouldCenterLogo ? logoXCentered : logoXRight}
+	{@const logoAnchor = shouldUseUltraShortLogoLayout ? { x: 0, y: 1 } : shouldCenterLogo ? { x: 0.5, y: 1 } : { x: 0, y: 1 }}
 
 	{#if !isPortraitLayout}
 		<Sprite

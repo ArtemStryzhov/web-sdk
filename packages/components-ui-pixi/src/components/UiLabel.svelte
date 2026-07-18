@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Text, Container } from 'pixi-svelte';
-	import { WHITE } from 'constants-shared/colors';
 
 	import UiSprite from './UiSprite.svelte';
 	import { UI_BASE_FONT_SIZE } from '../constants';
@@ -9,6 +8,7 @@
 	type Props = {
 		label: string;
 		value: string;
+		numericAmount?: number;
 		tiled?: boolean;
 		stacked?: boolean;
 		spacing?: number;
@@ -19,7 +19,13 @@
 
 	// Double font size for WIN label specifically
 	const isWinLabel = $derived(props.label.toUpperCase().includes('WIN'));
-	const fontSize = $derived(isWinLabel ? UI_BASE_FONT_SIZE * 2 : UI_BASE_FONT_SIZE);
+	const baseValueFontSize = UI_BASE_FONT_SIZE;
+	const labelFontSize = $derived(isWinLabel ? UI_BASE_FONT_SIZE * 2 : UI_BASE_FONT_SIZE);
+	const shouldCompactValue = $derived((props.numericAmount ?? 0) > 100000);
+	const compactValueFontSize = $derived(
+		isWinLabel ? baseValueFontSize * 0.8 * 1.15 : labelFontSize * 0.8
+	);
+	const valueFontSize = $derived(shouldCompactValue ? compactValueFontSize : labelFontSize);
 
 	// Check if this is a balance label for semibold weight
 	const isBalanceLabel = $derived(props.label.toUpperCase().includes('BALANCE'));
@@ -39,14 +45,14 @@
 
 	const labelStyle = $derived({
 		fontFamily: 'Kanit, Arial, sans-serif',
-		fontSize,
+		fontSize: labelFontSize,
 		fontWeight: (isWinLabel ? 'bold' : (isBalanceLabel || isBetLabel ? 600 : 400)) as any, // Type assertion needed for Pixi.js compatibility
 		fill: 0xD8ECA6, // Light lime green color for labels
 	});
 
 	const valueStyle = $derived({
 		fontFamily: 'Kanit, Arial, sans-serif',
-		fontSize,
+		fontSize: valueFontSize,
 		fill: 0xE0E0E0, // Light gray/off-white color for dollar amount
 	});
 </script>
@@ -57,20 +63,20 @@
 			key=""
 			y={isWinLabel ? -40 : -20}
 			anchor={{ x: 0.5, y: 0 }}
-			width={fontSize * 3 * (326 / 73)}
-			height={fontSize * 3}
+			width={labelFontSize * 3 * (326 / 73)}
+			height={labelFontSize * 3}
 		/>
 	{/if}
 	<Text anchor={{ x: 0.5, y: 0 }} text={props.label} style={labelStyle} />
-	<Text anchor={{ x: 0.5, y: 0 }} text={props.value} style={valueStyle} y={fontSize} />
+	<Text anchor={{ x: 0.5, y: 0 }} text={props.value} style={valueStyle} y={labelFontSize} />
 {:else}
 	{#if props.tiled}
 		<UiSprite
 			key=""
 			x={isWinLabel ? -180 : -90}
 			anchor={{ x: 0, y: 0.5 }}
-			width={fontSize * 3 * (326 / 73)}
-			height={fontSize * 3}
+			width={labelFontSize * 3 * (326 / 73)}
+			height={labelFontSize * 3}
 		/>
 	{/if}
 		<Container>
@@ -79,7 +85,7 @@
 				anchor={{ x: 0, y: 0.5 }}
 				text={props.value}
 				style={valueStyle}
-				x={(props.spacing || fontSize * 5)}
+				x={(props.spacing || labelFontSize * 5)}
 			/>
 		</Container>
 {/if}

@@ -16,10 +16,18 @@
 	const balanceTween = new Tween(stateBet.balanceAmount);
 	const label = $derived(i18nDerived.balance());
 	const value = $derived(numberToCurrencyString(balanceTween.current));
+	const numericAmount = $derived(balanceTween.current);
 
 	$effect(() => {
 		balanceTween.set(stateBet.balanceAmount);
 	});
 </script>
 
-<UiLabel tiled {label} {value} spacing={UI_BASE_FONT_SIZE * 4.8} stacked={props.stacked} />
+<UiLabel
+	tiled
+	{label}
+	{value}
+	{numericAmount}
+	spacing={UI_BASE_FONT_SIZE * 4.8}
+	stacked={props.stacked}
+/>

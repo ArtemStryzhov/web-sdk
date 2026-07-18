@@ -32,17 +32,61 @@
 	};
 
 	let disabled = $state(true);
+	let isCompactCloseViewport = $state(false);
 
-	onMount(async () => {
-		await waitForTimeout(300);
+	const updateCompactCloseViewport = () => {
+		if (typeof window === 'undefined') {
+			isCompactCloseViewport = false;
+			return;
+		}
 
-		disabled = false;
+		const nextValue =
+			window.matchMedia('(orientation: landscape)').matches &&
+			window.innerWidth <= 1200 &&
+			window.innerHeight <= 600;
+
+		if (nextValue !== isCompactCloseViewport) {
+			console.info('[Popup] compact close mode', {
+				compact: nextValue,
+				width: window.innerWidth,
+				height: window.innerHeight,
+				zIndex: props.zIndex,
+			});
+		}
+
+		isCompactCloseViewport = nextValue;
+	};
+
+	onMount(() => {
+		updateCompactCloseViewport();
+
+		const onResize = () => {
+			updateCompactCloseViewport();
+		};
+
+		if (typeof window !== 'undefined') {
+			window.addEventListener('resize', onResize);
+			window.addEventListener('orientationchange', onResize);
+		}
+
+		void (async () => {
+			await waitForTimeout(300);
+
+			disabled = false;
+		})();
+
+		return () => {
+			if (typeof window !== 'undefined') {
+				window.removeEventListener('resize', onResize);
+				window.removeEventListener('orientationchange', onResize);
+			}
+		};
 	});
 </script>
 
 <OnHotkey hotkey="Escape" onpress={closeModal} />
 
-	<div class="pop-up-wrap" class:disabled class:no-fullscreen={props.noFullScreenOverlay} style={`z-index: ${props.zIndex};`}>
+	<div class="pop-up-wrap" class:disabled class:no-fullscreen={props.noFullScreenOverlay} class:compact-close={isCompactCloseViewport} style={`z-index: ${props.zIndex};`}>
 		{#if !props.noFullScreenOverlay}
 			<div class="blur-layer"></div>
 		{/if}
@@ -65,7 +109,14 @@
 		>
 		{#if !props.persistent}
 			<div class="close-button-wrap" style="--zIndex: {zIndexInternal.closeButton}">
-				<button class="close-button" data-test="close-button" onclick={closeModal} onmouseenter={playHoverSound} aria-label="Close modal"></button>
+				<button
+					class="close-button"
+					data-test="close-button"
+					onclick={closeModal}
+					onmouseenter={playHoverSound}
+					aria-label="Close modal"
+					style={isCompactCloseViewport ? 'transform: scale(0.4); transform-origin: center; width: 80px; height: 80px; margin: 20px;' : undefined}
+				></button>
 			</div>
 		{/if}
 		{@render props.children()}
@@ -156,5 +207,17 @@
 
 	.close-button::after {
 		transform: translate(-50%, -50%) rotate(-45deg);
+	}
+
+	.pop-up-wrap.compact-close .close-button {
+		width: 32px !important;
+		height: 32px !important;
+		margin: 8px !important;
+	}
+
+	.pop-up-wrap.compact-close .close-button::before,
+	.pop-up-wrap.compact-close .close-button::after {
+		width: 18px !important;
+		height: 2px !important;
 	}
 </style>
