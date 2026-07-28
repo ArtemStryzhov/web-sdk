@@ -3,30 +3,70 @@
 
 	import { Popup } from 'components-shared';
 	import { zIndex } from 'constants-shared/zIndex';
-	import { stateModal } from 'state-shared';
+	import { stateModal, stateUrlDerived } from 'state-shared';
+
+	const isSocial = $derived(stateUrlDerived.social());
+
+	// Jurisdiction-compliant labels for social (sweepstakes) casino mode
+	const txt = $derived({
+		paytableHeading: isSocial ? 'WIN TABLE' : 'PAYTABLE',
+		payingSymbols: isSocial ? 'winning symbols' : 'paying symbols',
+		featureBuyHeading: isSocial ? 'FEATURE PLAY' : 'FEATURE BUY',
+		buyBonusButton: isSocial ? 'PLAY BONUS' : 'BUY BONUS',
+		purchaseFeature: isSocial ? 'play game features' : 'purchase game features',
+		monsterContractBuyHeading: isSocial ? 'MONSTER CONTRACT BONUS PLAY' : 'MONSTER CONTRACT BONUS BUY',
+		monsterContractPurchase: isSocial
+			? 'Players have the option to play the Monster Contract Bonus directly. This feature can be played for 100 times the underlying play amount and carries a theoretical expected return of 96.34%.'
+			: 'Players have the option to purchase the Monster Contract Bonus directly. This feature costs 100 times the underlying bet and carries a theoretical expected return of 96.34%.',
+		bladesOfFateBuyHeading: isSocial ? 'BLADES OF FATE BONUS PLAY' : 'BLADES OF FATE BONUS BUY',
+		bladesOfFatePurchase: isSocial
+			? 'Players have the option to play the Blades of Fate Bonus directly. This feature can be played for 300 times the underlying play amount and carries a theoretical expected return of 96.34%.'
+			: 'Players have the option to purchase the Blades of Fate Bonus directly. This feature costs 300 times the underlying bet and carries a theoretical expected return of 96.34%.',
+	});
 
 	let useShortLandscapePadding = $state(false);
+	let usePortraitTallPadding = $state(false);
+	let use800x450Width = $state(false);
 
 	const updateShortLandscapePadding = () => {
 		if (typeof window === 'undefined') {
 			useShortLandscapePadding = false;
+			usePortraitTallPadding = false;
+			use800x450Width = false;
 			return;
 		}
 
-		const nextValue =
+		const nextShortLandscape =
 			window.matchMedia('(orientation: landscape)').matches &&
 			window.innerWidth <= 1200 &&
 			window.innerHeight <= 600;
 
-		if (nextValue !== useShortLandscapePadding) {
-			console.info('[ModalGameRules] short landscape padding mode', {
-				enabled: nextValue,
-				width: window.innerWidth,
-				height: window.innerHeight,
-			});
-		}
+		const nextPortraitTall =
+			window.matchMedia('(orientation: portrait)').matches &&
+			window.innerWidth >= 420 &&
+			window.innerWidth <= 430 &&
+			window.innerHeight >= 810 &&
+			window.innerHeight <= 815;
 
-		useShortLandscapePadding = nextValue;
+		// 800x450-like: landscape, wider detection range to catch all ~800x450 variants
+		const next800x450 =
+			window.matchMedia('(orientation: landscape)').matches &&
+			window.innerWidth >= 700 &&
+			window.innerWidth <= 900 &&
+			window.innerHeight >= 400 &&
+			window.innerHeight <= 520;
+
+		console.info('[ModalGameRules] viewport detection', {
+			width: window.innerWidth,
+			height: window.innerHeight,
+			shortLandscape: nextShortLandscape,
+			portraitTall: nextPortraitTall,
+			is800x450: next800x450,
+		});
+
+		useShortLandscapePadding = nextShortLandscape;
+		usePortraitTallPadding = nextPortraitTall;
+		use800x450Width = next800x450;
 	};
 
 	const closeModal = () => {
@@ -80,13 +120,15 @@
 		>
 			<div
 				class="rules-scroll-container"
-				style={useShortLandscapePadding ? 'padding-left: 20px; padding-right: 20px; padding-bottom: 30px;' : undefined}
+				style={use800x450Width ? 'padding-left: 70px; padding-right: 70px; padding-bottom: 30px;' : (useShortLandscapePadding ? 'padding-left: 20px; padding-right: 20px; padding-bottom: 30px;' : (usePortraitTallPadding ? 'padding-left: 45px; padding-right: 45px; padding-bottom: 30px;' : undefined))}
+				style:padding-top="40px"
+				style:padding-bottom={use800x450Width || useShortLandscapePadding || usePortraitTallPadding ? '30px' : '60px'}
 			>
 				<div class="rules">
 					<h1>ABOUT THE GAME</h1>
-					<p>Monster Hunt is a 5-reel, 5-row payline slot. The Silver Sword symbol expands upward on each spin. If the Silver Sword passes through an Elixir Flask during its expansion, the flask's multiplier value is applied to the Silver Sword's own multiplier.</p>
+					<p>Beast Hunt is a 5-reel, 5-row payline slot. The Silver Sword symbol expands upward on each spin. If the Silver Sword passes through an Elixir Flask during its expansion, the flask's multiplier value is applied to the Silver Sword's own multiplier.</p>
 
-					<h1 class="centered">PAYTABLE</h1>
+					<h1 class="centered">{txt.paytableHeading}</h1>
 					<div class="symbol-rows">
 						<ul class="l_symbols">
 							<li class="img_A">
@@ -150,14 +192,14 @@
 					</div>
 
 					<h1>ABOUT THE GAME</h1>
-					<p>This game has a theoretical expected return of 96.34% in normal mode. The maximum possible win across all betting modes, with the exception of Monster Contract and Blades of Fate, is 20000x the underlying bet. In Monster Contract and Blades of Fate modes, the maximum possible win reaches 40000x the underlying bet.</p>
+					<p>This game has a theoretical expected return of 96.34% in normal mode. The maximum possible win across all betting modes, with the exception of Monster Contract and Blades of Fate, is 20000x the underlying bet. In Monster Contract and Blades of Fate modes, the maximum possible win reaches 66666x the underlying bet.</p>
 
 					<h1>SPECIAL SYMBOLS</h1>
 					<ul class="special_symbols">
 						<li class="img_elicsir">
 							<span class="symbol-icon"></span>
 							<h2>ELIXIR FLASK SYMBOL</h2>
-							<p>The Elixir Flask symbol substitutes for all paying symbols and functions as a Wild. Elixir Flask symbols always land with a multiplier value of x2, x3, x4, x5, or x10.</p>
+							<p>The Elixir Flask symbol substitutes for all {txt.payingSymbols} and functions as a Wild. Elixir Flask symbols always land with a multiplier value of x2, x3, x4, x5, or x10.</p>
 						</li>
 						<li class="img_B">
 							<span class="symbol-icon"></span>
@@ -188,20 +230,14 @@
 					<h2>BLADES OF FATE</h2>
 					<p>Landing 4 Bonus symbols within a single spin sequence activates the Blades of Fate Bonus and awards 10 free spins. This bonus mode features an increased probability of landing Silver Sword and Elixir Flask symbols.</p>
 
-					<h2>FEATURE BUY</h2>
-					<p>Players have the option to purchase game features directly through the interface by selecting the BUY BONUS button.</p>
+					<h2>{txt.featureBuyHeading}</h2>
+					<p>Players have the option to {txt.purchaseFeature} directly through the interface by selecting the {txt.buyBonusButton} button.</p>
 
-					<h2>MONSTER CONTRACT BONUS BUY</h2>
-					<p>Players have the option to purchase the Monster Contract Bonus directly. This feature costs 100 times the underlying bet and carries a theoretical expected return of 96.34%.</p>
+					<h2>{txt.monsterContractBuyHeading}</h2>
+					<p>{txt.monsterContractPurchase}</p>
 
-					<h2>BLADES OF FATE BONUS BUY</h2>
-					<p>Players have the option to purchase the Blades of Fate Bonus directly. This feature costs 300 times the underlying bet and carries a theoretical expected return of 96.34%.</p>
-
-					<h1>GENERAL INFO</h1>
-					<p>SPIN BUTTON | Starts a new spin. SLAM STOP BUTTON | Immediately halts the current spin. INFORMATION | Displays game rules and the Paytable with all Symbol Values. AUTOPLAY | Opens the Autoplay settings menu. QUICK SPIN | Switch between Quick Spin, Instant Spin, and Regular speed modes. BUY BONUS | Opens the Feature Buy interface. SOUND | Toggle game sounds On or Off. MUSIC | Toggle background music On or Off. INCREASE | Raises the current Bet Amount. DECREASE | Lowers the current Bet Amount. BALANCE | Displays your current Balance in the selected currency. WIN | Displays the total win amount for the current spin. TOTAL WIN | Displays the cumulative win amount across all spins during free spins.</p>
-
-					<h1>LEGAL NOTICE</h1>
-					<p>Any malfunction renders all bets and payouts void. A stable internet connection is required at all times. Should a disconnection occur, please reload the game to complete any unfinished bets. The theoretical expected return is calculated across a large number of spins. Reel animations are purely illustrative and do not represent any physical device.</p>
+					<h2>{txt.bladesOfFateBuyHeading}</h2>
+					<p>{txt.bladesOfFatePurchase}</p>
 				</div>
 			</div>
 		</div>
@@ -228,6 +264,13 @@
 		right: 0px;
 		z-index: 51;
 		pointer-events: auto;
+	}
+
+	// On screens > 1800px, move close button 20px left
+	@media (min-width: 1801px) {
+		.close-button-container {
+			right: 20px;
+		}
 	}
 
 	.custom-close-button {
@@ -300,6 +343,63 @@
 		overflow-x: hidden;
 		box-sizing: border-box;
 		padding: 40px 30px 60px;
+	}
+
+	// Width > 360: increase left and right padding by 15px (30px + 15px = 45px)
+	@media (min-width: 361px) {
+		.rules-scroll-container {
+			padding-left: 45px;
+			padding-right: 45px;
+		}
+	}
+
+	// On 800x450: constrain .rules width to 660px (= 800 - 2*70px effective margin)
+	// Targeting .rules instead of .rules-scroll-container avoids inline style specificity conflicts
+	@media (orientation: landscape) and (min-width: 750px) and (max-width: 850px) and (min-height: 420px) and (max-height: 480px) {
+		.rules-scroll-container .rules {
+			width: 660px;
+			margin-left: auto;
+			margin-right: auto;
+		}
+	}
+
+	// Width > 1000px: increase left and right padding by 20px more (45px + 20px = 65px)
+	@media (min-width: 1001px) {
+		.rules-scroll-container {
+			padding-left: 65px;
+			padding-right: 65px;
+		}
+	}
+
+	// Width >= 1024: increase left and right padding (45px + 15px + 20px = 80px)
+	@media (min-width: 1024px) {
+		.rules-scroll-container {
+			padding-left: 80px;
+			padding-right: 80px;
+		}
+	}
+
+	// Width > 1300px: fixed width content with 1190px max-width
+	@media (min-width: 1301px) {
+		.rules-scroll-container {
+			margin: 0 auto;
+		}
+		
+		.rules-scroll-container .rules {
+			max-width: 1190px;
+			width: 1190px;
+			margin: 0 auto;
+		}
+	}
+
+	// On 425x812: fix bottom padding to be minimal like on other screens, ensure scroll bar at right edge
+	@media (min-width: 420px) and (max-width: 430px) and (min-height: 810px) and (max-height: 815px) {
+		.rules-scroll-container {
+			padding-left: 45px;
+			padding-right: 45px;
+			padding-bottom: 30px;
+			overflow-x: visible;
+		}
 	}
 
 	.rules {

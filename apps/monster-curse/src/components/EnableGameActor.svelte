@@ -3,10 +3,11 @@
 
 	import { Text } from 'pixi-svelte';
 	import { stateMeta } from 'state-shared';
+	import { stateUrlDerived } from 'state-shared';
 
 	import { gameActor } from '../game/actor';
 	import { getContext } from '../game/context';
-	import { customBetModeMeta } from '../game/betModeMeta';
+	import { getBetModeMeta } from '../game/betModeMeta';
 
 	type Props = {
 		debug?: boolean;
@@ -17,7 +18,7 @@
 
 	onMount(() => {
 		// Initialize custom bet mode metadata for Monster Curse
-		stateMeta.betModeMeta = customBetModeMeta;
+		stateMeta.betModeMeta = getBetModeMeta(stateUrlDerived.social());
 
 		const { unsubscribe } = gameActor.subscribe((snapshot) => {
 			context.stateXstate.value = snapshot.value;

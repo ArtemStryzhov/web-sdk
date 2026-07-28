@@ -4,10 +4,12 @@ import { messagesMap as messagesMapUiHtml } from 'components-ui-html';
 
 import en from './en';
 import zh from './zh';
+import sweeps_en from './sweeps_en';
 
 const messagesMapGame = {
 	en,
 	zh,
+	sweeps_en,
 };
 
 const messagesMap = mergeMessagesMaps([messagesMapGame, messagesMapUiPixi, messagesMapUiHtml]);

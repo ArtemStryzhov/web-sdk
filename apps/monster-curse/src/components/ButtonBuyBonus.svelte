@@ -2,6 +2,7 @@
 	import { Text, Sprite } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateModal, stateBet, stateBetDerived, stateUi } from 'state-shared';
+	import { stateUrlDerived } from 'state-shared';
 	import { getContextApp } from 'pixi-svelte';
 	import * as PIXI from 'pixi.js';
 
@@ -125,12 +126,12 @@
 				}}
 			/>
 		{:else}
-			<!-- BUY BONUS text - stacked on two lines -->
+			<!-- BUY BONUS / PLAY BONUS text - stacked on two lines -->
 			<Text
 				x={center.x}
 				y={center.y - 23}
 				anchor={0.5}
-				text="BUY"
+				text={stateUrlDerived.social() ? 'PLAY' : 'BUY'}
 				style={{
 					align: 'center',
 					fontFamily: 'Kanit, Arial, sans-serif',

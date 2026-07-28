@@ -83,3 +83,30 @@ export const customBetModeMeta: BetModeMeta = {
 	},
 };
 
+export const getBetModeMeta = (social: boolean): BetModeMeta => {
+	if (!social) return customBetModeMeta;
+
+	return {
+		...customBetModeMeta,
+		buy_contract: {
+			...customBetModeMeta.buy_contract,
+			text: {
+				...customBetModeMeta.buy_contract.text,
+				button: 'PLAY',
+				dialog: 'Are you sure you want to play Monster Contract for 100x your play amount? This will trigger 10 free spins with increased chances of landing bonus symbols.',
+				tickerIdle: 'PLACE YOUR PLAY',
+			},
+		},
+		buy_blades: {
+			...customBetModeMeta.buy_blades,
+			text: {
+				...customBetModeMeta.buy_blades.text,
+				button: 'PLAY',
+				dialog: 'Are you sure you want to play Blades of Fate for 300x your play amount? This will trigger 10 free spins with sticky expanding Silver Sword symbols.',
+				tickerIdle: 'PLACE YOUR PLAY',
+			},
+		},
+	};
+};
+
+

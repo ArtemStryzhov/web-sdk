@@ -8,6 +8,7 @@
 	import { getContextApp } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import { stateUrlDerived } from 'state-shared';
 
 	type Props = {
 		onpress: () => void;
@@ -288,7 +289,6 @@
 	const compactSpacingOffset = $derived(shouldUseCompactBlockGap ? 40 : 0);
 	const compactSpacingMultiplier = $derived(shouldUseCompactBlockGap ? 0.55 : 1);
 	const shortLandscapeRenderScale = $derived(isShortLandscapeLike ? 0.8 : 1);
-	const compactCenterSpacingCompression = $derived(shouldUseCompactBlockGap ? 0.88 : 1);
 	const frameRenderScale = $derived(
 		viewport375x667BlockScale * shortLandscapeRenderScale * viewport400x225BlockScale
 	);
@@ -305,7 +305,7 @@
 	const firstBlockExtraLeftPadding = $derived((isViewport800x450Like ? 20 : 0) + (isViewport400x225Like ? 25 : 0));
 	const firstBlockLargeDesktopTopPadding = $derived(canvasSizes.width > 2250 ? 10 : 0);
 	const firstBlockExtraTopPadding = $derived(
-		(isViewport800x450Like ? 30 : 0) +
+		(isViewport800x450Like ? 5 : 0) +
 		(isViewport425x812Like ? 15 : 0) +
 		(isViewport1200x675Like ? 10 : 0) +
 		firstBlockLargeDesktopTopPadding
@@ -419,8 +419,7 @@
 		}
 
 		const safeRenderScale = Math.max(frameRenderScale, 0.0001);
-		const spacingFromTargetGap = frameWidth + targetCompactVisibleGap / safeRenderScale;
-		return spacingFromTargetGap * compactCenterSpacingCompression;
+		return frameWidth + targetCompactVisibleGap / safeRenderScale;
 	});
 	const sliderFrameOffsets = $derived(
 		Array.from({ length: numFrames }, (_, i) => i * frameSpacing)
@@ -432,6 +431,10 @@
 		// On portrait screens >375px, shift 19% to the left (reduce right shift)
 		if (isPortrait && canvasSizes.width > 375) {
 			return baseShift - (mainLayout.width * 0.19);
+		}
+		// On 800x450, shift left by 30% minus 15px right adjustment (0.2 + 0.02 = 0.22)
+		if (isViewport800x450Like) {
+			return mainLayout.width * 0.22;
 		}
 		return baseShift;
 	});
@@ -633,11 +636,11 @@
 	const buttonYWithViewportOffset = $derived(buttonY + buttonYOffset1200x675);
 
 	// Frame text content
-	const frameTexts = [
+	const frameTexts = $derived([
 		'Silver Sword symbols may carry variable multiplier values and expand vertically to occupy the entire reel.',
 		'Elixir Flask symbols interact with expanding Silver Sword symbols, applying an extra multiplier effect.',
-		'Maximum payout: 20,000× bet',
-	];
+		stateUrlDerived.social() ? 'Maximum payout: 20,000× play amount' : 'Maximum payout: 20,000× bet',
+	]);
 
 	// Text style for frame content
 	const frameTextStyle = $derived({
@@ -695,6 +698,7 @@
 			widthBasedTextScale * // Width-based reduction tier for 1124 and 1050 breakpoints
 			firstBlockResolutionTextScale *
 			viewport400x225TextScale * // 20% larger on 400x225-like screens
+			(isViewport800x450Like ? 0.95 : 1) * // Decrease by 5% on 800x450-like screens
 			(isShortLandscapeLike ? 1.2 : 1), // Increase by 20% on short landscape screens
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
@@ -756,10 +760,11 @@
 	const frameTextYFirst = $derived(
 		-frameHeight * 0.5 +
 			145 +
+			(isViewport800x450Like ? -25 : 0) +
 			(isDesktop && canvasSizes.height > 1300 ? -50 : 0) +
 			(isSmallScreen ? -15 : 0) +
 			firstBlockExtraTopPadding +
-			(isShortLandscapeLike ? frameHeight * 0.2 : 0)
+			(isShortLandscapeLike && !isViewport800x450Like ? frameHeight * 0.2 : 0)
 	);
 
 const textStyle = $derived({
@@ -770,6 +775,33 @@ const textStyle = $derived({
 	fill: 0x61E5FF,
 	align: 'center' as const,
 });
+
+	$effect(() => {
+		if (!shouldShowWelcomeFrames) {
+			return;
+		}
+
+		console.info('[PressToContinue] viewport/mode', {
+			width: canvasSizes.width,
+			height: canvasSizes.height,
+			isLandscape,
+			isSliderMode,
+			isShortLandscapeLike,
+			isViewport800x450Like,
+			isUltraShortLandscape,
+			isViewport400x225Like,
+			shouldUseCompactBlockGap,
+			frameGap,
+			frameGapEffective,
+			compactSpacingOffset,
+			compactSpacingMultiplier,
+			frameRenderScale,
+			targetCompactVisibleGap,
+			frameSpacingBase,
+			frameSpacing,
+			frameScale,
+		});
+	});
 
 	const handlePress = () => {
 		// Mark that we've shown the welcome frames, so they won't appear again
@@ -795,10 +827,11 @@ const textStyle = $derived({
 				<Graphics
 					draw={(graphics) => {
 						graphics.clear();
-						// Make mask wide enough to show all 3 frames plus sliding space
+						// Make mask wide enough to show all 3 frames plus sliding space, extend for full screen on 800x450
 						const totalFramesWidth = frameWidth * numFrames + frameGapEffective * (numFrames - 1);
 						const maxSlideDistance = (numFrames - 1) * frameSpacing;
-						const maskWidth = Math.max(mainLayout.width, totalFramesWidth + maxSlideDistance);
+						const baseWidth = Math.max(mainLayout.width, totalFramesWidth + maxSlideDistance);
+						const maskWidth = isViewport800x450Like ? baseWidth * 1.3 : baseWidth;
 						graphics.rect(-maskWidth * 0.5, -mainLayout.height * 0.5, maskWidth, mainLayout.height);
 						graphics.fill({ color: 0xffffff, alpha: 1 });
 					}}
