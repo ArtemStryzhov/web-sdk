@@ -280,6 +280,34 @@
 		const similarity = Math.min(canvasSizes.width / 1024, canvasSizes.height / 576);
 		return similarity >= 0.97 && similarity <= 1.03;
 	});
+	const isViewport1470x775Like = $derived.by(() => {
+		resizeTick;
+
+		if (!isDesktop) {
+			return false;
+		}
+
+		// Compare both axes independently (instead of only the smaller ratio) so nearby
+		// desktop viewports such as 1500x750 or 1440x810 are treated the same way, while
+		// screens that merely share one dimension are left untouched.
+		const widthRatio = canvasSizes.width / 1470;
+		const heightRatio = canvasSizes.height / 775;
+
+		return Math.min(widthRatio, heightRatio) >= 0.95 && Math.max(widthRatio, heightRatio) <= 1.05;
+	});
+	const firstBlockViewport1470x775TextScale = $derived(isViewport1470x775Like ? 0.85 : 1);
+	const isViewport3008x1605Like = $derived.by(() => {
+		resizeTick;
+
+		if (!isDesktop) {
+			return false;
+		}
+
+		const widthRatio = canvasSizes.width / 3008;
+		const heightRatio = canvasSizes.height / 1605;
+
+		return Math.min(widthRatio, heightRatio) >= 0.95 && Math.max(widthRatio, heightRatio) <= 1.05;
+	});
 	const viewport425x812TextScale = $derived(isViewport425x812Like ? 1.15 : 1);
 	const viewport375x667BlockScale = $derived(isViewport375x667Like ? 1.15 : 1);
 	const viewport400x225BlockScale = $derived(isViewport400x225Like ? 0.72 : 1);
@@ -699,6 +727,7 @@
 			firstBlockResolutionTextScale *
 			viewport400x225TextScale * // 20% larger on 400x225-like screens
 			(isViewport800x450Like ? 0.95 : 1) * // Decrease by 5% on 800x450-like screens
+			firstBlockViewport1470x775TextScale * // 15% smaller on 1470x775-like screens
 			(isShortLandscapeLike ? 1.2 : 1), // Increase by 20% on short landscape screens
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
@@ -707,7 +736,13 @@
 		wordWrapWidth: frameWidth * 0.8 - 40 - firstBlockExtraLeftPadding, // Extra left padding on 800x450-like screens
 	});
 
-	const frameTextXFirst = $derived((40 + firstBlockExtraLeftPadding) * 0.5); // Shift right by half of the padding to maintain visual balance
+	// The first block's text is nudged right by half of its extra left padding to keep the
+	// narrower wrap box visually balanced. The text itself is centre-anchored, so that nudge
+	// also moves its centre off the block's centre; on 3008x1605-like screens drop it so the
+	// text sits exactly in the middle of the block.
+	const frameTextXFirst = $derived(
+		isViewport3008x1605Like ? 0 : (40 + firstBlockExtraLeftPadding) * 0.5
+	);
 
 	// Image dimensions from spritesheet (original sizes)
 	const imageSizes = {

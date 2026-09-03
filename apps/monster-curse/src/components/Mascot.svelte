@@ -1,12 +1,114 @@
-<script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import { Container, Sprite, Graphics } from 'pixi-svelte';
-	import { getContextApp, getContextParent } from 'pixi-svelte';
+<script lang="ts" module>
 	import * as PIXI from 'pixi.js';
-	import lottie, { type AnimationItem } from 'lottie-web';
-	import { getContext } from '../game/context';
+
+	/**
+	 * The mascot is a pre-rendered PNG frame sequence exported from After Effects,
+	 * not a Spine skeleton (despite living under `assets/spines/`).
+	 *
+	 * Both variants are 30 fps re-renders; filenames are zero padded to 5 digits
+	 * (img_00000.png ... img_00150.png). If the sequences are re-exported again,
+	 * `frames` and `fps` here are the only values that need updating.
+	 */
+	const VARIANTS = {
+		1: { dir: '1', frames: 151, fps: 30, width: 500, height: 550, loop: true, scale: 1 },
+		2: { dir: '2/images', frames: 109, fps: 30, width: 500, height: 450, loop: false, scale: 1.68 },
+	} as const;
+
+	type VariantKey = keyof typeof VARIANTS;
+
+	const FRAME_DIGITS = 5;
+	const DECODE_CONCURRENCY = 8;
+
+	// Decoded frames are cached at module level: the portrait and desktop mascots are
+	// separate component instances behind an {#if}, so rotating the device remounts
+	// this component and would otherwise re-download and re-decode the whole sequence.
+	//
+	// Decoded frames are expensive — a 500x550 RGBA bitmap is 1.1MB, so variant 1
+	// alone is ~166MB resident. Variant 1 is the idle loop and stays; variant 2 is
+	// released once the big win is over (see releaseFrames).
+	const frameCache = new Map<VariantKey, Promise<ImageBitmap[]>>();
+	const warmed = new Set<VariantKey>();
+
+	const frameUrl = (version: VariantKey, index: number) => {
+		const base = (import.meta as any).env?.BASE_URL ?? '/';
+		const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
+		const name = `img_${String(index).padStart(FRAME_DIGITS, '0')}.png`;
+		return `${assetBase}/assets/spines/mascot/${VARIANTS[version].dir}/${name}`;
+	};
+
+	// A fixed pool rather than one Promise.all over every frame: 151 simultaneous
+	// requests on an HTTP/2 origin starve the rest of the game's asset loading.
+	const eachFrame = (version: VariantKey, handle: (index: number) => Promise<void>) => {
+		const { frames } = VARIANTS[version];
+		let next = 0;
+		const worker = async () => {
+			while (next < frames) await handle(next++);
+		};
+		return Promise.all(Array.from({ length: Math.min(DECODE_CONCURRENCY, frames) }, worker));
+	};
+
+	const fetchFrame = async (version: VariantKey, index: number) => {
+		const response = await fetch(frameUrl(version, index));
+		if (!response.ok) {
+			throw Error(`[Mascot] variant ${version} frame ${index}: HTTP ${response.status}`);
+		}
+		return response;
+	};
+
+	const loadFrames = (version: VariantKey) => {
+		const cached = frameCache.get(version);
+		if (cached) return cached;
+
+		const bitmaps = new Array<ImageBitmap>(VARIANTS[version].frames);
+		const promise = eachFrame(version, async (index) => {
+			bitmaps[index] = await createImageBitmap(await (await fetchFrame(version, index)).blob());
+		})
+			.then(() => bitmaps)
+			.catch((error) => {
+				frameCache.delete(version); // let a later mount retry instead of caching the failure
+				throw error;
+			});
+
+		frameCache.set(version, promise);
+		return promise;
+	};
+
+	/**
+	 * Pull a sequence into the HTTP cache without decoding it. Variant 2 only gets a
+	 * 2s head start before the win screen (see bookEventHandlerMap `setWin`), which is
+	 * not enough to fetch 12MB on a slow connection — but it is ample to decode 109
+	 * already-cached frames. Warming bytes instead of bitmaps buys that head start for
+	 * ~0 resident memory.
+	 */
+	const warmFrames = async (version: VariantKey) => {
+		if (warmed.has(version) || frameCache.has(version)) return;
+		warmed.add(version);
+		try {
+			await eachFrame(version, async (index) => {
+				await (await fetchFrame(version, index)).arrayBuffer();
+			});
+		} catch {
+			warmed.delete(version);
+		}
+	};
+
+	const releaseFrames = async (version: VariantKey) => {
+		const pending = frameCache.get(version);
+		if (!pending) return;
+		frameCache.delete(version);
+		try {
+			(await pending).forEach((bitmap) => bitmap.close());
+		} catch {
+			// load already failed and removed itself from the cache
+		}
+	};
+</script>
+
+<script lang="ts">
+	import { onDestroy } from 'svelte';
+	import { Container, BaseSprite, getContextApp } from 'pixi-svelte';
+
 	import { sound } from '../game/sound';
-	import MascotSprite from './MascotSprite.svelte';
 
 	type Props = {
 		x?: number;
@@ -15,7 +117,6 @@
 		height?: number;
 		anchor?: { x: number; y: number };
 		zIndex?: number;
-		format?: 'lottie' | 'video' | 'images';
 		loop?: boolean;
 		autoplay?: boolean;
 		scale?: number;
@@ -24,574 +125,168 @@
 
 	const props: Props = $props();
 
-	// Default values
 	const x = $derived(props.x ?? 0);
 	const y = $derived(props.y ?? 0);
 	const width = $derived(props.width ?? 500);
 	const height = $derived(props.height ?? 550);
 	const anchor = $derived(props.anchor ?? { x: 0.5, y: 0.5 });
 	const zIndex = $derived(props.zIndex ?? 100);
-	const format = $derived(props.format ?? 'lottie');
 	const loop = $derived(props.loop ?? true);
 	const autoplay = $derived(props.autoplay ?? true);
 	const scale = $derived(props.scale ?? 1);
-	const version = $derived(props.version ?? 1);
+	const version = $derived((props.version ?? 1) as VariantKey);
 
-	const context = getContext();
-	const pixiContext = getContextApp();
-	const parentContext = getContextParent();
-	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
-	const layoutType = $derived(context.stateLayoutDerived.layoutType());
-	const isPortrait = $derived(layoutType === 'portrait');
+	const context = getContextApp();
 
-	// Animation state
-	let animationItem: AnimationItem | null = $state(null);
-	let videoElement: HTMLVideoElement | null = $state(null);
-	let imageSequenceIndex = $state(0);
-	let texture: PIXI.Texture | null = $state(null);
-	let oldTexture: PIXI.Texture | null = $state(null);
-	let oldActualWidth: number | null = $state(null);
-	let oldActualHeight: number | null = $state(null);
-	let isTransitioning = $state(false);
-	let sprite: PIXI.Sprite | null = $state(null);
-	let canvas: HTMLCanvasElement | null = $state(null);
-	let animationFrameId: number | null = $state(null);
-	let lottieContainer: HTMLDivElement | null = $state(null);
-	let containerRef: any = $state(null);
-	let animationCompleted = $state(false);
-
-	// Calculate actual dimensions with scale
-	const versionScale = $derived(version === 2 ? 1.68 : 1);
-	const actualWidth = $derived(width * scale * versionScale);
-	const actualHeight = $derived(height * scale * versionScale);
-	
-	// Display dimensions: use old dimensions when transitioning, otherwise use current dimensions
-	// During transition, prefer oldTexture dimensions even if texture exists
-	const displayWidth = $derived(
-		isTransitioning && oldTexture && oldActualWidth !== null 
-			? oldActualWidth 
-			: (texture ? actualWidth : (oldTexture && oldActualWidth !== null ? oldActualWidth : actualWidth))
-	);
-	const displayHeight = $derived(
-		isTransitioning && oldTexture && oldActualHeight !== null 
-			? oldActualHeight 
-			: (texture ? actualHeight : (oldTexture && oldActualHeight !== null ? oldActualHeight : actualHeight))
-	);
-
-	// Lottie animation setup
-	const setupLottie = () => {
-		if (!pixiContext) return;
-
-		// Capture current version value
-		const currentVersion = version;
-		if (!currentVersion) {
-			console.error('[Mascot] Version is undefined');
-			return;
-		}
-
-		// Create container for Lottie (it will create its own canvas)
-		lottieContainer = document.createElement('div');
-		lottieContainer.style.width = `${actualWidth}px`;
-		lottieContainer.style.height = `${actualHeight}px`;
-		lottieContainer.style.position = 'absolute';
-		lottieContainer.style.left = '-9999px';
-		lottieContainer.style.top = '-9999px';
-		document.body.appendChild(lottieContainer);
-
-		// Load Lottie animation - use absolute paths for runtime loading
-		// Support BASE_URL if configured (for deployments with base paths)
-		const base = (import.meta as any).env?.BASE_URL ?? '/';
-		const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
-		const lottiePath = `${assetBase}/assets/spines/mascot/${currentVersion}/${currentVersion}.json`;
-		// Set assetsPath so Lottie knows where to find the images
-		// Version 1 has images directly in the folder, version 2 has them in a subfolder
-		const assetsPath = currentVersion === 2 
-			? `${assetBase}/assets/spines/mascot/${currentVersion}/images/`
-			: `${assetBase}/assets/spines/mascot/${currentVersion}/`;
-
-		// For version 2 (win screen mascot), don't loop - play once and hold last frame
-		const shouldLoop = currentVersion === 2 ? false : loop;
-
-		if (!lottieContainer) return;
-
-		animationItem = lottie.loadAnimation({
-			container: lottieContainer,
-			renderer: 'canvas',
-			loop: shouldLoop,
-			autoplay: autoplay,
-			path: lottiePath,
-			assetsPath: assetsPath,
-		});
-
-		// Ensure animation plays
-		if (autoplay && animationItem) {
-			animationItem.play();
-		}
-
-		if (animationItem) {
-			animationItem.addEventListener('data_failed', (err) => {
-				console.error(`[Mascot] Lottie data failed to load from ${lottiePath}:`, err);
-				console.error(`[Mascot] Make sure the file exists at: ${lottiePath}`);
-				console.error(`[Mascot] Assets path: ${assetsPath}`);
-			});
-		}
-
-		// Wait for Lottie to create its canvas
-		const waitForLottieCanvas = () => {
-			if (!lottieContainer) return;
-			const lottieCanvas = lottieContainer.querySelector('canvas') as HTMLCanvasElement;
-			if (!lottieCanvas) {
-				// Retry after a short delay
-				setTimeout(waitForLottieCanvas, 50);
-				return;
-			}
-			setupLottieCanvas(lottieCanvas);
-		};
-
-		const setupLottieCanvas = (lottieCanvas: HTMLCanvasElement) => {
-
-			// Create our own canvas for texture updates
-			canvas = document.createElement('canvas');
-			canvas.width = actualWidth;
-			canvas.height = actualHeight;
-			const ctx = canvas.getContext('2d');
-			if (!ctx) return;
-
-			// Create PIXI texture from canvas — created ONCE, then pixels are re-uploaded via
-			// texture.source.update() each frame instead of destroy+Texture.from every frame.
-			// The old destroy+from pattern allocated a new GPU texture 60 fps, filling VRAM.
-			const updateTexture = () => {
-				if (canvas && lottieCanvas && ctx && pixiContext) {
-					// Copy Lottie canvas to our canvas
-					ctx.clearRect(0, 0, canvas.width, canvas.height);
-					ctx.drawImage(lottieCanvas, 0, 0, actualWidth, actualHeight);
-
-					if (!texture) {
-						// First frame: create the GPU texture once
-						texture = PIXI.Texture.from(canvas);
-					} else {
-						// Subsequent frames: re-upload changed pixels into the SAME GPU allocation
-						texture.source.update();
-					}
-					
-					// If we were transitioning and now have a new texture, clean up oldTexture
-					if (isTransitioning && oldTexture && texture) {
-						oldTexture.destroy();
-						oldTexture = null;
-						oldActualWidth = null;
-						oldActualHeight = null;
-						isTransitioning = false;
-					}
-				}
-			};
-
-			// Update texture on each frame
-			const animate = () => {
-				if (animationItem && animationItem.isLoaded && !animationCompleted) {
-					updateTexture();
-				} else if (animationCompleted && lottieCanvas && ctx && pixiContext) {
-					// Keep updating texture from last frame when animation is completed
-					updateTexture();
-				}
-				animationFrameId = requestAnimationFrame(animate);
-			};
-
-			if (animationItem) {
-				// For version 2, listen for complete event to hold last frame
-				if (currentVersion === 2) {
-					animationItem.addEventListener('complete', () => {
-						animationCompleted = true;
-						// Keep the last frame visible by continuing to update texture
-						if (animationFrameId === null) {
-							animate();
-						}
-					});
-				}
-
-				// Wait for DOMLoaded to ensure Lottie is fully ready
-				animationItem.addEventListener('DOMLoaded', () => {
-					// Create initial texture and start animation
-					updateTexture();
-					if (autoplay) {
-						animate();
-					}
-				});
-
-				animationItem.addEventListener('loaded_images', () => {
-					// Update texture when images load
-					updateTexture();
-				});
-
-				// Listen for enterFrame to update texture as animation plays
-				animationItem.addEventListener('enterFrame', () => {
-					if (!animationCompleted) {
-						updateTexture();
-					}
-				});
-
-				// Also listen for config_ready in case DOMLoaded doesn't fire
-				animationItem.addEventListener('config_ready', () => {
-					setTimeout(() => {
-						updateTexture();
-						if (autoplay && !animationFrameId) {
-							animate();
-						}
-					}, 100);
-				});
-			}
-		};
-
-		// Start waiting for canvas
-		waitForLottieCanvas();
+	type Surface = {
+		canvas: HTMLCanvasElement;
+		ctx: CanvasRenderingContext2D;
+		texture: PIXI.Texture;
 	};
 
-	// Video animation setup
-	const setupVideo = () => {
-		if (!canvas || !pixiContext) return;
+	// One canvas + one GPU texture per variant, each created once. Frames are blitted
+	// into the canvas at native size and the sprite does the scaling, so there is no
+	// per-frame CPU resample and no per-frame texture allocation.
+	const surfaces = new Map<VariantKey, Surface>();
 
-		// Capture current version value
-		const currentVersion = version;
-		if (!currentVersion) {
-			console.error('[Mascot] Version is undefined');
-			return;
-		}
+	let frames: ImageBitmap[] = [];
+	let elapsed = 0;
+	let drawnFrame = -1;
+	let requestedVersion: VariantKey | null = null;
 
-		// Support BASE_URL if configured
-		const base = (import.meta as any).env?.BASE_URL ?? '/';
-		const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
-		videoElement = document.createElement('video');
-		videoElement.src = `${assetBase}/assets/spines/mascot/${currentVersion}.mov`;
-		videoElement.loop = loop;
-		videoElement.autoplay = autoplay;
-		videoElement.muted = true; // Required for autoplay
-		videoElement.playsInline = true;
+	let activeVersion = $state<VariantKey | null>(null);
+	let texture = $state<PIXI.Texture | null>(null);
 
-		canvas.width = actualWidth;
-		canvas.height = actualHeight;
+	// Sizing follows the variant actually on screen, not the requested one, so the
+	// outgoing animation keeps its own scale while the incoming one is still decoding.
+	//
+	// Expressed as a sprite scale rather than width/height because the two variants
+	// have different native heights (550 vs 450): width/height are resolved against
+	// whichever texture the sprite currently holds, so a swap would mis-size for a
+	// frame. The target box is unchanged from the previous implementation — both
+	// variants are still drawn into `width x height` scaled by the variant factor,
+	// which stretches variant 2's 450px-tall art the same way Lottie did.
+	const spriteScale = $derived.by(() => {
+		if (!activeVersion) return { x: 1, y: 1 };
+		const variant = VARIANTS[activeVersion];
+		return {
+			x: (width * scale * variant.scale) / variant.width,
+			y: (height * scale * variant.scale) / variant.height,
+		};
+	});
+
+	const getSurface = (variantKey: VariantKey) => {
+		const existing = surfaces.get(variantKey);
+		if (existing) return existing;
+
+		const variant = VARIANTS[variantKey];
+		const canvas = document.createElement('canvas');
+		canvas.width = variant.width;
+		canvas.height = variant.height;
 		const ctx = canvas.getContext('2d');
-		if (!ctx) return;
+		if (!ctx) throw Error('[Mascot] could not acquire a 2d context');
 
-		if (!videoElement) return;
-		
-		videoElement.addEventListener('loadedmetadata', () => {
-			if (!videoElement) return;
-			// Scale video to fit canvas
-			const videoAspect = videoElement.videoWidth / videoElement.videoHeight;
-			const canvasAspect = actualWidth / actualHeight;
-
-			let drawWidth = actualWidth;
-			let drawHeight = actualHeight;
-			let drawX = 0;
-			let drawY = 0;
-
-			if (videoAspect > canvasAspect) {
-				// Video is wider
-				drawHeight = actualWidth / videoAspect;
-				drawY = (actualHeight - drawHeight) / 2;
-			} else {
-				// Video is taller
-				drawWidth = actualHeight * videoAspect;
-				drawX = (actualWidth - drawWidth) / 2;
-			}
-
-			const updateTexture = () => {
-				if (canvas && videoElement && ctx) {
-					ctx.clearRect(0, 0, canvas.width, canvas.height);
-					ctx.drawImage(videoElement, drawX, drawY, drawWidth, drawHeight);
-
-					if (!texture) {
-						texture = PIXI.Texture.from(canvas);
-					} else {
-						texture.source.update();
-					}
-					
-					// If we were transitioning and now have a new texture, clean up oldTexture
-					if (isTransitioning && oldTexture && texture) {
-						oldTexture.destroy();
-						oldTexture = null;
-						oldActualWidth = null;
-						oldActualHeight = null;
-						isTransitioning = false;
-					}
-				}
-			};
-
-			const animate = () => {
-				if (videoElement && !videoElement.paused) {
-					updateTexture();
-				}
-				animationFrameId = requestAnimationFrame(animate);
-			};
-
-			if (videoElement) {
-				videoElement.addEventListener('play', () => {
-					animate();
-				});
-
-				videoElement.play().catch((err) => {
-					console.error('Video autoplay failed:', err);
-				});
-			}
-		});
+		// Built directly rather than via PIXI.Texture.from(), which would put the
+		// canvas in the global texture cache and hand back a destroyed texture if
+		// this component is ever remounted after teardown.
+		const surface = {
+			canvas,
+			ctx,
+			texture: new PIXI.Texture({ source: new PIXI.CanvasSource({ resource: canvas }) }),
+		};
+		surfaces.set(variantKey, surface);
+		return surface;
 	};
 
-	// Image sequence animation setup
-	const setupImageSequence = () => {
-		if (!canvas || !pixiContext) return;
-
-		// Capture current version value
-		const currentVersion = version;
-		if (!currentVersion) {
-			console.error('[Mascot] Version is undefined');
-			return;
-		}
-
-		canvas.width = actualWidth;
-		canvas.height = actualHeight;
-		const ctx = canvas.getContext('2d');
-		if (!ctx) return;
-
-		const numFrames = 76; // Based on the JSON, there are 76 frames
-		const fps = 15; // From the JSON: "fr":15
-		const frameDelay = 1000 / fps;
-
-		let lastFrameTime = Date.now();
-
-		// Support BASE_URL if configured
-		const base = (import.meta as any).env?.BASE_URL ?? '/';
-		const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
-		
-		const loadImage = (index: number): Promise<HTMLImageElement> => {
-			return new Promise((resolve, reject) => {
-				const img = new Image();
-				img.onload = () => resolve(img);
-				img.onerror = reject;
-				const imagePath = currentVersion === 2
-					? `${assetBase}/assets/spines/mascot/${currentVersion}/images/img_${index}.png`
-					: `${assetBase}/assets/spines/mascot/${currentVersion}/img_${index}.png`;
-				img.src = imagePath;
-			});
-		};
-
-		const updateTexture = (img: HTMLImageElement) => {
-			if (canvas && ctx) {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				ctx.drawImage(img, 0, 0, actualWidth, actualHeight);
-
-				if (!texture) {
-					texture = PIXI.Texture.from(canvas);
-				} else {
-					texture.source.update();
-				}
-				
-				// If we were transitioning and now have a new texture, clean up oldTexture
-				if (isTransitioning && oldTexture && texture) {
-					oldTexture.destroy();
-					oldTexture = null;
-					oldActualWidth = null;
-					oldActualHeight = null;
-					isTransitioning = false;
-				}
-			}
-		};
-
-		const animate = async () => {
-			const now = Date.now();
-			if (now - lastFrameTime >= frameDelay) {
-				lastFrameTime = now;
-
-				try {
-					const img = await loadImage(imageSequenceIndex);
-					updateTexture(img);
-
-					imageSequenceIndex++;
-					if (imageSequenceIndex >= numFrames) {
-						if (loop) {
-							imageSequenceIndex = 0;
-						} else {
-							return; // Stop animation
-						}
-					}
-				} catch (err) {
-					console.error('Failed to load image frame:', err);
-				}
-			}
-
-			animationFrameId = requestAnimationFrame(animate);
-		};
-
-		// Load first frame
-		loadImage(0)
-			.then((img) => {
-				updateTexture(img);
-				if (autoplay) {
-					animate();
-				}
-			})
-			.catch((err) => {
-				console.error('Failed to load first frame:', err);
-			});
+	const drawFrame = (surface: Surface, index: number) => {
+		surface.ctx.clearRect(0, 0, surface.canvas.width, surface.canvas.height);
+		surface.ctx.drawImage(frames[index], 0, 0);
+		surface.texture.source.update();
+		drawnFrame = index;
 	};
 
+	const tick = (pixiTicker: PIXI.Ticker) => {
+		const currentVersion = activeVersion;
+		if (!currentVersion || !autoplay || frames.length === 0) return;
 
+		const variant = VARIANTS[currentVersion];
+		const shouldLoop = variant.loop && loop;
+		const duration = (variant.frames * 1000) / variant.fps;
 
-	// Track previous version to detect changes
-	let previousVersion = $state<number | null>(null);
-	let previousScale = $state<number | null>(null);
-	let previousWidth = $state<number | null>(null);
-	let previousHeight = $state<number | null>(null);
-	let previousFormat = $state<Props['format'] | null>(null);
+		elapsed += pixiTicker.deltaMS;
+		if (shouldLoop) elapsed %= duration; // keep the accumulator from drifting into float noise
 
-	// Cleanup function
-	const cleanup = (preserveTexture = false) => {
-		if (animationFrameId !== null) {
-			cancelAnimationFrame(animationFrameId);
-			animationFrameId = null;
-		}
-		if (animationItem) {
-			// Remove all event listeners before destroying to prevent memory leaks
-			animationItem.removeEventListener('data_failed');
-			animationItem.removeEventListener('complete');
-			animationItem.removeEventListener('DOMLoaded');
-			animationItem.removeEventListener('loaded_images');
-			animationItem.removeEventListener('enterFrame');
-			animationItem.removeEventListener('config_ready');
-			animationItem.destroy();
-			animationItem = null;
-		}
-		if (lottieContainer && lottieContainer.parentNode) {
-			lottieContainer.parentNode.removeChild(lottieContainer);
-			lottieContainer = null;
-		}
-		if (videoElement) {
-			// Remove video event listeners before cleanup
-			videoElement.removeEventListener('loadedmetadata', () => {});
-			videoElement.removeEventListener('play', () => {});
-			videoElement.pause();
-			videoElement.src = '';
-			videoElement = null;
-		}
-		if (texture && !preserveTexture) {
-			texture.destroy();
-			texture = null;
-		}
-		canvas = null;
-		animationCompleted = false;
+		const raw = Math.floor(elapsed / (1000 / variant.fps));
+		const index = shouldLoop ? raw % variant.frames : Math.min(raw, variant.frames - 1);
+
+		// Only touch the GPU when the frame really changes: at 30 fps on a 60 Hz
+		// display that halves the upload traffic, and the old pipeline did a full
+		// texture re-upload every single rAF regardless.
+		if (index === drawnFrame) return;
+		drawFrame(getSurface(currentVersion), index);
 	};
 
-	// Setup animation based on format and version
-	const setupAnimation = (oldVersion: number | null = null) => {
-		if (oldVersion === 1 && version === 2) {
+	const showVariant = async (nextVersion: VariantKey) => {
+		const bitmaps = await loadFrames(nextVersion);
+		if (requestedVersion !== nextVersion) return; // superseded while decoding
+
+		const surface = getSurface(nextVersion);
+		frames = bitmaps;
+		elapsed = 0;
+		drawnFrame = -1;
+
+		// Paint frame 0 before handing the texture to the sprite so the swap never
+		// shows a blank or stale frame.
+		drawFrame(surface, 0);
+		texture = surface.texture;
+		activeVersion = nextVersion;
+	};
+
+	$effect(() => {
+		const nextVersion = version;
+		if (nextVersion === requestedVersion) return;
+
+		const previousVersion = requestedVersion;
+		requestedVersion = nextVersion;
+
+		if (previousVersion === 1 && nextVersion === 2) {
 			sound.players?.once.play({ name: 'sfx_mascot_win_move', forcePlay: true });
 		}
 
-		// Save current texture as oldTexture if it exists and we're transitioning between versions
-		if (texture && oldVersion !== null && oldVersion !== version) {
-			// Clean up old oldTexture if it exists
-			if (oldTexture) {
-				oldTexture.destroy();
-				oldActualWidth = null;
-				oldActualHeight = null;
-			}
-
-			const oldVersionScale = oldVersion === 2 ? 2 : 1;
-			oldActualWidth = width * scale * oldVersionScale;
-			oldActualHeight = height * scale * oldVersionScale;
-			// Move texture to oldTexture and clear texture immediately
-			// This ensures displayWidth uses oldTexture dimensions during transition
-			oldTexture = texture;
-			texture = null; // Clear texture so displayWidth uses oldTexture
-			isTransitioning = true;
-			// Don't destroy texture in cleanup - we're keeping it as oldTexture
-			cleanup(true);
-		} else {
-			// Not transitioning (initial mount or no version change), clean up normally
-			if (oldTexture) {
-				oldTexture.destroy();
-				oldTexture = null;
-			}
-			oldActualWidth = null;
-			oldActualHeight = null;
-			isTransitioning = false;
-			cleanup();
-		}
-		animationCompleted = false;
-		
-		// Setup based on format
-		if (format === 'lottie') {
-			setupLottie();
-		} else if (format === 'video') {
-			// Create canvas for video
-			canvas = document.createElement('canvas');
-			setupVideo();
-		} else if (format === 'images') {
-			// Create canvas for image sequence
-			canvas = document.createElement('canvas');
-			setupImageSequence();
-		}
-	};
-
-	// Reinitialize when the rendered mascot presentation changes.
-	$effect(() => {
-		const currentVersion = version;
-		const currentScale = scale;
-		const currentWidth = width;
-		const currentHeight = height;
-		const currentFormat = format;
-
-		if (
-			previousVersion === null ||
-			previousScale === null ||
-			previousWidth === null ||
-			previousHeight === null ||
-			previousFormat === null
-		) {
-			return;
-		}
-
-		const versionChanged = currentVersion !== previousVersion;
-		const presentationChanged =
-			currentScale !== previousScale ||
-			currentWidth !== previousWidth ||
-			currentHeight !== previousHeight ||
-			currentFormat !== previousFormat;
-
-		if (!versionChanged && !presentationChanged) {
-			return;
-		}
-
-		const oldVersion = versionChanged ? previousVersion : null;
-		previousVersion = currentVersion;
-		previousScale = currentScale;
-		previousWidth = currentWidth;
-		previousHeight = currentHeight;
-		previousFormat = currentFormat;
-		setupAnimation(oldVersion);
+		showVariant(nextVersion)
+			.then(() => {
+				if (nextVersion !== 1) return;
+				// Back on the idle loop: hand back variant 2's ~98MB of bitmaps, and
+				// pull its bytes into the HTTP cache so the next big win is instant.
+				void releaseFrames(2);
+				const warm = () => void warmFrames(2);
+				if (typeof requestIdleCallback === 'function') requestIdleCallback(warm);
+				else setTimeout(warm, 2000);
+			})
+			.catch((error) => console.error('[Mascot] failed to load frames', error));
 	});
 
-	onMount(() => {
-		previousVersion = version;
-		previousScale = scale;
-		previousWidth = width;
-		previousHeight = height;
-		previousFormat = format;
-		setupAnimation();
+	$effect(() => {
+		const application = context.stateApp.pixiApplication;
+		if (!application) return;
+
+		const applicationTicker = application.ticker;
+		applicationTicker.add(tick);
+		return () => applicationTicker.remove(tick);
 	});
 
 	onDestroy(() => {
-		cleanup();
-		if (oldTexture) {
-			oldTexture.destroy();
-			oldTexture = null;
-		}
-		oldActualWidth = null;
-		oldActualHeight = null;
+		// Canvases and GPU textures are per-instance and must go — layout changes
+		// remount this component, so leaking them would accumulate. The decoded
+		// bitmaps behind `frameCache` are shared with the next mount and are kept.
+		surfaces.forEach((surface) => surface.texture.destroy(true));
+		surfaces.clear();
+		frames = [];
 	});
 </script>
 
-<Container x={x} y={y} zIndex={zIndex} eventMode="none">
-	{#if texture || oldTexture}
-		<MascotSprite texture={isTransitioning && oldTexture ? oldTexture : (texture || oldTexture)} {anchor} width={displayWidth} height={displayHeight} />
+<Container {x} {y} {zIndex} eventMode="none">
+	{#if texture}
+		<BaseSprite {texture} scale={spriteScale} {anchor} />
 	{/if}
 </Container>
-

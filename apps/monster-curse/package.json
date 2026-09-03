@@ -37,7 +37,6 @@
 		"constants-shared": "workspace:*",
 		"envs": "workspace:*",
 		"lodash": "4.17.16",
-		"lottie-web": "^5.13.0",
 		"pixi-svelte": "workspace:*",
 		"pixi.js": "8.8.1",
 		"rgs-requests": "workspace:*",

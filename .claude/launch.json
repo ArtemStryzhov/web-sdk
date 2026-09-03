@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "monster-curse",
+      "runtimeExecutable": "./node_modules/.bin/vite",
+      "runtimeArgs": ["dev", "--port", "3001", "--strictPort"],
+      "cwd": "apps/monster-curse",
+      "port": 3001
+    }
+  ]
+}
