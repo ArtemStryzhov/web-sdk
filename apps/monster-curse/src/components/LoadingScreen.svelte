@@ -174,7 +174,7 @@ const logoScale = $derived(
 	/>
 	<!-- Stone animation layer -->
 	{#if stonesFalling}
-		<StoneAnimation duration={500} speed={4500} scale={1/2} onComplete={onStoneComplete} />
+		<StoneAnimation coverAlpha={0} onComplete={onStoneComplete} />
 	{/if}
 
 	<!-- Button layer -->

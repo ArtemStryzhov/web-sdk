@@ -632,6 +632,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			type: 'freeSpinIntroUpdate',
 			totalFreeSpins: bookEvent.totalFs,
 		});
+		// Wait until the falling stones fully cover the screen so the player never sees the
+		// board swap from basegame to freegame.
+		await eventEmitter.broadcastAsync({ type: 'stonesCoverWait' });
 		stateGame.gameType = 'freegame';
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
@@ -677,7 +680,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		stateGame.gameType = 'basegame';
+		// `stateGame.gameType` stays 'freegame' until the stones cover the screen further
+		// down, so the background and board frame do not snap back during the total win.
 		// Clear any looping/stale win data and reset symbols before returning to basegame
 		stateGame.shouldLoopWinAnimations = false;
 		stateGame.winAnimationData = null;
@@ -706,6 +710,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
+		await eventEmitter.broadcastAsync({ type: 'stonesCoverWait' });
+		stateGame.gameType = 'basegame';
 		await eventEmitter.broadcastAsync({ type: 'transition' });
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerUnfold' });
