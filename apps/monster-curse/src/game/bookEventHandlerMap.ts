@@ -607,6 +607,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// animate scatters
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		await animateSymbols({ positions: bookEvent.positions });
+
+		// Announce the bonus round and wait for the player to click continue.
+		// Everything below (mode switch, stones transition, freespin intro) runs only after that.
+		await eventEmitter.broadcastAsync({
+			type: 'bonusIntroPopupShow',
+			totalFreeSpins: bookEvent.totalFs,
+		});
+
 		// show free spin intro
 		// Ensure we don't continue in a buy_ mode during freespins (prevents re-purchase loops)
 		try {

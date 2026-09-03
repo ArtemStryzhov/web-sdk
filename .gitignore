@@ -57,3 +57,6 @@ packages/e2e/math-testing/*/*.json
 packages/e2e/math-testing/*/*.png
 packages/e2e/math-testing/*/*.txt
 packages/e2e/math-testing/__pycache__/*
+
+#claude local settings
+CLAUDE.local.md

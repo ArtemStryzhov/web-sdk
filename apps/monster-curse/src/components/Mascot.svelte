@@ -19,6 +19,10 @@
 	const FRAME_DIGITS = 5;
 	const DECODE_CONCURRENCY = 8;
 
+	// Cross-fade between variants. Variant 2 is 1.68x the size of variant 1, so a
+	// straight cut is a jarring pop. Set to 0 for the previous hard-cut behaviour.
+	const TRANSITION_MS = 200;
+
 	// Decoded frames are cached at module level: the portrait and desktop mascots are
 	// separate component instances behind an {#if}, so rotating the device remounts
 	// this component and would otherwise re-download and re-decode the whole sequence.
@@ -157,23 +161,37 @@
 	let activeVersion = $state<VariantKey | null>(null);
 	let texture = $state<PIXI.Texture | null>(null);
 
+	// The outgoing variant, held at its last painted frame and its own scale while it
+	// fades out under the incoming one. `fadeProgress` is the incoming sprite's alpha.
+	let fadeFrom = $state<{ texture: PIXI.Texture; scale: number } | null>(null);
+	let fadeProgress = $state(1);
+	let fadeElapsed = 0;
+
+	/**
+	 * Fit the variant's native art into the `width x height` box, preserving aspect.
+	 *
+	 * This must be a single uniform factor, not separate x/y. The old implementation
+	 * handed Lottie a container of the box size and never passed `rendererSettings`,
+	 * so lottie-web applied its default `preserveAspectRatio: 'xMidYMid meet'` —
+	 * it fits the comp into the box and letterboxes it. Scaling x and y independently
+	 * instead stretches variant 2 (native 500x450) vertically by 550/450 = 1.22x.
+	 * Variant 1 is unaffected either way because its native aspect already matches
+	 * the box, which is why only the win mascot looked wrong.
+	 *
+	 * 'xMidYMid' centres the letterbox, so the art's centre still lands on the
+	 * sprite's centre anchor — position is unchanged by fitting rather than stretching.
+	 */
+	const scaleFor = (variantKey: VariantKey) => {
+		const variant = VARIANTS[variantKey];
+		return Math.min(
+			(width * scale * variant.scale) / variant.width,
+			(height * scale * variant.scale) / variant.height,
+		);
+	};
+
 	// Sizing follows the variant actually on screen, not the requested one, so the
 	// outgoing animation keeps its own scale while the incoming one is still decoding.
-	//
-	// Expressed as a sprite scale rather than width/height because the two variants
-	// have different native heights (550 vs 450): width/height are resolved against
-	// whichever texture the sprite currently holds, so a swap would mis-size for a
-	// frame. The target box is unchanged from the previous implementation — both
-	// variants are still drawn into `width x height` scaled by the variant factor,
-	// which stretches variant 2's 450px-tall art the same way Lottie did.
-	const spriteScale = $derived.by(() => {
-		if (!activeVersion) return { x: 1, y: 1 };
-		const variant = VARIANTS[activeVersion];
-		return {
-			x: (width * scale * variant.scale) / variant.width,
-			y: (height * scale * variant.scale) / variant.height,
-		};
-	});
+	const spriteScale = $derived(activeVersion ? scaleFor(activeVersion) : 1);
 
 	const getSurface = (variantKey: VariantKey) => {
 		const existing = surfaces.get(variantKey);
@@ -206,6 +224,14 @@
 	};
 
 	const tick = (pixiTicker: PIXI.Ticker) => {
+		// Advance the cross-fade before any early return: the outgoing variant is a
+		// frozen frame, so it must keep fading even if the incoming one cannot draw.
+		if (fadeFrom) {
+			fadeElapsed += pixiTicker.deltaMS;
+			fadeProgress = Math.min(1, fadeElapsed / TRANSITION_MS);
+			if (fadeProgress >= 1) fadeFrom = null;
+		}
+
 		const currentVersion = activeVersion;
 		if (!currentVersion || !autoplay || frames.length === 0) return;
 
@@ -230,6 +256,12 @@
 		const bitmaps = await loadFrames(nextVersion);
 		if (requestedVersion !== nextVersion) return; // superseded while decoding
 
+		// Capture the outgoing variant before it is replaced. Its canvas keeps the
+		// last frame painted into it, so it can be shown frozen while it fades.
+		const outgoing = activeVersion;
+		const outgoingSurface =
+			outgoing !== null && outgoing !== nextVersion ? surfaces.get(outgoing) : undefined;
+
 		const surface = getSurface(nextVersion);
 		frames = bitmaps;
 		elapsed = 0;
@@ -240,6 +272,15 @@
 		drawFrame(surface, 0);
 		texture = surface.texture;
 		activeVersion = nextVersion;
+
+		if (outgoing !== null && outgoingSurface && TRANSITION_MS > 0) {
+			fadeFrom = { texture: outgoingSurface.texture, scale: scaleFor(outgoing) };
+			fadeElapsed = 0;
+			fadeProgress = 0;
+		} else {
+			fadeFrom = null;
+			fadeProgress = 1;
+		}
 	};
 
 	$effect(() => {
@@ -286,7 +327,15 @@
 </script>
 
 <Container {x} {y} {zIndex} eventMode="none">
+	{#if fadeFrom}
+		<BaseSprite
+			texture={fadeFrom.texture}
+			scale={fadeFrom.scale}
+			{anchor}
+			alpha={1 - fadeProgress}
+		/>
+	{/if}
 	{#if texture}
-		<BaseSprite {texture} scale={spriteScale} {anchor} />
+		<BaseSprite {texture} scale={spriteScale} {anchor} alpha={fadeProgress} />
 	{/if}
 </Container>

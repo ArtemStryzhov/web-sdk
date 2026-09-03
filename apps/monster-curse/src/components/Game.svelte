@@ -24,6 +24,7 @@
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import Win from './Win.svelte';
+	import BonusIntroPopup from './BonusIntroPopup.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
@@ -434,6 +435,7 @@ const shouldUsePortraitStyle = $derived(
 {/snippet}
 
 		<Win />
+		<BonusIntroPopup />
 		<FreeSpinIntro />
 		<!-- Removed FreeSpinCounter - freespin count now shown on buy bonus button -->
 		<FreeSpinOutro />

@@ -257,6 +257,12 @@ export default {
 		},
 		preload: true,
 	},
+	// Dust region of the feature atlas page, reused as a still overlay (see BonusIntroPopup)
+	featureDust: {
+		type: 'sprite',
+		src: new URL('../../assets/spines/foregroundFeatureAnimation/animated/runes.png', import.meta.url).href,
+		preload: true,
+	},
 	foregroundFeatureAnimation: {
 		type: 'spine',
 		src: {
