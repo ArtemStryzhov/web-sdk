@@ -18,10 +18,11 @@
 	import { bookEventAmountToNormalisedAmount } from 'utils-shared/amount';
 
 	import WinCoins from './WinCoins.svelte';
-	import WinCounter from './WinCounter.svelte';
+	import WinCounter, { winCounterFontSize } from './WinCounter.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import { getContext } from '../game/context';
 	import { winLevelMap } from '../game/winLevelMap';
+	import { WIN_POPUP_Z, getWinImageY } from '../game/winPopupLayout';
 
 	const context = getContext();
 
@@ -64,8 +65,10 @@
 		dokdoFontReady;
 	});
 
-	// Get sprite key and size for each win level
-	const getWinLevelSprite = (level: number | undefined): { key: string; width: number; height: number } | null => {
+	// Get sprite key, size and vertical position for each win level
+	const getWinLevelSprite = (
+		level: number | undefined,
+	): { key: string; width: number; height: number; y: number } | null => {
 		if (!level) return null;
 		
 		const layoutType = context.stateLayoutDerived.layoutType();
@@ -100,10 +103,18 @@
 				return null;
 		}
 		
+		const width = baseSprite.width * scale;
+		const height = baseSprite.height * scale;
+
 		return {
 			key: baseSprite.key,
-			width: baseSprite.width * scale,
-			height: baseSprite.height * scale,
+			width,
+			height,
+			// Sit right above the win amount instead of at a fixed offset from the board centre.
+			y: getWinImageY({
+				spriteHeight: height,
+				amountFontSize: winCounterFontSize(layoutType),
+			}),
 		};
 	};
 
@@ -154,7 +165,11 @@
 
 				<!-- Background with opacity only for win levels >= 6 -->
 				{#if winLevelData && winLevelData.level >= 6}
-					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.7} zIndex={0} />
+					<CanvasSizeRectangle
+						backgroundColor={0x000000}
+						backgroundAlpha={0.7}
+						zIndex={WIN_POPUP_Z.background}
+					/>
 				{/if}
 
 				<OnMount
@@ -213,18 +228,26 @@
 
 				<!-- Show win amount only for big wins -->
 				{#if isBigWin}
-					<WinCounter {countUpAmount} />
+					<Container zIndex={WIN_POPUP_Z.amount}>
+						<WinCounter {countUpAmount} />
+					</Container>
 				{/if}
 
 				<!-- Sequential win level screens -->
 				{#if isBigWin && bigWinLevels.length > 0}
+					{#if shouldShowCoins}
+						{@const currentLevelData = winLevelMap[currentScreenLevel as keyof typeof winLevelMap]}
+						<Container zIndex={WIN_POPUP_Z.coins}>
+							<WinCoins emit={!countUpCompleted} levelAlias={currentLevelData?.alias} />
+						</Container>
+					{/if}
+
 					{#each bigWinLevels as level, index}
 						{@const isCurrentScreen = index === currentScreenIndex}
-						{@const levelData = winLevelMap[level as keyof typeof winLevelMap]}
 						{@const spriteData = getWinLevelSprite(level)}
 						
-						<FadeContainer show={isCurrentScreen} zIndex={1001}>
-							<MainContainer zIndex={1} cullable={false}>
+						<FadeContainer show={isCurrentScreen} zIndex={WIN_POPUP_Z.image}>
+							<MainContainer cullable={false}>
 								<Container
 									x={context.stateGameDerived.boardLayout().x}
 									y={context.stateGameDerived.boardLayout().y}
@@ -235,10 +258,10 @@
 									{@const boardLayout = context.stateGameDerived.boardLayout()}
 									
 									{#if spriteData}
-										<!-- Win level sprite at top center -->
+										<!-- Win level sprite right above the win amount -->
 										<Container
 											x={mainLayout.width * 0.5 - boardLayout.x}
-											y={-230}
+											y={spriteData.y}
 											zIndex={1001}
 										>
 											<Sprite
@@ -251,66 +274,62 @@
 									{/if}
 								</Container>
 							</MainContainer>
-
-							{#if shouldShowCoins}
-								<Container zIndex={1}>
-									<WinCoins emit={!countUpCompleted} levelAlias={levelData?.alias} />
-								</Container>
-							{/if}
-
-							<!-- Show PressToContinue only on level 10 -->
-							{#if level === 10}
-								<Container zIndex={1}>
-									<PressToContinue onpress={() => {
-										if (!countUpCompleted) {
-											finishCountUp();
-										}
-
-										oncomplete();
-									}} />
-								</Container>
-							{/if}
 						</FadeContainer>
+
+						<!-- Show PressToContinue only on level 10 -->
+						{#if level === 10}
+							<FadeContainer show={isCurrentScreen} zIndex={WIN_POPUP_Z.pressToContinue}>
+								<PressToContinue onpress={() => {
+									if (!countUpCompleted) {
+										finishCountUp();
+									}
+
+									oncomplete();
+								}} />
+							</FadeContainer>
+						{/if}
 					{/each}
 				{:else}
 					<!-- Non-big win: original single screen display -->
 					{@const spriteData = getWinLevelSprite(winLevelData?.level)}
 					
-					<MainContainer zIndex={1} cullable={false}>
-						<Container
-							x={context.stateGameDerived.boardLayout().x}
-							y={context.stateGameDerived.boardLayout().y}
-							zIndex={1000}
-							cullable={false}
-						>
-							{@const mainLayout = context.stateLayoutDerived.mainLayout()}
-							{@const boardLayout = context.stateGameDerived.boardLayout()}
-							
-							{#if spriteData}
-								<!-- Win level sprite at top center -->
-								<Container
-									x={mainLayout.width * 0.5 - boardLayout.x}
-									y={-230}
-									zIndex={1001}
-								>
-									<Sprite
-										key={spriteData.key}
-										anchor={0.5}
-										width={spriteData.width}
-										height={spriteData.height}
-									/>
-								</Container>
-							{/if}
-						</Container>
-					</MainContainer>
-
 					{#if shouldShowCoins}
-						<Container zIndex={1}>
+						<Container zIndex={WIN_POPUP_Z.coins}>
 							<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
 						</Container>
 					{/if}
 
-					<Container zIndex={1}>
+					<Container zIndex={WIN_POPUP_Z.image}>
+						<MainContainer cullable={false}>
+							<Container
+								x={context.stateGameDerived.boardLayout().x}
+								y={context.stateGameDerived.boardLayout().y}
+								zIndex={1000}
+								cullable={false}
+							>
+								{@const mainLayout = context.stateLayoutDerived.mainLayout()}
+								{@const boardLayout = context.stateGameDerived.boardLayout()}
+								
+								{#if spriteData}
+									<!-- Win level sprite right above the win amount -->
+									<Container
+										x={mainLayout.width * 0.5 - boardLayout.x}
+										y={spriteData.y}
+										zIndex={1001}
+									>
+										<Sprite
+											key={spriteData.key}
+											anchor={0.5}
+											width={spriteData.width}
+											height={spriteData.height}
+										/>
+									</Container>
+								{/if}
+							</Container>
+						</MainContainer>
+					</Container>
+
+					<Container zIndex={WIN_POPUP_Z.pressToContinue}>
 						<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
 					</Container>
 				{/if}

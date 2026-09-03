@@ -20,6 +20,7 @@
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import { WIN_AMOUNT_Y, WIN_POPUP_Z, getWinImageY } from '../game/winPopupLayout';
 	import WinCoins from './WinCoins.svelte';
 
 	const context = getContext();
@@ -34,11 +35,14 @@
 	let totalWinMusicClosed = $state(false);
 
 	// Same font style as Win.svelte
-	const multiplierFontStyle = (): TextStyleOptions => {
-		const layoutType = context.stateLayoutDerived.layoutType();
-		const isDesktop = layoutType === 'desktop';
+	const totalWinFontSize = () => {
+		const isDesktop = context.stateLayoutDerived.layoutType() === 'desktop';
 		const baseFontSize = 60;
-		const fontSize = isDesktop ? baseFontSize * 1.85 : baseFontSize * 1.5;
+		return isDesktop ? baseFontSize * 1.85 : baseFontSize * 1.5;
+	};
+
+	const multiplierFontStyle = (): TextStyleOptions => {
+		const fontSize = totalWinFontSize();
 		const strokeThickness = 5;
 		const shadowDistance = Math.hypot(3, 6);
 
@@ -72,7 +76,7 @@
 	};
 
 	// Get total.png sprite with layout-based scaling
-	const getTotalSprite = (): { key: string; width: number; height: number } => {
+	const getTotalSprite = (): { key: string; width: number; height: number; y: number } => {
 		const layoutType = context.stateLayoutDerived.layoutType();
 		let scale = 1.0; // Default (landscape)
 		
@@ -88,10 +92,15 @@
 		const baseWidth = 302.5;
 		const baseHeight = 269.5;
 		
+		const width = baseWidth * scale;
+		const height = baseHeight * scale;
+
 		return {
 			key: 'total.png',
-			width: baseWidth * scale,
-			height: baseHeight * scale,
+			width,
+			height,
+			// Sit right above the win amount instead of at a fixed offset from the board centre.
+			y: getWinImageY({ spriteHeight: height, amountFontSize: totalWinFontSize() }),
 		};
 	};
 
@@ -152,7 +161,7 @@
 {#if winLevelData && show}
 	<!-- Fullscreen background - rendered FIRST with lowest z-index -->
 	{@const canvasSizes = context.stateLayoutDerived.canvasSizes()}
-	<Container zIndex={0}>
+	<Container zIndex={WIN_POPUP_Z.background}>
 		<Graphics
 			draw={(g) => {
 				g.clear();
@@ -182,53 +191,58 @@
 					}}
 				/>
 
+				<!-- Coins animation - only render when counter is not completed and win is big.
+				     Kept below the artwork and the amount so it never covers the text. -->
+				{#if !countUpCompletedParam && winLevelData?.type === 'big'}
+					<Container zIndex={WIN_POPUP_Z.coins}>
+						<WinCoins emit={true} levelAlias={winLevelData?.alias} />
+					</Container>
+				{/if}
+
 				<!-- Content (sprite and amount) -->
-				<MainContainer zIndex={1} cullable={false}>
-					<Container
-						x={context.stateGameDerived.boardLayout().x}
-						y={context.stateGameDerived.boardLayout().y}
-						zIndex={1000}
-						cullable={false}
-					>
-						{@const mainLayout = context.stateLayoutDerived.mainLayout()}
-						{@const boardLayout = context.stateGameDerived.boardLayout()}
-						{@const spriteData = getTotalSprite()}
-						
-						<!-- Total win sprite at top center -->
+				<Container zIndex={WIN_POPUP_Z.image}>
+					<MainContainer cullable={false}>
 						<Container
-							x={mainLayout.width * 0.5 - boardLayout.x}
-							y={-230}
-							zIndex={1001}
-						>
-							<Sprite
-								key={spriteData.key}
-								anchor={0.5}
-								width={spriteData.width}
-								height={spriteData.height}
-							/>
-						</Container>
-						<!-- Win amount text below sprite -->
-						<!-- TextStyle padding should prevent clipping -->
-						<Container
-							x={mainLayout.width * 0.5 - boardLayout.x}
-							y={120}
+							x={context.stateGameDerived.boardLayout().x}
+							y={context.stateGameDerived.boardLayout().y}
 							zIndex={1000}
 							cullable={false}
 						>
-							<ResponsiveText
-								anchor={0.5}
-								maxWidth={2130}
-								text={bookEventAmountToCurrencyString(countUpAmount).replace(/\./g, '•')}
-								style={multiplierFontStyle()}
-							/>
+							{@const mainLayout = context.stateLayoutDerived.mainLayout()}
+							{@const boardLayout = context.stateGameDerived.boardLayout()}
+							{@const spriteData = getTotalSprite()}
+							
+							<!-- Total win sprite right above the win amount -->
+							<Container
+								x={mainLayout.width * 0.5 - boardLayout.x}
+								y={spriteData.y}
+								zIndex={1001}
+							>
+								<Sprite
+									key={spriteData.key}
+									anchor={0.5}
+									width={spriteData.width}
+									height={spriteData.height}
+								/>
+							</Container>
+							<!-- Win amount text below sprite -->
+							<!-- TextStyle padding should prevent clipping -->
+							<Container
+								x={mainLayout.width * 0.5 - boardLayout.x}
+								y={WIN_AMOUNT_Y}
+								zIndex={1002}
+								cullable={false}
+							>
+								<ResponsiveText
+									anchor={0.5}
+									maxWidth={2130}
+									text={bookEventAmountToCurrencyString(countUpAmount).replace(/\./g, '•')}
+									style={multiplierFontStyle()}
+								/>
+							</Container>
 						</Container>
-					</Container>
-				</MainContainer>
-
-				<!-- Coins animation - only render when counter is not completed and win is big -->
-				{#if !countUpCompletedParam && winLevelData?.type === 'big'}
-					<WinCoins emit={true} levelAlias={winLevelData?.alias} />
-				{/if}
+					</MainContainer>
+				</Container>
 
 			{/snippet}
 		</WinCountUpProvider>

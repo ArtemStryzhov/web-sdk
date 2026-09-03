@@ -1,3 +1,9 @@
+<script lang="ts" module>
+	/** Font size of the win amount, shared with the popups that position artwork against it. */
+	export const winCounterFontSize = (layoutType: string) =>
+		layoutType === 'desktop' ? 60 * 1.85 : 60 * 1.4;
+</script>
+
 <script lang="ts">
 	import { Container } from 'pixi-svelte';
 	import { ResponsiveText } from 'components-pixi';
@@ -6,6 +12,7 @@
 	import { MainContainer } from 'components-layout';
 
 	import { getContext } from '../game/context';
+	import { WIN_AMOUNT_Y } from '../game/winPopupLayout';
 
 	type Props = {
 		countUpAmount: number;
@@ -16,11 +23,7 @@
 
 	const multiplierFontStyle = (): TextStyleOptions => {
 		// Match multiplier.css exactly: font-size: 50px, text-shadow: 3px 6px 0px #BF00B5, -webkit-text-stroke: 5px transparent
-		// Base: 50 * 1.2 = 60, then +15% on desktop: 60 * 1.15 = 69
-		const layoutType = context.stateLayoutDerived.layoutType();
-		const isDesktop = layoutType === 'desktop';
-		const baseFontSize = 60;
-		const fontSize = isDesktop ? baseFontSize * 1.85 : baseFontSize * 1.4; // 69 on desktop, 60 otherwise
+		const fontSize = winCounterFontSize(context.stateLayoutDerived.layoutType());
 		const strokeThickness = 5; // Match -webkit-text-stroke: 5px
 		const shadowDistance = Math.hypot(3, 6); // Match text-shadow: 3px 6px (distance = sqrt(3^2 + 6^2) ≈ 6.708)
 
@@ -54,7 +57,7 @@
 	};
 </script>
 
-<MainContainer zIndex={1002} cullable={false}>
+<MainContainer cullable={false}>
 	<Container
 		x={context.stateGameDerived.boardLayout().x}
 		y={context.stateGameDerived.boardLayout().y}
@@ -67,7 +70,7 @@
 		<!-- Win amount text centered -->
 		<Container
 			x={mainLayout.width * 0.5 - boardLayout.x}
-			y={120}
+			y={WIN_AMOUNT_Y}
 			zIndex={1000}
 			cullable={false}
 		>

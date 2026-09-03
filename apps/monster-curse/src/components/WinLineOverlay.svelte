@@ -13,6 +13,22 @@
 	// x ≈ centre of reel 1 (left side of the second reel)
 	const TEXT_X = SYMBOL_SIZE * 1.5; // 180 px
 
+	// ── line_zigzag.png geometry ─────────────────────────────────────
+	// The artwork isn't drawn to the board grid: measured on the source image
+	// (882x273) its apexes sit at these normalised positions.
+	const ZIGZAG_U_BOT_L = 0.2664; // x of the left bottom apex   (reel 2 centre)
+	const ZIGZAG_U_BOT_R = 0.7415; // x of the right bottom apex  (reel 4 centre)
+	const ZIGZAG_V_TOP = 0.1224;   // y of the middle top apex    (upper row centre)
+	const ZIGZAG_V_BOT = 0.8990;   // y of the two bottom apexes  (lower row centre)
+
+	// Draw rect that maps those apexes onto the reel/row centres — i.e. the sprite is
+	// scaled down about the zigzag's own centre so the line runs through the symbols
+	// instead of over their tops.
+	const ZIGZAG_W = (SYMBOL_SIZE * 2) / (ZIGZAG_U_BOT_R - ZIGZAG_U_BOT_L);
+	const ZIGZAG_X = SYMBOL_SIZE * 1.5 - ZIGZAG_U_BOT_L * ZIGZAG_W;
+	const ZIGZAG_H = SYMBOL_SIZE / (ZIGZAG_V_BOT - ZIGZAG_V_TOP);
+	const ZIGZAG_Y = SYMBOL_SIZE * 0.5 - ZIGZAG_V_TOP * ZIGZAG_H;
+
 	const LABEL_W = 150; // border width  (wider than Symbol.svelte's 80 to fit "0.50x2")
 	const LABEL_H = 60;  // border height (same as Symbol.svelte)
 	const FONT_SIZE = 40;
@@ -38,8 +54,12 @@
 
 	type LineLayout = {
 		spriteKey: 'line_0' | 'line_45' | 'line_zigzag';
+		/** container origin in board space: top edge of the sprite, or its bottom edge when flipY */
 		containerY: number;
-		height: number;
+		/** sprite draw rect inside the container; the reveal mask covers the same height */
+		spriteX: number;
+		spriteWidth: number;
+		spriteHeight: number;
 		flipY: boolean;
 		/** y of win-amount label in board space (15 px above the line at reel 1) */
 		textY: number;
@@ -58,23 +78,29 @@
 		const rowAtReel1 = payline ? payline[1] : 0;
 		const textY = rowAtReel1 * SYMBOL_SIZE - 15;
 
+		const full = { spriteX: 0, spriteWidth: BOARD_WIDTH };
+
 		if (lineIndex >= 1 && lineIndex <= 5) {
 			const row = lineIndex - 1;
-			return { spriteKey: 'line_0', containerY: row * SYMBOL_SIZE, height: SYMBOL_SIZE, flipY: false, textY };
+			return { spriteKey: 'line_0', containerY: row * SYMBOL_SIZE, ...full, spriteHeight: SYMBOL_SIZE, flipY: false, textY };
 		}
 		if (lineIndex === 6) {
-			return { spriteKey: 'line_45', containerY: BOARD_WIDTH, height: BOARD_WIDTH, flipY: true, textY };
+			return { spriteKey: 'line_45', containerY: BOARD_WIDTH, ...full, spriteHeight: BOARD_WIDTH, flipY: true, textY };
 		}
 		if (lineIndex === 7) {
-			return { spriteKey: 'line_45', containerY: 0, height: BOARD_WIDTH, flipY: false, textY };
+			return { spriteKey: 'line_45', containerY: 0, ...full, spriteHeight: BOARD_WIDTH, flipY: false, textY };
 		}
 		const isInverted = lineIndex >= 12;
 		const minRow = isInverted ? lineIndex - 12 : lineIndex - 8;
-		const h = SYMBOL_SIZE * 2;
+		// The line lives in a 2-row band; the sprite is inset by ZIGZAG_Y inside it
+		// (mirrored for the inverted lines, which are drawn with scale.y = -1).
+		const bandTop = minRow * SYMBOL_SIZE;
 		return {
 			spriteKey: 'line_zigzag',
-			containerY: isInverted ? minRow * SYMBOL_SIZE + h : minRow * SYMBOL_SIZE,
-			height: h,
+			containerY: isInverted ? bandTop + SYMBOL_SIZE * 2 - ZIGZAG_Y : bandTop + ZIGZAG_Y,
+			spriteX: ZIGZAG_X,
+			spriteWidth: ZIGZAG_W,
+			spriteHeight: ZIGZAG_H,
 			flipY: isInverted,
 			textY,
 		};
@@ -288,13 +314,13 @@
 		zIndex={60000}
 		alpha={0.85}
 	>
-		<Rectangle isMask x={0} y={0} width={line.maskWidth} height={line.layout.height} />
+		<Rectangle isMask x={0} y={0} width={line.maskWidth} height={line.layout.spriteHeight} />
 		<Sprite
 			key={line.layout.spriteKey}
-			x={0}
+			x={line.layout.spriteX}
 			y={0}
-			width={BOARD_WIDTH}
-			height={line.layout.height}
+			width={line.layout.spriteWidth}
+			height={line.layout.spriteHeight}
 			anchor={{ x: 0, y: 0 }}
 		/>
 	</Container>
