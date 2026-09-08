@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte';
 
-	import { requestAuthenticate } from 'rgs-requests';
+	import { requestAuthenticate, requestReplay } from 'rgs-requests';
 
 	// Define the response type locally to avoid import issues
 	type AuthenticateResponse = {
@@ -38,9 +38,8 @@
 		};
 		error?: unknown;
 	};
-	import { stateUrlDerived, stateBet, stateConfig, stateModal } from 'state-shared';
+	import { stateUrlDerived, stateBet, stateConfig, stateModal, stateUi } from 'state-shared';
 	import { API_AMOUNT_MULTIPLIER, MOST_USED_BET_INDEXES } from 'constants-shared/bet';
-
 
 	type Props = { children: Snippet };
 
@@ -111,7 +110,7 @@
 
 			// round
 			if (typedData?.round) {
-				// Example of authenticateData.round 
+				// Example of authenticateData.round
 				// {
 				// 	"betID": 62277967,
 				// 	"amount": 1000000,
@@ -123,23 +122,21 @@
 				// 	"event": null
 				// }
 
-				if(typedData.round?.state) {
+				if (typedData.round?.state) {
 					// @ts-ignore
-					stateBet.lastBet =  typedData.round;
+					stateBet.lastBet = typedData.round;
 				}
 
-				if(typedData.round?.amount) {
+				if (typedData.round?.amount) {
 					const betAmountValue =
-						typedData.round.amount > 0
-							? typedData.round.amount / API_AMOUNT_MULTIPLIER
-							: 0;
+						typedData.round.amount > 0 ? typedData.round.amount / API_AMOUNT_MULTIPLIER : 0;
 					stateBet.betAmount = betAmountValue;
 					stateBet.wageredBetAmount = betAmountValue;
 				}
 
 				if (typedData.round?.mode) {
 					stateBet.activeBetModeKey = typedData.round.mode;
-				};
+				}
 			}
 		} catch (error) {
 			console.error(error);
@@ -147,8 +144,64 @@
 		}
 	};
 
+	const handleReplay = async () => {
+		try {
+			const betAmountValue = stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER || 0;
+			stateBet.betAmount = betAmountValue;
+			stateBet.wageredBetAmount = betAmountValue;
+			// an unknown key would make stateBetDerived.activeBetMode() null, so only
+			// take the mode from the URL when it is actually there
+			if (stateUrlDerived.mode()) stateBet.activeBetModeKey = stateUrlDerived.mode();
+			if (stateUrlDerived.currency()) stateBet.currency = stateUrlDerived.currency();
+
+			const replayData = await requestReplay({
+				rgsUrl: stateUrlDerived.rgsUrl(),
+				game: stateUrlDerived.game(),
+				mode: stateUrlDerived.mode(),
+				version: stateUrlDerived.version(),
+				event: stateUrlDerived.event(),
+			});
+
+			// error
+			if ((replayData as { error?: unknown })?.error) throw replayData;
+
+			// The endpoint returns the recorded round itself, but a wrapped
+			// { round } envelope (the shape /wallet/play uses) is accepted too.
+			const round = ((replayData as { round?: unknown })?.round ?? replayData) as {
+				state?: unknown[];
+			};
+
+			if (!round?.state?.length) {
+				throw {
+					error: 'Empty state in replay response',
+					message: JSON.stringify({ replayData }),
+				};
+			}
+
+			// A replay has no session and no wallet, so it is played back through the
+			// resume-bet path: 'event: 0' replays the round from its first book event.
+			// @ts-ignore
+			stateBet.lastBet = {
+				...round,
+				event: '0',
+				active: true,
+				mode: stateBet.activeBetModeKey,
+			};
+		} catch (error) {
+			console.error(error);
+			stateModal.modal = { name: 'error', error };
+		}
+	};
+
 	onMount(async () => {
-		await authenticate();
+		if (stateUrlDerived.replay()) {
+			stateUi.config.mode = 'replay';
+			await handleReplay();
+		} else {
+			stateUi.config.mode = 'default';
+			await authenticate();
+		}
+
 		authenticated = true;
 	});
 </script>

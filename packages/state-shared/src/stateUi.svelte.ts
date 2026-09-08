@@ -53,6 +53,8 @@ export const AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP = {
 	[INFINITY_MARK]: Infinity,
 };
 
+export type UIConfigMode = 'default' | 'replay';
+
 export const stateUi = $state({
 	autoSpinsText: '10' as AutoSpinsText,
 	autoSpinsCustomRounds: 10,
@@ -64,4 +66,7 @@ export const stateUi = $state({
 	menuOpen: false,
 	drawerFold: false,
 	drawerButtonShow: false,
+	config: {
+		mode: 'default' as UIConfigMode,
+	},
 });

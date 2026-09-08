@@ -49,7 +49,11 @@ const updateIsTurbo = (value: boolean, options: { persistent: boolean }) => {
 	stateBet.isTurbo = value;
 };
 
-const activeBetMode = () => stateMeta.betModeMeta?.[stateBet.activeBetModeKey] || null;
+const activeBetMode = () =>
+	stateMeta.betModeMeta?.[stateBet.activeBetModeKey] ??
+	stateMeta.betModeMeta?.[stateBet.activeBetModeKey.toUpperCase()] ??
+	stateMeta.betModeMeta?.[stateBet.activeBetModeKey.toLowerCase()] ??
+	null;
 const isContinuousBet = () => stateBet.autoSpinsCounter > 1 || stateBet.isSpaceHold;
 const timeScale = () => (stateBet.isTurbo ? 2 : 1);
 const betCostMultiplier = () =>

@@ -241,3 +241,19 @@ export const requestBet = async (options: {
 
 	return data;
 };
+
+export const requestReplay = async (options: {
+	game: string;
+	version: string;
+	mode: string;
+	event: string;
+	rgsUrl: string;
+}) => {
+	const data = await rgsFetcher.get({
+		// @ts-ignore the replay endpoint is not in the generated schema.ts yet
+		url: `/bet/replay/${options.game}/${options.version}/${options.mode}/${options.event}`,
+		rgsUrl: options.rgsUrl,
+	});
+
+	return data;
+};

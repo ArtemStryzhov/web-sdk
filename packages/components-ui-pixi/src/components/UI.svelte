@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 
+	import { stateUi } from 'state-shared';
 	import { getContextLayout } from 'utils-layout';
 	import { EnableSpaceHold } from 'components-shared';
 
@@ -13,7 +14,7 @@
 	import LabelBalance from './LabelBalance.svelte';
 	import LabelWin from './LabelWin.svelte';
 	import LabelBet from './LabelBet.svelte';
-	
+
 	import ButtonGameRules from './ButtonGameRules.svelte';
 	import ButtonSettings from './ButtonSettings.svelte';
 	import ButtonBuyBonus from './ButtonBuyBonus.svelte';
@@ -50,6 +51,10 @@
 	};
 
 	const LayoutComponent = $derived(LAYOUT_COMPONENT_MAP[stateLayoutDerived.layoutType()]);
+
+	// A replay plays back a recorded round: there is no session, balance or wallet
+	// behind it, so every control that would place a bet is left out.
+	const isReplay = $derived(stateUi.config.mode === 'replay');
 
 	const logLayoutInfo = () => {
 		const layoutType = stateLayoutDerived.layoutType();
@@ -127,10 +132,12 @@
 		{/snippet}
 
 		{#snippet amountBalance(labelProps)}
-			{#if props.amountBalance}
-				{@render props.amountBalance(labelProps)}
-			{:else}
-				<LabelBalance {...labelProps} />
+			{#if !isReplay}
+				{#if props.amountBalance}
+					{@render props.amountBalance(labelProps)}
+				{:else}
+					<LabelBalance {...labelProps} />
+				{/if}
 			{/if}
 		{/snippet}
 
@@ -151,15 +158,19 @@
 		{/snippet}
 
 		{#snippet buttonBuyBonus(buttonProps)}
-			{#if props.buttonBuyBonus}
-				{@render props.buttonBuyBonus(buttonProps)}
-			{:else}
-				<ButtonBuyBonus {...buttonProps} />
+			{#if !isReplay}
+				{#if props.buttonBuyBonus}
+					{@render props.buttonBuyBonus(buttonProps)}
+				{:else}
+					<ButtonBuyBonus {...buttonProps} />
+				{/if}
 			{/if}
 		{/snippet}
 
 		{#snippet buttonBet(buttonProps)}
-			<ButtonBet {...buttonProps} />
+			{#if !isReplay}
+				<ButtonBet {...buttonProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet buttonTurbo(buttonProps)}
@@ -167,19 +178,25 @@
 		{/snippet}
 
 		{#snippet buttonAutoSpin(buttonProps)}
-			{#if props.buttonAutoSpin}
-				{@render props.buttonAutoSpin(buttonProps)}
-			{:else}
-				<ButtonAutoSpin {...buttonProps} />
+			{#if !isReplay}
+				{#if props.buttonAutoSpin}
+					{@render props.buttonAutoSpin(buttonProps)}
+				{:else}
+					<ButtonAutoSpin {...buttonProps} />
+				{/if}
 			{/if}
 		{/snippet}
 
 		{#snippet buttonIncrease(buttonProps)}
-			<ButtonIncrease {...buttonProps} />
+			{#if !isReplay}
+				<ButtonIncrease {...buttonProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet buttonDecrease(buttonProps)}
-			<ButtonDecrease {...buttonProps} />
+			{#if !isReplay}
+				<ButtonDecrease {...buttonProps} />
+			{/if}
 		{/snippet}
 
 		{#snippet buttonMenu(buttonProps)}
@@ -193,8 +210,6 @@
 		{#snippet buttonClose(buttonProps)}
 			<ButtonClose {...buttonProps} />
 		{/snippet}
-
-
 
 		{#snippet buttonGameRules(buttonProps)}
 			<ButtonGameRules {...buttonProps} />
