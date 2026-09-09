@@ -360,6 +360,24 @@
 
 	const buttonSpriteKey = $derived(isHovered ? 'button_grey.png' : 'button_inactive.png');
 
+	// Desktop cards (blocks) are rendered 25% smaller. The frame, its images, the text size
+	// and every in-card pixel offset follow this factor, so the card stays proportional and
+	// the text keeps fitting inside it.
+	const desktopCardScale = $derived(isDesktop ? 0.75 : 1);
+
+	// Very wide screens (e.g. 3008x1605) run out of room inside the card, so the frame and its
+	// images get 10% bigger there. Deliberately not applied to the text size: growing both would
+	// keep the same overflow, while only growing the card gives the text 10% more space.
+	const largeDesktopCardScale = $derived(canvasSizes.width > 2500 ? 1.1 : 1);
+
+	// The CTA button is drawn in mainLayout coordinates, so it keeps growing together with
+	// mainLayout.scale on wide screens. Freeze its visual size at the size it has on a
+	// 1400px-wide canvas; narrower screens are unaffected (the factor clamps to 1).
+	const BUTTON_GROWTH_MAX_WIDTH = 1400;
+	const buttonSizeScale = $derived(
+		Math.min(1, BUTTON_GROWTH_MAX_WIDTH / mainLayout.width / mainLayout.scale)
+	);
+
 	// Welcome frame layout calculations
 	const frameOriginalWidth = 846;
 	const frameOriginalHeight = 993;
@@ -417,6 +435,8 @@
 
 			return (
 				base *
+				desktopCardScale * // Desktop cards are 25% smaller
+				largeDesktopCardScale * // ...but 10% bigger again above 2500px wide
 				extraScale *
 				smallDesktopScale *
 				narrowDesktopScale *
@@ -660,7 +680,7 @@
 
 	// Position button above the bottom of the blocks (accounting for button center anchor)
 	// Margin reduced by 60%: 30px * 0.4 = 12px
-	const buttonY = $derived(framesY + frameHeight * 0.5 + 12 + (buttonHeight * buttonScale * 0.5) + (isSmallScreen ? 40 : 0));
+	const buttonY = $derived(framesY + frameHeight * 0.5 + 12 + (buttonHeight * buttonScale * buttonSizeScale * 0.5) + (isSmallScreen ? 40 : 0));
 	const buttonYWithViewportOffset = $derived(buttonY + buttonYOffset1200x675);
 
 	// Frame text content
@@ -693,6 +713,7 @@
 			viewport425x812TextScale * // 15% larger on 425x812-like screens
 			widthBasedTextScale * // Width-based reduction tier for 1124 and 1050 breakpoints
 			viewport400x225TextScale * // 20% larger on 400x225-like screens
+			desktopCardScale * // Desktop cards are 25% smaller
 			(isShortLandscapeLike ? 1.2 : 1), // Increase by 20% on short landscape screens
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
@@ -728,12 +749,13 @@
 			viewport400x225TextScale * // 20% larger on 400x225-like screens
 			(isViewport800x450Like ? 0.95 : 1) * // Decrease by 5% on 800x450-like screens
 			firstBlockViewport1470x775TextScale * // 15% smaller on 1470x775-like screens
+			desktopCardScale * // Desktop cards are 25% smaller
 			(isShortLandscapeLike ? 1.2 : 1), // Increase by 20% on short landscape screens
 		fontWeight: 400 as any,
 		fill: 0xFFFFFF,
 		align: 'center' as const,
 		wordWrap: true,
-		wordWrapWidth: frameWidth * 0.8 - 40 - firstBlockExtraLeftPadding, // Extra left padding on 800x450-like screens
+		wordWrapWidth: frameWidth * 0.8 - (40 + firstBlockExtraLeftPadding) * desktopCardScale, // Extra left padding on 800x450-like screens
 	});
 
 	// The first block's text is nudged right by half of its extra left padding to keep the
@@ -741,7 +763,7 @@
 	// also moves its centre off the block's centre; on 3008x1605-like screens drop it so the
 	// text sits exactly in the middle of the block.
 	const frameTextXFirst = $derived(
-		isViewport3008x1605Like ? 0 : (40 + firstBlockExtraLeftPadding) * 0.5
+		isViewport3008x1605Like ? 0 : (40 + firstBlockExtraLeftPadding) * 0.5 * desktopCardScale
 	);
 
 	// Image dimensions from spritesheet (original sizes)
@@ -754,58 +776,69 @@
 
 	// Calculate image scales to fit within frames (with some padding), then double the size
 	const imageScale = $derived((frameWidth * 0.3 / Math.max(imageSizes.sword.width, imageSizes['50x'].width)) * 2); // Scale based on frame width, doubled
-	const imageScaleSens = $derived((frameWidth * 0.4 / imageSizes.sens2000.width) * 2 * 1.2); // Slightly larger for sens2000, doubled, then increased by 20%
+	const imageScaleSens = $derived((frameWidth * 0.4 / imageSizes.sens2000.width) * 2 * 1.2 * 0.85); // Slightly larger for sens2000, doubled, increased by 20%, then reduced by 15%
+	// Second block image is 10% smaller than the shared image scale
+	const imageScaleElicsir = $derived(imageScale * 0.9);
 
 	// Calculate image positions
 	// Frame boundaries: left = -frameWidth/2, right = frameWidth/2, top = -frameHeight/2, bottom = frameHeight/2
 	// First block: sword.png near left border, 50x.png centered horizontally, top aligned
-	const swordX = $derived(-frameWidth * 0.45 - 50); // Near left border (with padding from edge), moved 50px left
-	const swordY = $derived(-frameHeight * 0.4 + 80); // Positioned in upper area, moved 50px down
+	const swordX = $derived(-frameWidth * 0.45 - 50 * desktopCardScale); // Near left border (with padding from edge), moved 50px left
+	const swordY = $derived(-frameHeight * 0.4 + 80 * desktopCardScale); // Positioned in upper area, moved 50px down
 	const multiplierX = $derived(0); // Centered horizontally
-	const multiplierY = $derived(-frameHeight * 0.4 + 20); // Top aligned
+	const multiplierY = $derived(-frameHeight * 0.4 + 20 * desktopCardScale); // Top aligned
 
-	// Second block: elicsir.png centered horizontally, top aligned
+	// Second block: elicsir.png centered horizontally, top aligned, then moved down by 15% of its own height
 	const elicsirX = $derived(0); // Centered horizontally
-	const elicsirY = $derived(-frameHeight * 0.4 +35); // Top aligned
+	const elicsirY = $derived(
+		-frameHeight * 0.4 +
+			35 * desktopCardScale +
+			imageSizes.elicsir.height * imageScaleElicsir * 0.15
+	);
 
-	// Third block: sens2000.png centered horizontally, top aligned
+	// Third block: sens2000.png centered horizontally, top aligned, then moved down by 33% of its own height
 	const sens2000X = $derived(0); // Centered horizontally
-	const sens2000Y = $derived(-frameHeight * 0.4 + 40); // Top aligned, moved 40px down
+	const sens2000Y = $derived(
+		-frameHeight * 0.4 +
+			40 * desktopCardScale +
+			imageSizes.sens2000.height * imageScaleSens * 0.33
+	);
 
 	// Calculate text Y position below images to avoid overlap
 	// Images are anchored at center, so bottom edge = imageY + (imageHeight / 2)
 	const frameTextY = $derived.by(() => {
 		// Calculate bottom edge of each image
 		const block0ImageBottom = multiplierY + (imageSizes['50x'].height * imageScale / 2);
-		const block1ImageBottom = elicsirY + (imageSizes.elicsir.height * imageScale / 2);
+		const block1ImageBottom = elicsirY + (imageSizes.elicsir.height * imageScaleElicsir / 2);
 		const block2ImageBottom = sens2000Y + (imageSizes.sens2000.height * imageScaleSens / 2);
 		
 		// Find the maximum bottom edge (lowest image)
 		const maxImageBottom = Math.max(block0ImageBottom, block1ImageBottom, block2ImageBottom);
 		
 		// Position text below the lowest image with 20px padding
-		return maxImageBottom + 20;
+		return maxImageBottom + 20 * desktopCardScale;
 	});
 
 	// Text Y position for first two blocks (raised by additional 60% from current position)
-	const frameTextYFirstTwo = $derived(frameTextY * 0.1 -20);
+	const frameTextYFirstTwo = $derived(frameTextY * 0.1 - 20 * desktopCardScale);
 	// Text Y position for first block only - positioned much higher, near the top of the frame, lowered by 15%
 	// On tall desktop screens (height > 1300px, e.g. 3008x1384) move the text up by 50px to compensate
 	// for the smaller frameHeight caused by larger mainLayout.scale on taller viewports
 	const frameTextYFirst = $derived(
 		-frameHeight * 0.5 +
-			145 +
-			(isViewport800x450Like ? -25 : 0) +
-			(isDesktop && canvasSizes.height > 1300 ? -50 : 0) +
-			(isSmallScreen ? -15 : 0) +
-			firstBlockExtraTopPadding +
+			(145 +
+				(isViewport800x450Like ? -25 : 0) +
+				(isDesktop && canvasSizes.height > 1300 ? -50 : 0) +
+				(isSmallScreen ? -15 : 0) +
+				firstBlockExtraTopPadding) *
+				desktopCardScale +
 			(isShortLandscapeLike && !isViewport800x450Like ? frameHeight * 0.2 : 0)
 	);
 
 const textStyle = $derived({
 	fontFamily: 'Kanit, Arial, sans-serif',
 	// Increase CTA button label by an additional 15% and center vertically
-	fontSize: UI_BASE_FONT_SIZE * 0.3 * 1.15 * 1.2 * 1.15,
+	fontSize: UI_BASE_FONT_SIZE * 0.3 * 1.15 * 1.2 * 1.15 * buttonSizeScale,
 	fontWeight: 600 as any,
 	fill: 0x61E5FF,
 	align: 'center' as const,
@@ -927,8 +960,8 @@ const textStyle = $derived({
 							{#if index === 1}
 								<Sprite
 									key="elicsir.png"
-									width={imageSizes.elicsir.width * imageScale}
-									height={imageSizes.elicsir.height * imageScale}
+									width={imageSizes.elicsir.width * imageScaleElicsir}
+									height={imageSizes.elicsir.height * imageScaleElicsir}
 									anchor={{ x: 0.5, y: 0.5 }}
 									x={elicsirX}
 									y={elicsirY}
@@ -1038,8 +1071,8 @@ const textStyle = $derived({
 					{#if index === 1}
 						<Sprite
 							key="elicsir.png"
-							width={imageSizes.elicsir.width * imageScale}
-							height={imageSizes.elicsir.height * imageScale}
+							width={imageSizes.elicsir.width * imageScaleElicsir}
+							height={imageSizes.elicsir.height * imageScaleElicsir}
 							anchor={{ x: 0.5, y: 0.5 }}
 							x={elicsirX}
 							y={elicsirY}
@@ -1105,8 +1138,8 @@ const textStyle = $derived({
 			hitArea={new PIXI.Rectangle(
 				0,
 				0,
-				buttonWidth * buttonScale,
-				buttonHeight * buttonScale
+				buttonWidth * buttonScale * buttonSizeScale,
+				buttonHeight * buttonScale * buttonSizeScale
 			)}
 			onpointerover={(e) => {
 				e.stopPropagation();
@@ -1123,8 +1156,8 @@ const textStyle = $derived({
 		>
 			<Sprite
 				key={buttonSpriteKey}
-				width={buttonWidth * buttonScale}
-				height={buttonHeight * buttonScale}
+				width={buttonWidth * buttonScale * buttonSizeScale}
+				height={buttonHeight * buttonScale * buttonSizeScale}
 				anchor={{ x: 0.5, y: 0.5 }}
 				x={0}
 				y={0}
@@ -1136,7 +1169,7 @@ const textStyle = $derived({
 				style={textStyle}
 				anchor={{ x: 0.5, y: 0.5 }}
 				x={0}
-				y={5}
+				y={5 * buttonSizeScale}
 				eventMode="none"
 			/>
 		</Container>

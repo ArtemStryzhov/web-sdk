@@ -28,18 +28,28 @@
 
 	const bet = () => context.eventEmitter.broadcast({ type: 'bet' });
 
+	// Turbo raised by the stop button / spacebar is a one-shot skip: it belongs to the
+	// spin that is running right now and has to be dropped again as soon as that spin
+	// is over. `stopButtonEnable` marks every spin boundary (each free-spin reveal as
+	// well as the end of the round), so it is the signal to release it.
+	const releaseStopButtonTurbo = () => {
+		if (!stopButtonTriggeredTurbo) return;
+		stopButtonTriggeredTurbo = false;
+		stateBetDerived.updateIsTurbo(false, { persistent: false });
+	};
+
 	const stop = () => {
 		if (!stopDisabled) {
 			if (stateBetDerived.hasAutoBetCounter()) stateBet.autoSpinsCounter = 0;
-			
+
 			// Track that turbo was activated by stop button
 			if (!stateBet.isTurbo) {
 				stopButtonTriggeredTurbo = true;
 			}
-			
+
 			// Immediately enable turbo mode for faster completion
 			stateBetDerived.updateIsTurbo(true, { persistent: false });
-			
+
 			// Broadcast stop event to interrupt animations
 			context.eventEmitter.broadcast({ type: 'stopButtonClick' });
 		}
@@ -73,20 +83,17 @@
 
 	const key = $derived.by(getKey);
 
-	// Watch for state changes to reset turbo when round completes
+	// Safety net: whatever happens during the round, going idle always clears the flag.
 	$effect(() => {
-		const isIdle = context.stateXstateDerived.isIdle();
-		
-		// When game returns to idle state after stop button turbo was activated
-		if (isIdle && stopButtonTriggeredTurbo) {
-			stopButtonTriggeredTurbo = false;
-			stateBetDerived.updateIsTurbo(false, { persistent: false });
-		}
+		if (context.stateXstateDerived.isIdle()) releaseStopButtonTurbo();
 	});
 
 	context.eventEmitter.subscribeOnMount({
 		stopButtonClick: () => (stopDisabled = true),
-		stopButtonEnable: () => (stopDisabled = false),
+		stopButtonEnable: () => {
+			stopDisabled = false;
+			releaseStopButtonTurbo();
+		},
 	});
 </script>
 

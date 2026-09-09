@@ -56,14 +56,6 @@
 			window.innerHeight >= 400 &&
 			window.innerHeight <= 520;
 
-		console.info('[ModalGameRules] viewport detection', {
-			width: window.innerWidth,
-			height: window.innerHeight,
-			shortLandscape: nextShortLandscape,
-			portraitTall: nextPortraitTall,
-			is800x450: next800x450,
-		});
-
 		useShortLandscapePadding = nextShortLandscape;
 		usePortraitTallPadding = nextPortraitTall;
 		use800x450Width = next800x450;

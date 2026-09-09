@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { onMount } from 'svelte';
 
 	import { stateUi } from 'state-shared';
 	import { getContextLayout } from 'utils-layout';
@@ -55,68 +54,6 @@
 	// A replay plays back a recorded round: there is no session, balance or wallet
 	// behind it, so every control that would place a bet is left out.
 	const isReplay = $derived(stateUi.config.mode === 'replay');
-
-	const logLayoutInfo = () => {
-		const layoutType = stateLayoutDerived.layoutType();
-		const canvasSizes = stateLayoutDerived.canvasSizes();
-		const canvasRatio = stateLayoutDerived.canvasRatio();
-		const canvasRatioType = stateLayoutDerived.canvasRatioType();
-		const canvasSizeType = stateLayoutDerived.canvasSizeType();
-		const mainLayout = stateLayoutDerived.mainLayout();
-		const mainLayoutStandard = stateLayoutDerived.mainLayoutStandard();
-
-		console.log('📐 [LAYOUT] Current Layout Info:', {
-			layoutType,
-			canvasSizes: { width: canvasSizes.width, height: canvasSizes.height },
-			canvasRatio: canvasRatio.toFixed(3),
-			canvasRatioType,
-			canvasSizeType,
-			mainLayout: {
-				width: mainLayout.width,
-				height: mainLayout.height,
-				x: mainLayout.x,
-				y: mainLayout.y,
-			},
-			mainLayoutStandard: {
-				width: mainLayoutStandard.width,
-				height: mainLayoutStandard.height,
-				x: mainLayoutStandard.x,
-				y: mainLayoutStandard.y,
-			},
-		});
-	};
-
-	let isInitialMount = $state(true);
-
-	// Log on init
-	onMount(() => {
-		logLayoutInfo();
-		isInitialMount = false;
-	});
-
-	// Debounced resize logging
-	const debounceDelay = 300; // 300ms debounce
-
-	$effect(() => {
-		// Track layout changes (which includes resize)
-		const layoutType = stateLayoutDerived.layoutType();
-		const canvasSizes = stateLayoutDerived.canvasSizes();
-
-		// Skip logging on initial mount (already logged in onMount)
-		if (isInitialMount) {
-			return;
-		}
-
-		// Set timeout for debounced logging
-		const timeoutId = setTimeout(() => {
-			logLayoutInfo();
-		}, debounceDelay);
-
-		// Cleanup on unmount or when dependencies change
-		return () => {
-			clearTimeout(timeoutId);
-		};
-	});
 </script>
 
 <EnableSpaceHold />
