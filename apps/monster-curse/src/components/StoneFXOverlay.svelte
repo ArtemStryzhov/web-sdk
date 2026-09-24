@@ -119,6 +119,15 @@
 			}
 		},
 		stonesCoverWait: async () => waitForCover(),
+		// A replay plays the same round from the top, so the transitions it already
+		// played have to count as unplayed again.
+		replayReset: async () => {
+			show = false;
+			isCovered = false;
+			wasInBonusGameWhenWinShowed = false;
+			playedTransitions = new Set<string>();
+			resolveCoverWaiters();
+		},
 		bonusGameEnd: async () => {
 			if (wasInBonusGameWhenWinShowed) {
 				const transitionKey = 'bonusGameEnd';

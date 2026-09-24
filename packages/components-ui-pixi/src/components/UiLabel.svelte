@@ -8,6 +8,11 @@
 	type Props = {
 		label: string;
 		value: string;
+		/**
+		 * Which label this is, for styling purposes. The visible text is localized
+		 * ("BET" reads "PLAY" in a social build), so it can never be matched on.
+		 */
+		kind?: 'bet' | 'balance' | 'win';
 		numericAmount?: number;
 		tiled?: boolean;
 		stacked?: boolean;
@@ -18,7 +23,7 @@
 	const context = getContext();
 
 	// Double font size for WIN label specifically
-	const isWinLabel = $derived(props.label.toUpperCase().includes('WIN'));
+	const isWinLabel = $derived(props.kind === 'win');
 	const baseValueFontSize = UI_BASE_FONT_SIZE;
 	const labelFontSize = $derived(isWinLabel ? UI_BASE_FONT_SIZE * 2 : UI_BASE_FONT_SIZE);
 	const shouldCompactValue = $derived((props.numericAmount ?? 0) > 100000);
@@ -28,10 +33,10 @@
 	const valueFontSize = $derived(shouldCompactValue ? compactValueFontSize : labelFontSize);
 
 	// Check if this is a balance label for semibold weight
-	const isBalanceLabel = $derived(props.label.toUpperCase().includes('BALANCE'));
+	const isBalanceLabel = $derived(props.kind === 'balance');
 
 	// Check if this is a bet label for semibold weight (and stacking on desktop/landscape)
-	const isBetLabel = $derived(props.label.toUpperCase().includes('BET'));
+	const isBetLabel = $derived(props.kind === 'bet');
 
 	// Check if we should stack based on layout type (tablet and portrait should be stacked by default)
 	// Bet labels should also stack on desktop and landscape

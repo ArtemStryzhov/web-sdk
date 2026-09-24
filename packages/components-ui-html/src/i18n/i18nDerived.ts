@@ -21,4 +21,17 @@ export const i18nDerived = {
 	lossLimitReached: () => stateI18nDerived.translate('LOSS LIMIT REACHED'),
 	singleWinLimitReached: () => stateI18nDerived.translate('SINGLE WIN LIMIT REACHED'),
 	settings: () => stateI18nDerived.translate('SETTINGS'),
+	// replay window
+	replay: () => stateI18nDerived.translate('REPLAY'),
+	betReplay: () => stateI18nDerived.translate('Bet Replay'),
+	mode: () => stateI18nDerived.translate('Mode'),
+	baseBet: () => stateI18nDerived.translate('Base Bet'),
+	costMultiplier: () => stateI18nDerived.translate('Cost Multiplier'),
+	totalBetCost: () => stateI18nDerived.translate('Total Bet Cost'),
+	payoutMultiplier: () => stateI18nDerived.translate('Payout Multiplier'),
+	totalWin: () => stateI18nDerived.translate('Total Win'),
+	startReplay: () => stateI18nDerived.translate('Start Replay'),
+	replayAgain: () => stateI18nDerived.translate('Replay Again'),
+	replayNote: () =>
+		stateI18nDerived.translate('This is a replay of a previous bet round. No bets will be placed.'),
 };

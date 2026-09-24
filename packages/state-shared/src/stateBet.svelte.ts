@@ -1,9 +1,16 @@
 import type { BaseBet } from 'utils-bet';
-import { stateMeta } from './stateMeta.svelte';
+import { stateMetaDerived } from './stateMeta.svelte';
 
 export type Currency = string;
 export type LastBet = BaseBet | null;
 export type BetModeKey = string;
+
+/**
+ * Social (sweepstakes) balances are sweeps coins, never real money. Used as the
+ * fallback when a social session has no currency of its own to read — the amount
+ * formatter renders it as "SC".
+ */
+export const SOCIAL_CURRENCY: Currency = 'XEC';
 
 export const stateBet = $state({
 	currency: 'USD' as Currency,
@@ -49,11 +56,7 @@ const updateIsTurbo = (value: boolean, options: { persistent: boolean }) => {
 	stateBet.isTurbo = value;
 };
 
-const activeBetMode = () =>
-	stateMeta.betModeMeta?.[stateBet.activeBetModeKey] ??
-	stateMeta.betModeMeta?.[stateBet.activeBetModeKey.toUpperCase()] ??
-	stateMeta.betModeMeta?.[stateBet.activeBetModeKey.toLowerCase()] ??
-	null;
+const activeBetMode = () => stateMetaDerived.betModeData(stateBet.activeBetModeKey);
 const isContinuousBet = () => stateBet.autoSpinsCounter > 1 || stateBet.isSpaceHold;
 const timeScale = () => (stateBet.isTurbo ? 2 : 1);
 const betCostMultiplier = () =>

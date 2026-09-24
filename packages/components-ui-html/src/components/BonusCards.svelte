@@ -2,6 +2,7 @@
 	import { stateBet, stateModal, stateUi, INFINITY_MARK, type BetModeData } from 'state-shared';
 	import { Button } from 'components-shared';
 	import { getContextEventEmitter } from 'utils-event-emitter';
+	import { currencyPrefix, numberToAmountString } from 'utils-shared/amount';
 
 	import BaseIcon from './BaseIcon.svelte';
 	import BonusCard from './BonusCard.svelte';
@@ -47,8 +48,8 @@
 
 					{#snippet price()}
 						{@const price = stateBet.betAmount * betModeData.costMultiplier}
-						{@const currencySymbol = stateBet.currency === 'USD' ? '$' : `${stateBet.currency} `}
-						{@const formatted = price.toFixed(2)}
+						{@const currencySymbol = currencyPrefix()}
+						{@const formatted = numberToAmountString(price)}
 						{@const [intPart, decPart] = formatted.split('.')}
 						<div class="price">
 							<span class="currency">{currencySymbol}</span>

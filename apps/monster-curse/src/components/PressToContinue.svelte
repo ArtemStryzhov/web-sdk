@@ -216,6 +216,11 @@
 	const isSmallDesktop = $derived(isDesktop && canvasSizes.width < 1600 && canvasSizes.height < 800);
 	const isNarrowDesktop = $derived(isDesktop && canvasSizes.width <= 1024);
 	const isNarrowDesktop1200 = $derived(isDesktop && canvasSizes.width < 1200);
+	// 4K desktops. The threshold matches the very-wide tier firstBlockLargeDesktopScale below
+	// uses, so it covers a 4K canvas at any window height, e.g. 3008x1143 and 3008x1605 alike.
+	const is4KDesktop = $derived(isDesktop && canvasSizes.width > 2900);
+	// The first block's text is shrunk hardest on these screens (0.74 below); give 10% back.
+	const first4KDesktopTextScale = $derived(is4KDesktop ? 1.1 : 1);
 	const firstBlockLargeDesktopScale = $derived.by(() => {
 		if (canvasSizes.width > 2900) {
 			return 0.74;
@@ -687,7 +692,7 @@
 	const frameTexts = $derived([
 		'Silver Sword symbols may carry variable multiplier values and expand vertically to occupy the entire reel.',
 		'Elixir Flask symbols interact with expanding Silver Sword symbols, applying an extra multiplier effect.',
-		stateUrlDerived.social() ? 'Maximum payout: 20,000× play amount' : 'Maximum payout: 20,000× bet',
+		stateUrlDerived.social() ? 'Maximum prize: 20,000× play amount' : 'Maximum payout: 20,000× bet',
 	]);
 
 	// Text style for frame content
@@ -735,6 +740,7 @@
 			(isNarrowDesktop1200 ? 1.15 : 1) *
 			(isUltraNarrow ? 0.8 : 1) *
 			firstBlockLargeDesktopScale * // Width-based large-screen reduction for first block text
+			first4KDesktopTextScale * // ...partly given back on 4K desktops
 			(isSmallScreen ? 0.8 * 0.9 : 1) * // 20% + extra 10% smaller on screens < 380px wide
 			portraitTextScale *
 			tabletTextScale *
@@ -804,6 +810,11 @@
 			imageSizes.sens2000.height * imageScaleSens * 0.33
 	);
 
+	// The third block's artwork sits too low on a 4K canvas. The offset is quoted in canvas
+	// pixels while the blocks are drawn inside MainContainer, which scales its children by
+	// mainLayout.scale, so divide by it to land on the asked-for on-screen distance.
+	const sens2000YRendered = $derived(sens2000Y + (is4KDesktop ? -15 / mainLayout.scale : 0));
+
 	// Calculate text Y position below images to avoid overlap
 	// Images are anchored at center, so bottom edge = imageY + (imageHeight / 2)
 	const frameTextY = $derived.by(() => {
@@ -818,6 +829,10 @@
 		// Position text below the lowest image with 20px padding
 		return maxImageBottom + 20 * desktopCardScale;
 	});
+
+	// Third block's own text position: the shared frameTextY, nudged up on 4K desktops.
+	// Kept separate from frameTextY itself, which the second block's position derives from.
+	const frameTextYThird = $derived(frameTextY + (is4KDesktop ? -30 / mainLayout.scale : 0));
 
 	// Text Y position for first two blocks (raised by additional 60% from current position)
 	const frameTextYFirstTwo = $derived(frameTextY * 0.1 - 20 * desktopCardScale);
@@ -977,7 +992,7 @@ const textStyle = $derived({
 									height={imageSizes.sens2000.height * imageScaleSens}
 									anchor={{ x: 0.5, y: 0.5 }}
 									x={sens2000X}
-									y={sens2000Y}
+									y={sens2000YRendered}
 									eventMode="none"
 								/>
 							{/if}
@@ -1007,7 +1022,7 @@ const textStyle = $derived({
 										style={frameTextStyle}
 										anchor={{ x: 0.5, y: 0 }}
 										x={0}
-										y={frameTextY}
+										y={frameTextYThird}
 										eventMode="none"
 									/>
 								{/if}
@@ -1088,7 +1103,7 @@ const textStyle = $derived({
 							height={imageSizes.sens2000.height * imageScaleSens}
 							anchor={{ x: 0.5, y: 0.5 }}
 							x={sens2000X}
-							y={sens2000Y}
+							y={sens2000YRendered}
 							eventMode="none"
 						/>
 					{/if}
@@ -1118,7 +1133,7 @@ const textStyle = $derived({
 								style={frameTextStyle}
 								anchor={{ x: 0.5, y: 0 }}
 								x={0}
-								y={frameTextY}
+								y={frameTextYThird}
 								eventMode="none"
 							/>
 						{/if}

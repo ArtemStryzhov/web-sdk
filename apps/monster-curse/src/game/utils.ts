@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { stateBet } from 'state-shared';
+import { stateBet, stateReplayDerived } from 'state-shared';
 import { createPlayBookUtils } from 'utils-book';
 import { createGetEmptyPaddedBoard } from 'utils-slots';
 
@@ -83,6 +83,9 @@ export const playBet = async (bet: Bet) => {
 	
 	try {
 		await playBookEvents(bet.state);
+		// A replay is finished once its book is; normally the round's `finalWin`
+		// event has already said so, this covers a book that carries no finalWin.
+		stateReplayDerived.finish();
 		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		
 		if (stateGame.winAnimationData) {

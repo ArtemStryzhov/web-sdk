@@ -1,7 +1,12 @@
 import { locales } from 'config-lingui';
 import { page } from '$app/state';
 
+import { stateConfig } from './stateConfig.svelte';
+
 export type Language = (typeof locales)[number];
+
+/** Social (sweepstakes) builds ship English only. */
+export const SOCIAL_LANGUAGE: Language = 'en';
 
 export type Key =
 	// keys for play
@@ -25,12 +30,22 @@ export type Key =
 const getUrlSearchParam = (key: Key) => page.url.searchParams.get(key);
 
 // params for play
-const lang = () =>
-	getUrlSearchParam('lang') === 'br' ? 'pt' : (getUrlSearchParam('lang') as Language) || 'en';
+const social = () => getUrlSearchParam('social') === 'true';
+
+// Two signals mark a social (sweepstakes) session: the `social=true` URL param, and
+// the `socialCasino` jurisdiction flag from authenticate(). Either one locks the game
+// to English — the `lang` param is ignored and no other locale is selectable, so any
+// language switcher must read this before offering a choice.
+const languageLocked = () => social() || stateConfig.jurisdiction.socialCasino;
+
+const lang = (): Language => {
+	if (languageLocked()) return SOCIAL_LANGUAGE;
+	const value = getUrlSearchParam('lang');
+	return value === 'br' ? 'pt' : (value as Language) || 'en';
+};
 const sessionID = () => getUrlSearchParam('sessionID') || '';
 const rgsUrl = () => getUrlSearchParam('rgs_url') || '';
 const force = () => getUrlSearchParam('force') === 'true';
-const social = () => getUrlSearchParam('social') === 'true';
 
 // params for replay
 const replay = () => getUrlSearchParam('replay') === 'true';
@@ -44,6 +59,7 @@ const event = () => getUrlSearchParam('event') || '';
 export const stateUrlDerived = {
 	// states for play
 	lang,
+	languageLocked,
 	sessionID,
 	rgsUrl,
 	force,

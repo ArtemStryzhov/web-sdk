@@ -1,5 +1,8 @@
 {
 	"extends": "config-ts/base.json",
 	"include": ["."],
-	"exclude": ["dist", "build", "node_modules"]
+	// `scripts` holds node-only tooling (see scripts/verifyPayouts.ts); it is not
+	// part of the browser build and does not type-check against these lib/target
+	// settings. It is run directly with `pnpm --filter monster-curse verify-payouts`.
+	"exclude": ["dist", "build", "node_modules", "scripts"]
 }

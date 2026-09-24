@@ -17,4 +17,4 @@
 	const value = $derived(numberToCurrencyString(stateBet.betAmount));
 </script>
 
-<UiLabel tiled {label} {value} stacked={props.stacked} />
+<UiLabel tiled kind="bet" {label} {value} stacked={props.stacked} />

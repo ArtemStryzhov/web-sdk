@@ -3,26 +3,76 @@
 
 	import { Popup } from 'components-shared';
 	import { zIndex } from 'constants-shared/zIndex';
-	import { stateModal, stateUrlDerived } from 'state-shared';
+	import { stateMetaDerived, stateModal, stateUrlDerived } from 'state-shared';
+
+	import { i18nDerived } from '../i18n/i18nDerived';
 
 	const isSocial = $derived(stateUrlDerived.social());
+
+	// Mode names come from the game's bet-mode dictionary, the same one the reels,
+	// the replay panel and index.json read. The second argument is only what a game
+	// that does not register these modes falls back to — the dictionary wins.
+	const contractName = $derived(stateMetaDerived.betModeName('buy_contract', 'Monster Contract'));
+	const bladesName = $derived(stateMetaDerived.betModeName('buy_blades', 'Blades of Fate'));
+	const contractHeading = $derived(contractName.toUpperCase());
+	const bladesHeading = $derived(bladesName.toUpperCase());
 
 	// Jurisdiction-compliant labels for social (sweepstakes) casino mode
 	const txt = $derived({
 		paytableHeading: isSocial ? 'WIN TABLE' : 'PAYTABLE',
 		payingSymbols: isSocial ? 'winning symbols' : 'paying symbols',
 		featureBuyHeading: isSocial ? 'FEATURE PLAY' : 'FEATURE BUY',
-		buyBonusButton: isSocial ? 'PLAY BONUS' : 'BUY BONUS',
+		buyBonusButton: isSocial ? 'FEATURE PLAY' : 'BUY BONUS',
 		purchaseFeature: isSocial ? 'play game features' : 'purchase game features',
-		monsterContractBuyHeading: isSocial ? 'MONSTER CONTRACT BONUS PLAY' : 'MONSTER CONTRACT BONUS BUY',
+		monsterContractBuyHeading: `${contractHeading} ${isSocial ? 'BONUS PLAY' : 'BONUS BUY'}`,
 		monsterContractPurchase: isSocial
-			? 'Players have the option to play the Monster Contract Bonus directly. This feature can be played for 100 times the underlying play amount and carries a theoretical expected return of 96.34%.'
-			: 'Players have the option to purchase the Monster Contract Bonus directly. This feature costs 100 times the underlying bet and carries a theoretical expected return of 96.34%.',
-		bladesOfFateBuyHeading: isSocial ? 'BLADES OF FATE BONUS PLAY' : 'BLADES OF FATE BONUS BUY',
+			? `Players have the option to play the ${contractName} Bonus directly. This feature can be played for 100 times the underlying play amount and carries a theoretical expected return of 96.34%.`
+			: `Players have the option to purchase the ${contractName} Bonus directly. This feature costs 100 times the underlying bet and carries a theoretical expected return of 96.34%.`,
+		bladesOfFateBuyHeading: `${bladesHeading} ${isSocial ? 'BONUS PLAY' : 'BONUS BUY'}`,
 		bladesOfFatePurchase: isSocial
-			? 'Players have the option to play the Blades of Fate Bonus directly. This feature can be played for 300 times the underlying play amount and carries a theoretical expected return of 96.34%.'
-			: 'Players have the option to purchase the Blades of Fate Bonus directly. This feature costs 300 times the underlying bet and carries a theoretical expected return of 96.34%.',
+			? `Players have the option to play the ${bladesName} Bonus directly. This feature can be played for 300 times the underlying play amount and carries a theoretical expected return of 96.34%.`
+			: `Players have the option to purchase the ${bladesName} Bonus directly. This feature costs 300 times the underlying bet and carries a theoretical expected return of 96.34%.`,
+		aboutTheGame: isSocial
+			? 'Beast Hunt is a 5-reel, 5-row slot. The Silver Sword symbol expands upward on each spin. If the Silver Sword passes through an Elixir Flask during its expansion, the flask\'s multiplier value is applied to the Silver Sword\'s own multiplier.'
+			: 'Beast Hunt is a 5-reel, 5-row payline slot. The Silver Sword symbol expands upward on each spin. If the Silver Sword passes through an Elixir Flask during its expansion, the flask\'s multiplier value is applied to the Silver Sword\'s own multiplier.',
+		maxWin: isSocial
+			? `This game has a theoretical expected return of 96.44% in normal mode, and 96.34% in both ${contractName} and ${bladesName} modes. The maximum possible win is 20000x the underlying play amount in normal mode, in ${contractName} and in ${bladesName}.`
+			: `This game has a theoretical expected return of 96.44% in normal mode, and 96.34% in both ${contractName} and ${bladesName} modes. The maximum possible win is 20000x the underlying bet in normal mode, in ${contractName} and in ${bladesName}.`,
+		waysToWin: isSocial
+			? 'A winning combination is formed by landing at least 3 matching symbols on adjacent reels, beginning from the leftmost reel, across any of the 15 fixed lines. Only the single highest win per line is awarded.'
+			: 'A winning combination is formed by landing at least 3 matching symbols on adjacent reels, beginning from the leftmost reel, across any of the 15 fixed paylines. Only the single highest win per payline is awarded.',
+		paylinesImageAlt: isSocial ? 'Lines' : 'Paylines',
+
+		// ── User Interaction Guide ───────────────────────────────────────────────
+		// Same substitutions as the rest of the map: a social build plays rather
+		// than bets or buys, and holds coins rather than funds.
+		howToPlay: isSocial
+			? 'Use the \u2212 and + buttons to change the play value. Press the SPIN button to play. The space bar can be used instead of the SPIN button.'
+			: 'Use the \u2212 and + buttons to change the bet value. Press the SPIN button to play. The space bar can be used instead of the SPIN button.',
+		betLabel: isSocial ? 'PLAY' : 'BET',
+		balanceDescription: isSocial
+			? 'shows the current amount of coins available to play.'
+			: 'shows the current amount of funds available to play.',
+		betDescription: isSocial
+			? 'shows the current total play amount for a single game round.'
+			: 'shows the current total bet for a single game round.',
+		increaseDecreaseDescription: isSocial
+			? 'decrease and increase the current play amount, cycling through the play levels available in the game.'
+			: 'decrease and increase the current bet, cycling through the bet levels available in the game.',
+		spinDescription: isSocial
+			? 'starts the game round at the current play amount.'
+			: 'starts the game round at the current bet.',
+		buyBonusDescription: isSocial
+			? `opens the feature play menu, where the ${contractName} Bonus and the ${bladesName} Bonus can be played directly. A confirmation step is required before a feature is played.`
+			: `opens the feature purchase menu, where the ${contractName} Bonus and the ${bladesName} Bonus can be purchased directly. A confirmation step is required before a purchase is made.`,
+		autoplayMenuDescription: isSocial
+			? 'Select the number of automatic rounds to start automatic play. Automatic play runs at the currently selected play amount and stops when the selected number of rounds has been played, when the balance is insufficient for the next round, or when automatic play is stopped manually.'
+			: 'Select the number of automatic rounds to start automatic play. Automatic play runs at the currently selected bet and stops when the selected number of rounds has been played, when the balance is insufficient for the next round, or when automatic play is stopped manually.',
 	});
+
+	// The button artwork carries no lettering — the game draws the label over it in
+	// Pixi, so the guide reproduces the same two lines over the same sprite.
+	const buyBonusButtonLines = $derived(isSocial ? ['FEATURE', 'PLAY'] : ['BUY', 'BONUS']);
 
 	let useShortLandscapePadding = $state(false);
 	let usePortraitTallPadding = $state(false);
@@ -118,7 +168,7 @@
 			>
 				<div class="rules">
 					<h1>ABOUT THE GAME</h1>
-					<p>Beast Hunt is a 5-reel, 5-row payline slot. The Silver Sword symbol expands upward on each spin. If the Silver Sword passes through an Elixir Flask during its expansion, the flask's multiplier value is applied to the Silver Sword's own multiplier.</p>
+					<p>{txt.aboutTheGame}</p>
 
 					<h1 class="centered">{txt.paytableHeading}</h1>
 					<div class="symbol-rows">
@@ -184,7 +234,7 @@
 					</div>
 
 					<h1>ABOUT THE GAME</h1>
-					<p>This game has a theoretical expected return of 96.34% in normal mode. The maximum possible win across all betting modes, with the exception of Monster Contract and Blades of Fate, is 20000x the underlying bet. In Monster Contract and Blades of Fate modes, the maximum possible win reaches 66666x the underlying bet.</p>
+					<p>{txt.maxWin}</p>
 
 					<h1>SPECIAL SYMBOLS</h1>
 					<ul class="special_symbols">
@@ -195,8 +245,8 @@
 						</li>
 						<li class="img_B">
 							<span class="symbol-icon"></span>
-							<h2>MONSTER CONTRACT SYMBOL</h2>
-							<p>The Monster Contract symbol can only appear during the base game.</p>
+							<h2>{contractHeading} SYMBOL</h2>
+							<p>The {contractName} symbol can only appear during the base game.</p>
 						</li>
 					</ul>
 
@@ -210,17 +260,17 @@
 					</ul>
 
 					<h1>WAYS TO WIN</h1>
-					<p>A winning combination is formed by landing at least 3 matching symbols on adjacent reels, beginning from the leftmost reel, across any of the 15 fixed paylines. Only the single highest win per payline is awarded.</p>
+					<p>{txt.waysToWin}</p>
 
-					<img class="paylines-img paylines-desktop" src="assets/sprites/paylines/paylines.png" alt="Paylines" />
-					<img class="paylines-img paylines-mobile" src="assets/sprites/paylines/paylines_mob.png" alt="Paylines" />
+					<img class="paylines-img paylines-desktop" src="assets/sprites/paylines/paylines.png" alt={txt.paylinesImageAlt} />
+					<img class="paylines-img paylines-mobile" src="assets/sprites/paylines/paylines_mob.png" alt={txt.paylinesImageAlt} />
 
 					<h1>BONUS FEATURES</h1>
-					<h2>MONSTER CONTRACT</h2>
-					<p>Landing 3 Bonus symbols within a single spin sequence activates the Monster Contract Bonus and awards 10 free spins. This bonus mode features an increased probability of landing Silver Sword and Elixir Flask symbols.</p>
+					<h2>{contractHeading}</h2>
+					<p>Landing 3 Bonus symbols within a single spin sequence activates the {contractName} Bonus and awards 10 free spins. This bonus mode features an increased probability of landing Silver Sword and Elixir Flask symbols. Bonus symbols do not appear on the board during the {contractName} Bonus, so the free spins cannot be retriggered and no additional free spins can be awarded.</p>
 
-					<h2>BLADES OF FATE</h2>
-					<p>Landing 4 Bonus symbols within a single spin sequence activates the Blades of Fate Bonus and awards 10 free spins. This bonus mode features an increased probability of landing Silver Sword and Elixir Flask symbols.</p>
+					<h2>{bladesHeading}</h2>
+					<p>Landing 4 Bonus symbols within a single spin sequence activates the {bladesName} Bonus and awards 10 free spins. This bonus mode features an increased probability of landing Silver Sword and Elixir Flask symbols. Bonus symbols do not appear on the board during the {bladesName} Bonus, so the free spins cannot be retriggered and no additional free spins can be awarded.</p>
 
 					<h2>{txt.featureBuyHeading}</h2>
 					<p>Players have the option to {txt.purchaseFeature} directly through the interface by selecting the {txt.buyBonusButton} button.</p>
@@ -231,8 +281,183 @@
 					<h2>{txt.bladesOfFateBuyHeading}</h2>
 					<p>{txt.bladesOfFatePurchase}</p>
 
+					<h1>USER INTERACTION GUIDE</h1>
+					<h2 class="plain">HOW TO PLAY</h2>
+					<ul class="ui_controls">
+						<li>
+							<span class="control-visual">
+								<span class="control-stack">
+									<img class="control-img control-img--pair" src="assets/sprites/minus_enabled.png" alt="Decrease" />
+									<img class="control-img control-img--pair" src="assets/sprites/plus_enabled.png" alt="Increase" />
+								</span>
+							</span>
+							<p>{txt.howToPlay}</p>
+						</li>
+					</ul>
+
+					<h2>MAIN GAME INTERFACE</h2>
+					<ul class="ui_controls">
+						<li>
+							<span class="control-visual">
+								<span class="control-readout">
+									<span class="control-readout-label">BALANCE</span>
+									<span class="control-readout-value">1,000.00</span>
+								</span>
+							</span>
+							<p><b>BALANCE</b> &mdash; {txt.balanceDescription}</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<span class="control-readout">
+									<span class="control-readout-label">{txt.betLabel}</span>
+									<span class="control-readout-value">1.00</span>
+								</span>
+							</span>
+							<p><b>{txt.betLabel}</b> &mdash; {txt.betDescription}</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<span class="control-stack">
+									<img class="control-img control-img--pair" src="assets/sprites/minus_enabled.png" alt="Decrease" />
+									<img class="control-img control-img--pair" src="assets/sprites/plus_enabled.png" alt="Increase" />
+								</span>
+							</span>
+							<p><b>&minus;</b> and <b>+</b> &mdash; {txt.increaseDecreaseDescription}</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<span class="control-round-button">
+									<img class="control-round-button-bg" src="assets/sprites/bgback.png" alt="" />
+									<img class="control-spin-icon" src="assets/sprites/play.png" alt="Spin" />
+								</span>
+							</span>
+							<p><b>SPIN</b> &mdash; {txt.spinDescription}</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<img class="control-img control-portrait-only" src="assets/sprites/autospin_mob_default.png" alt="Autoplay" />
+								<span class="control-flat control-landscape-only">AUTOPLAY</span>
+							</span>
+							<p><b>AUTOPLAY</b> &mdash; opens the automatic play menu. A confirmation step is required before automatic play starts.</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<span class="control-buy">
+									<span class="control-buy-frame"></span>
+									<span class="control-buy-text">
+										<span>{buyBonusButtonLines[0]}</span>
+										<span>{buyBonusButtonLines[1]}</span>
+									</span>
+								</span>
+							</span>
+							<p><b>{txt.buyBonusButton}</b> &mdash; {txt.buyBonusDescription}</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<img class="control-img control-img--pair" src="assets/sprites/sound-on.png" alt="Sound on" />
+								<img class="control-img control-img--pair" src="assets/sprites/sound-off.png" alt="Sound off" />
+							</span>
+							<p><b>Sound icon</b> &mdash; toggles all sound and music on and off.</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<span class="control-menu" role="img" aria-label="Menu"><i></i><i></i><i></i></span>
+							</span>
+							<p><b>&#9776; (Menu)</b> &mdash; opens the MAIN MENU.</p>
+						</li>
+					</ul>
+
+					<h2>MAIN MENU</h2>
+					<ul class="ui_controls">
+						<li>
+							<span class="control-visual">
+								<span class="control-pill">
+									<span class="control-pill-knob">
+										<img src="assets/sprites/info.png" alt="" />
+									</span>
+									<span class="control-pill-text">GAME<br />INFO</span>
+								</span>
+							</span>
+							<p><b>GAME INFO</b> &mdash; opens the information screen containing the game rules, the {txt.paytableHeading.toLowerCase()}, the ways to win and the description of all bonus features.</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<span class="control-pill control-pill--knob-right">
+									<span class="control-pill-knob">
+										<img src="assets/sprites/vector.png" alt="" />
+									</span>
+									<span class="control-pill-text">TURBO</span>
+								</span>
+							</span>
+							<p><b>TURBO</b> &mdash; toggles turbo spin mode on and off. Turbo mode speeds up the presentation of a round; it does not affect the outcome of the round or the amount won.</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<span class="control-close" role="img" aria-label="Close"><i></i><i></i></span>
+							</span>
+							<p><b>X</b> &mdash; closes the menu and returns to the game.</p>
+						</li>
+					</ul>
+
+					<h2>AUTOPLAY</h2>
+					<ul class="ui_controls">
+						<!--
+							A still of the autoplay menu, built from the same markup and the same
+							style values as `AutoSpinsOptions.svelte` and `AutoSpinsStartButton.svelte`,
+							minus the panel background, and scaled into the guide's icon column.
+							It illustrates the menu, so the slider is inert and the whole still is
+							hidden from assistive technology — the paragraph beside it already
+							carries the same information as text.
+						-->
+						<li class="autoplay-row">
+							<div class="control-visual">
+								<div class="autoplay-preview" aria-hidden="true">
+									<div class="autoplay-preview-row">
+										<input
+											class="autoplay-preview-slider"
+											type="range"
+											min="0"
+											max="200"
+											value="10"
+											disabled
+											tabindex="-1"
+										/>
+										<div class="autoplay-preview-value">
+											<div class="autoplay-preview-value-background"></div>
+											<span class="autoplay-preview-value-text">10</span>
+										</div>
+									</div>
+									<div class="autoplay-preview-start">
+										<span class="autoplay-preview-start-text">{i18nDerived.startAutoplay()}</span>
+									</div>
+								</div>
+							</div>
+							<p>{txt.autoplayMenuDescription}</p>
+						</li>
+
+						<li>
+							<span class="control-visual">
+								<span class="control-round-button">
+									<img class="control-round-button-bg" src="assets/sprites/bgback.png" alt="" />
+									<img class="control-stop-icon" src="assets/sprites/stop.png" alt="Stop" />
+								</span>
+							</span>
+							<p><b>STOP</b> &mdash; stops the reels of the current round immediately. Stopping the reels does not affect the outcome of the round or the amount won.</p>
+						</li>
+					</ul>
+
 					<h1>GENERAL GAME DISCLAIMER</h1>
-					<p>Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.</p>
+					<p>Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser.</p>
+					<p>TM and © 2026. All rights reserved.</p>
 				</div>
 			</div>
 		</div>
@@ -418,6 +643,10 @@
 			text-align: center;
 		}
 
+		h2.plain {
+			color: #ffffff;
+		}
+
 		h1,
 		h2 {
 			font-size: 35px;
@@ -571,6 +800,536 @@
 		display: none;
 	}
 
+	// ─── User Interaction Guide ────────────────────────────────────────
+	// Every visual below is the artwork the game itself draws, so the guide cannot
+	// drift away from the live UI. Menu and close are the only two controls Pixi
+	// builds from primitives rather than a sprite, so they are rebuilt here at the
+	// same dimensions and colour.
+	.ui_controls {
+		margin: 10px 0 20px;
+
+		li {
+			display: flex;
+			align-items: center;
+			gap: 30px;
+			margin-bottom: 20px;
+		}
+
+		p {
+			margin: 0;
+			flex: 1 1 auto;
+		}
+	}
+
+	.control-visual {
+		flex: 0 0 auto;
+		width: 180px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 14px;
+	}
+
+	.control-img {
+		display: block;
+		width: auto;
+		height: 76px;
+	}
+
+	.control-img--pair {
+		height: 62px;
+	}
+
+	// − above +, the order and the axis the game itself uses.
+	.control-stack {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+	}
+
+	// SPIN / STOP — the light blob with the icon layered over it, at the same
+	// relative sizes ButtonBet.svelte uses.
+	.control-round-button {
+		position: relative;
+		display: block;
+		width: 96px;
+		height: 96px;
+	}
+
+	.control-round-button-bg,
+	.control-spin-icon,
+	.control-stop-icon {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+	}
+
+	.control-round-button-bg {
+		width: 96px;
+		height: 96px;
+	}
+
+	.control-spin-icon {
+		width: 110px;
+		height: 110px;
+	}
+
+	.control-stop-icon {
+		width: 37px;
+		height: 37px;
+	}
+
+	// Bonus-buy button — the frame is the `common` spritesheet cell (198×198 at
+	// 1,196 in a 2884×2027 sheet) scaled to 120px, with the label drawn over it
+	// exactly as the game draws it.
+	.control-buy {
+		position: relative;
+		display: block;
+		width: 120px;
+		height: 120px;
+	}
+
+	.control-buy-frame {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-image: url('assets/sprites/common/spritesheet.png');
+		background-repeat: no-repeat;
+		background-size: 1747.9px 1228.5px;
+		background-position: -0.6px -118.8px;
+	}
+
+	.control-buy-text {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		font-size: 21px;
+		font-weight: 600;
+		line-height: 1.15;
+		color: #61e5ff;
+	}
+
+	// BALANCE / BET readouts, stacked the way UiLabel.svelte stacks them.
+	.control-readout {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		line-height: 1.15;
+	}
+
+	.control-readout-label {
+		font-weight: 600;
+		color: #d8eca6;
+	}
+
+	.control-readout-value {
+		color: #e0e0e0;
+	}
+
+	// GAME INFO / TURBO pills, matching ButtonGameRules.svelte and ButtonTurbo.svelte.
+	.control-pill {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 168px;
+		height: 56px;
+		padding: 0 6px;
+		box-sizing: border-box;
+		border-radius: 28px;
+		background-color: rgba(217, 217, 217, 0.3);
+	}
+
+	.control-pill-knob {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 22px;
+		background-color: rgba(207, 208, 202, 0.2);
+
+		img {
+			display: block;
+			width: 11px;
+			height: 24px;
+		}
+	}
+
+	.control-pill-text {
+		flex: 1 1 auto;
+		text-align: center;
+		font-size: 17px;
+		font-weight: 600;
+		line-height: 1.1;
+		color: #d8eca6;
+	}
+
+	// Turbo reads as engaged: knob to the right, label to the left, lime bolt —
+	// the end state of the toggle animation in ButtonTurbo.svelte.
+	.control-pill--knob-right {
+		flex-direction: row-reverse;
+	}
+
+	// AUTOPLAY the way UiButton.svelte draws it — 230×66 at 0.73, radius 20,
+	// rgba(217, 217, 217, 0.3), lime label. Portrait swaps in the sprite the game
+	// swaps in, so each orientation shows the control the player actually gets.
+	.control-flat {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 168px;
+		height: 48px;
+		border-radius: 15px;
+		background-color: rgba(217, 217, 217, 0.3);
+		font-size: 29px;
+		font-weight: 600;
+		line-height: 1;
+		color: #d8eca6;
+	}
+
+	.control-portrait-only {
+		display: none;
+	}
+
+	@media (orientation: portrait) {
+		.control-portrait-only {
+			display: block;
+		}
+
+		.control-landscape-only {
+			display: none;
+		}
+	}
+
+	// Hamburger and close — 45/32/45 × 5 bars, 2.5 radius, #D8ECA6, as in
+	// ButtonMenu.svelte and ButtonClose.svelte.
+	.control-menu,
+	.control-close {
+		position: relative;
+		width: 45px;
+		height: 45px;
+	}
+
+	.control-menu {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 7px;
+
+		i {
+			display: block;
+			height: 5px;
+			border-radius: 2.5px;
+			background-color: #d8eca6;
+
+			&:nth-child(1),
+			&:nth-child(3) {
+				width: 45px;
+			}
+
+			&:nth-child(2) {
+				width: 32px;
+			}
+		}
+	}
+
+	// ─── Autoplay menu still ───────────────────────────────────────────
+	// Values copied from AutoSpinsOptions.svelte and AutoSpinsStartButton.svelte so
+	// the still and the live menu stay identical; only the panel background is left out.
+	// The still keeps the menu's own pixel values and is shrunk as a whole into the
+	// 180px icon column, so it lines up with every other visual in the guide. `zoom`
+	// rather than `transform` because it shrinks the layout box too, which keeps the
+	// column width right at every breakpoint below without a per-breakpoint factor.
+	.autoplay-preview {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+		width: 384px; // 313 slider + 1rem gap + 55 value badge
+		zoom: 0.46875; // 180 / 384
+	}
+
+	.autoplay-preview-row {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+	}
+
+	.autoplay-preview-slider {
+		width: 313px;
+		height: 30px;
+		margin: 0;
+		border-radius: 15px;
+		background: rgba(217, 217, 217, 0.3);
+		outline: none;
+		opacity: 1;
+		cursor: default;
+		-webkit-appearance: none;
+		appearance: none;
+
+		&::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			appearance: none;
+			width: 30px;
+			height: 30px;
+			border: none;
+			border-radius: 50%;
+			background: #d8eca6;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+			cursor: default;
+		}
+
+		&::-moz-range-thumb {
+			width: 30px;
+			height: 30px;
+			border: none;
+			border-radius: 50%;
+			background: #d8eca6;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+			cursor: default;
+		}
+	}
+
+	.autoplay-preview-value {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 55px;
+		height: 57px;
+	}
+
+	.autoplay-preview-value-background {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(217, 217, 217, 0.3);
+		border-radius: 23px;
+		transform: rotate(45deg);
+		transform-origin: center center;
+		z-index: 1;
+	}
+
+	.autoplay-preview-value-text {
+		position: relative;
+		z-index: 2;
+		font-size: 25px;
+		font-weight: 600;
+		line-height: 1;
+		color: #d8eca6;
+	}
+
+	.autoplay-preview-start {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 135px;
+		width: max-content;
+		height: 3rem;
+		padding: 0 1rem;
+		border-radius: 135px;
+		background: rgba(217, 217, 217, 0.3);
+	}
+
+	.autoplay-preview-start-text {
+		font-size: 25px;
+		font-weight: 600;
+		line-height: 1;
+		white-space: nowrap;
+		color: #d8eca6;
+	}
+
+	@media (max-width: 480px) {
+		.autoplay-preview-row {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+
+		.autoplay-preview-slider {
+			width: 250px;
+			height: 26px;
+			border-radius: 13px;
+
+			&::-webkit-slider-thumb {
+				width: 26px;
+				height: 26px;
+			}
+
+			&::-moz-range-thumb {
+				width: 26px;
+				height: 26px;
+			}
+		}
+
+		.autoplay-preview-value {
+			width: 48px;
+			height: 50px;
+		}
+
+		.autoplay-preview-value-background {
+			border-radius: 20px;
+		}
+
+		.autoplay-preview-value-text {
+			font-size: 18px;
+		}
+
+		.autoplay-preview-start {
+			min-width: 120px;
+			padding: 0 0.75rem;
+		}
+
+		.autoplay-preview-start-text {
+			font-size: 18px;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.autoplay-preview-row {
+			gap: 0.875rem;
+		}
+
+		.autoplay-preview-slider {
+			width: 280px;
+			height: 28px;
+			border-radius: 14px;
+
+			&::-webkit-slider-thumb {
+				width: 28px;
+				height: 28px;
+			}
+
+			&::-moz-range-thumb {
+				width: 28px;
+				height: 28px;
+			}
+		}
+
+		.autoplay-preview-value {
+			width: 52px;
+			height: 54px;
+		}
+
+		.autoplay-preview-value-background {
+			border-radius: 22px;
+		}
+
+		.autoplay-preview-value-text {
+			font-size: 22px;
+		}
+
+		.autoplay-preview-start {
+			min-width: 125px;
+			padding: 0 0.875rem;
+		}
+
+		.autoplay-preview-start-text {
+			font-size: 22px;
+		}
+	}
+
+	@media (max-height: 600px) {
+		.autoplay-preview-slider {
+			height: 26px;
+			border-radius: 13px;
+		}
+
+		.autoplay-preview-value {
+			width: 50px;
+			height: 52px;
+		}
+
+		.autoplay-preview-value-text {
+			font-size: 20px;
+		}
+
+		.autoplay-preview-start-text {
+			font-size: 20px;
+		}
+	}
+
+	@media (max-height: 500px) {
+		.autoplay-preview-row {
+			gap: 0.5rem;
+		}
+
+		.autoplay-preview-slider {
+			width: 240px;
+			height: 24px;
+			border-radius: 12px;
+
+			&::-webkit-slider-thumb {
+				width: 24px;
+				height: 24px;
+			}
+
+			&::-moz-range-thumb {
+				width: 24px;
+				height: 24px;
+			}
+		}
+
+		.autoplay-preview-value {
+			width: 45px;
+			height: 47px;
+		}
+
+		.autoplay-preview-value-background {
+			border-radius: 18px;
+		}
+
+		.autoplay-preview-value-text {
+			font-size: 16px;
+		}
+
+		.autoplay-preview-start {
+			padding: 0 0.5rem;
+		}
+
+		.autoplay-preview-start-text {
+			font-size: 16px;
+		}
+	}
+
+	.control-close {
+		display: block;
+
+		i {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			width: 45px;
+			height: 5px;
+			margin: -2.5px 0 0 -22.5px;
+			border-radius: 2.5px;
+			background-color: #d8eca6;
+
+			&:nth-child(1) {
+				transform: rotate(45deg);
+			}
+
+			&:nth-child(2) {
+				transform: rotate(-45deg);
+			}
+		}
+	}
+
 	@media (orientation: portrait) {
 		.symbol-rows {
 			flex-direction: row;
@@ -676,6 +1435,169 @@
 		.img_B .symbol-icon { background-position: 0 -144px; }
 
 		.sword-img { height: 224px; }
+	}
+
+	// Guide visuals follow the same step-downs as the paytable symbols above.
+	@media (max-width: 699px) {
+		.ui_controls li {
+			gap: 22px;
+		}
+
+		.control-visual {
+			width: 148px;
+			gap: 12px;
+		}
+
+		.control-img { height: 62px; }
+		.control-img--pair { height: 50px; }
+
+		.control-round-button,
+		.control-round-button-bg {
+			width: 78px;
+			height: 78px;
+		}
+
+		.control-spin-icon { width: 90px; height: 90px; }
+		.control-stop-icon { width: 30px; height: 30px; }
+
+		.control-buy { width: 98px; height: 98px; }
+
+		.control-buy-frame {
+			background-size: 1427.4px 1003.3px;
+			background-position: -0.5px -97px;
+		}
+
+		.control-buy-text { font-size: 17px; }
+
+		.control-pill {
+			width: 138px;
+			height: 46px;
+			border-radius: 23px;
+			gap: 8px;
+		}
+
+		.control-pill-knob {
+			width: 36px;
+			height: 36px;
+			border-radius: 18px;
+
+			img { width: 9px; height: 20px; }
+		}
+
+		.control-pill-text { font-size: 14px; }
+
+		.control-stack { gap: 6px; }
+
+		.control-flat {
+			width: 138px;
+			height: 40px;
+			border-radius: 12px;
+			font-size: 24px;
+		}
+	}
+
+	@media (max-width: 699px) {
+		.ui_controls li.autoplay-row {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 14px;
+		}
+
+		.autoplay-row .control-visual {
+			width: auto;
+			justify-content: flex-start;
+		}
+
+		.autoplay-preview {
+			zoom: 0.7;
+		}
+	}
+
+	@media (max-width: 549px) {
+		.ui_controls li {
+			gap: 16px;
+			margin-bottom: 16px;
+		}
+
+		.control-visual {
+			width: 112px;
+			gap: 10px;
+		}
+
+		.control-img { height: 48px; }
+		.control-img--pair { height: 40px; }
+
+		.control-round-button,
+		.control-round-button-bg {
+			width: 60px;
+			height: 60px;
+		}
+
+		.control-spin-icon { width: 69px; height: 69px; }
+		.control-stop-icon { width: 23px; height: 23px; }
+
+		.control-buy { width: 76px; height: 76px; }
+
+		.control-buy-frame {
+			background-size: 1107px 778.1px;
+			background-position: -0.4px -75.2px;
+		}
+
+		.control-buy-text { font-size: 13px; }
+
+		.control-pill {
+			width: 106px;
+			height: 36px;
+			border-radius: 18px;
+			gap: 6px;
+			padding: 0 4px;
+		}
+
+		.control-pill-knob {
+			width: 28px;
+			height: 28px;
+			border-radius: 14px;
+
+			img { width: 7px; height: 15px; }
+		}
+
+		.control-pill-text { font-size: 11px; }
+
+		.control-stack { gap: 5px; }
+
+		.control-flat {
+			width: 106px;
+			height: 31px;
+			border-radius: 9px;
+			font-size: 18px;
+		}
+
+		.control-menu,
+		.control-close {
+			width: 32px;
+			height: 32px;
+		}
+
+		.control-menu {
+			gap: 5px;
+
+			i {
+				height: 4px;
+				border-radius: 2px;
+
+				&:nth-child(1),
+				&:nth-child(3) { width: 32px; }
+
+				&:nth-child(2) { width: 23px; }
+			}
+		}
+
+		.control-close i {
+			width: 32px;
+			height: 4px;
+			margin: -2px 0 0 -16px;
+			border-radius: 2px;
+		}
 	}
 
 	@media (max-width: 1023px) {

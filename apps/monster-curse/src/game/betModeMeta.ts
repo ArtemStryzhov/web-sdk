@@ -1,27 +1,36 @@
 import type { BetModeMeta } from 'state-shared';
 
+import { BET_MODE_MAP } from './betModes';
+
+const BASE = BET_MODE_MAP.BASE;
+const CONTRACT = BET_MODE_MAP.buy_contract;
+const BLADES = BET_MODE_MAP.buy_blades;
+
+const EMPTY_ASSETS = {
+	icon: '',
+	dialogImage: '',
+	dialogVolatility: '',
+	volatility: '',
+	button: '',
+};
+
 /**
- * Custom bet mode metadata for Monster Curse game
- * Defines two buy bonus options:
- * - buy_contract: Monster Contract ($100)
- * - buy_blades: Blades of Fate ($300)
+ * Custom bet mode metadata for Monster Curse.
+ *
+ * Mode names, cost multipliers and max wins come from `betModes.ts`, the single
+ * dictionary the game, the rules, the replay panel and `index.json` all read —
+ * this file only adds the copy around them.
  */
 export const customBetModeMeta: BetModeMeta = {
-	BASE: {
-		mode: 'BASE',
-		costMultiplier: 1.0,
+	[BASE.key]: {
+		mode: BASE.key,
+		costMultiplier: BASE.costMultiplier,
 		type: 'default',
 		parent: '',
 		children: '',
-		assets: {
-			icon: '',
-			dialogImage: '',
-			dialogVolatility: '',
-			volatility: '',
-			button: '',
-		},
+		assets: EMPTY_ASSETS,
 		text: {
-			title: 'BASE GAME',
+			title: BASE.name,
 			dialog: '',
 			button: '',
 			betAmountLabel: '',
@@ -29,84 +38,77 @@ export const customBetModeMeta: BetModeMeta = {
 			tickerSpin: '',
 			bannerText: '',
 		},
-		maxWin: 5000,
+		maxWin: BASE.maxWin,
 	},
-	buy_contract: {
-		mode: 'buy_contract',
-		costMultiplier: 100.0,
+	[CONTRACT.key]: {
+		mode: CONTRACT.key,
+		costMultiplier: CONTRACT.costMultiplier,
 		type: 'buy',
 		parent: '',
 		children: '',
-		assets: {
-			icon: '',
-			dialogImage: '',
-			dialogVolatility: '',
-			volatility: '',
-			button: '',
-		},
+		assets: EMPTY_ASSETS,
 		text: {
-			title: 'Monster Contract',
-			description: 'Unlock 10 free spins with boosted odds for Silver Sword and Elixir Flask symbols to emerge.',
-			dialog: 'Are you sure you want to buy Monster Contract for 100x your bet? This will trigger 10 free spins with increased chances of landing bonus symbols.',
+			title: CONTRACT.name,
+			description:
+				'Unlock 10 free spins with boosted odds for Silver Sword and Elixir Flask symbols to emerge.',
+			dialog: `Are you sure you want to buy ${CONTRACT.name} for ${CONTRACT.costMultiplier}x your bet? This will trigger 10 free spins with increased chances of landing bonus symbols.`,
 			button: 'BUY',
-			betAmountLabel: 'MONSTER CONTRACT',
+			betAmountLabel: CONTRACT.name.toUpperCase(),
 			tickerIdle: 'PLACE YOUR BET',
-			tickerSpin: 'MONSTER CONTRACT ACTIVATED',
+			tickerSpin: `${CONTRACT.name.toUpperCase()} ACTIVATED`,
 			bannerText: '',
 		},
-		maxWin: 5000,
+		maxWin: CONTRACT.maxWin,
 	},
-	buy_blades: {
-		mode: 'buy_blades',
-		costMultiplier: 300.0,
+	[BLADES.key]: {
+		mode: BLADES.key,
+		costMultiplier: BLADES.costMultiplier,
 		type: 'buy',
 		parent: '',
 		children: '',
-		assets: {
-			icon: '',
-			dialogImage: '',
-			dialogVolatility: '',
-			volatility: '',
-			button: '',
-		},
+		assets: EMPTY_ASSETS,
 		text: {
-			title: 'Blades of Fate',
-			description: 'Unlock 10 free spins with sticky Silver Sword symbols, expanding to the top of the reel on every spin.',
-			dialog: 'Are you sure you want to buy Blades of Fate for 300x your bet? This will trigger 10 free spins with sticky expanding Silver Sword symbols.',
+			title: BLADES.name,
+			description:
+				'Unlock 10 free spins with sticky Silver Sword symbols, expanding to the top of the reel on every spin.',
+			dialog: `Are you sure you want to buy ${BLADES.name} for ${BLADES.costMultiplier}x your bet? This will trigger 10 free spins with sticky expanding Silver Sword symbols.`,
 			button: 'BUY',
-			betAmountLabel: 'BLADES OF FATE',
+			betAmountLabel: BLADES.name.toUpperCase(),
 			tickerIdle: 'PLACE YOUR BET',
-			tickerSpin: 'BLADES OF FATE ACTIVATED',
+			tickerSpin: `${BLADES.name.toUpperCase()} ACTIVATED`,
 			bannerText: '',
 		},
-		maxWin: 5000,
+		maxWin: BLADES.maxWin,
 	},
 };
 
 export const getBetModeMeta = (social: boolean): BetModeMeta => {
 	if (!social) return customBetModeMeta;
 
+	// Social (sweepstakes) wording: a bonus is played, never bought or bet on.
+	// The mode names themselves are unchanged — they come from `betModes.ts`,
+	// which carries the social name for every mode.
 	return {
 		...customBetModeMeta,
-		buy_contract: {
-			...customBetModeMeta.buy_contract,
+		[CONTRACT.key]: {
+			...customBetModeMeta[CONTRACT.key],
 			text: {
-				...customBetModeMeta.buy_contract.text,
+				...customBetModeMeta[CONTRACT.key].text,
+				title: CONTRACT.socialName,
 				button: 'PLAY',
-				dialog: 'Are you sure you want to play Monster Contract for 100x your play amount? This will trigger 10 free spins with increased chances of landing bonus symbols.',
+				dialog: `Are you sure you want to play ${CONTRACT.socialName} for ${CONTRACT.costMultiplier}x your play amount? This will trigger 10 free spins with increased chances of landing bonus symbols.`,
 				tickerIdle: 'PLACE YOUR PLAY',
 			},
 		},
-		buy_blades: {
-			...customBetModeMeta.buy_blades,
+		[BLADES.key]: {
+			...customBetModeMeta[BLADES.key],
 			text: {
-				...customBetModeMeta.buy_blades.text,
+				...customBetModeMeta[BLADES.key].text,
+				title: BLADES.socialName,
 				button: 'PLAY',
-				dialog: 'Are you sure you want to play Blades of Fate for 300x your play amount? This will trigger 10 free spins with sticky expanding Silver Sword symbols.',
+				dialog: `Are you sure you want to play ${BLADES.socialName} for ${BLADES.costMultiplier}x your play amount? This will trigger 10 free spins with sticky expanding Silver Sword symbols.`,
 				tickerIdle: 'PLACE YOUR PLAY',
 			},
 		},
 	};
 };
-
-

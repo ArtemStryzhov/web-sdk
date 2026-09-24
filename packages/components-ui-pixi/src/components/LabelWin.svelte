@@ -25,6 +25,7 @@
 
 <UiLabel
 	tiled
+	kind="win"
 	{label}
 	{value}
 	{numericAmount}

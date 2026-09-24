@@ -26,18 +26,23 @@
 		return messages;
 	};
 
+	// Social (sweepstakes) builds swap in the compliant wording where it exists.
+	// `stateUrlDerived.lang()` already collapses to 'en' for them, so this only ever
+	// resolves to `sweeps_en` there — no other locale is reachable in a social build.
+	const resolveMessagesKey = (lang: Language): Language | SweepsLanguage => {
+		const sweepsLang: SweepsLanguage = `sweeps_${lang}`;
+		return stateUrlDerived.social() && sweepsLang in props.messagesMap ? sweepsLang : lang;
+	};
+
 	onMount(() => {
 		try {
 			const lang = stateUrlDerived.lang();
-			const sweepsLang: SweepsLanguage = `sweeps_${lang}`;
-			const useSweeps = stateUrlDerived.social() && sweepsLang in props.messagesMap;
-			const activeLang = useSweeps ? sweepsLang : lang;
-			const messages = loadMessages(activeLang);
+			const messages = loadMessages(resolveMessagesKey(lang));
 			stateI18nDerived.init(lang, messages ?? {});
 		} catch (error) {
 			console.error("Loading fallback locale 'en' because of error", error);
 			try {
-				const messages = loadMessages('en');
+				const messages = loadMessages(resolveMessagesKey('en'));
 				stateI18nDerived.init('en', messages ?? {});
 			} catch (error) {
 				console.error("Loading fallback locale 'en' without any messages because of error", error);

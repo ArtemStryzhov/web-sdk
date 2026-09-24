@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte';
 
-	import { requestAuthenticate, requestReplay } from 'rgs-requests';
+	import { requestAuthenticate } from 'rgs-requests';
 
 	// Define the response type locally to avoid import issues
 	type AuthenticateResponse = {
@@ -38,8 +38,16 @@
 		};
 		error?: unknown;
 	};
-	import { stateUrlDerived, stateBet, stateConfig, stateModal, stateUi } from 'state-shared';
+	import {
+		stateUrlDerived,
+		stateBet,
+		stateConfig,
+		stateModal,
+		stateUi,
+	} from 'state-shared';
 	import { API_AMOUNT_MULTIPLIER, MOST_USED_BET_INDEXES } from 'constants-shared/bet';
+
+	import { loadReplayRound } from '../replay';
 
 	type Props = { children: Snippet };
 
@@ -146,47 +154,7 @@
 
 	const handleReplay = async () => {
 		try {
-			const betAmountValue = stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER || 0;
-			stateBet.betAmount = betAmountValue;
-			stateBet.wageredBetAmount = betAmountValue;
-			// an unknown key would make stateBetDerived.activeBetMode() null, so only
-			// take the mode from the URL when it is actually there
-			if (stateUrlDerived.mode()) stateBet.activeBetModeKey = stateUrlDerived.mode();
-			if (stateUrlDerived.currency()) stateBet.currency = stateUrlDerived.currency();
-
-			const replayData = await requestReplay({
-				rgsUrl: stateUrlDerived.rgsUrl(),
-				game: stateUrlDerived.game(),
-				mode: stateUrlDerived.mode(),
-				version: stateUrlDerived.version(),
-				event: stateUrlDerived.event(),
-			});
-
-			// error
-			if ((replayData as { error?: unknown })?.error) throw replayData;
-
-			// The endpoint returns the recorded round itself, but a wrapped
-			// { round } envelope (the shape /wallet/play uses) is accepted too.
-			const round = ((replayData as { round?: unknown })?.round ?? replayData) as {
-				state?: unknown[];
-			};
-
-			if (!round?.state?.length) {
-				throw {
-					error: 'Empty state in replay response',
-					message: JSON.stringify({ replayData }),
-				};
-			}
-
-			// A replay has no session and no wallet, so it is played back through the
-			// resume-bet path: 'event: 0' replays the round from its first book event.
-			// @ts-ignore
-			stateBet.lastBet = {
-				...round,
-				event: '0',
-				active: true,
-				mode: stateBet.activeBetModeKey,
-			};
+			await loadReplayRound();
 		} catch (error) {
 			console.error(error);
 			stateModal.modal = { name: 'error', error };

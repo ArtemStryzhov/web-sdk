@@ -28,6 +28,12 @@
 			: 0
 	);
 
+	// Social (sweepstakes) builds must not offer to *buy* anything, so the control
+	// is named FEATURE PLAY there. Two lines either way, same artwork.
+	const buttonLines = $derived(
+		stateUrlDerived.social() ? ['FEATURE', 'PLAY'] : ['BUY', 'BONUS'],
+	);
+
 	const openModal = () => (stateModal.modal = { name: 'buyBonus' });
 	const disableActiveBetMode = () => (stateBet.activeBetModeKey = 'BASE');
 	const onpress = () => {
@@ -126,12 +132,12 @@
 				}}
 			/>
 		{:else}
-			<!-- BUY BONUS / PLAY BONUS text - stacked on two lines -->
+			<!-- BUY BONUS / FEATURE PLAY text - stacked on two lines -->
 			<Text
 				x={center.x}
 				y={center.y - 23}
 				anchor={0.5}
-				text={stateUrlDerived.social() ? 'PLAY' : 'BUY'}
+				text={buttonLines[0]}
 				style={{
 					align: 'center',
 					fontFamily: 'Kanit, Arial, sans-serif',
@@ -144,7 +150,7 @@
 				x={center.x}
 				y={center.y + 23}
 				anchor={0.5}
-				text="BONUS"
+				text={buttonLines[1]}
 				style={{
 					align: 'center',
 					fontFamily: 'Kanit, Arial, sans-serif',

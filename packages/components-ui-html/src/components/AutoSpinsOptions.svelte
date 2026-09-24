@@ -159,6 +159,26 @@
 				height: 24px;
 			}
 		}
+
+		// Narrow phones. The 768px rule above widens the track back to 280px, which
+		// no longer fits: the modal is 95vw here, and its 1.5rem padding plus this
+		// container's 0.875rem leaves about 256px at 350px wide and about 228px at
+		// 320px. Last in the block so it wins over the rules above at equal specificity.
+		@media (max-width: 350px) {
+			width: 220px;
+			height: 26px;
+			border-radius: 13px;
+
+			&::-webkit-slider-thumb {
+				width: 26px;
+				height: 26px;
+			}
+
+			&::-moz-range-thumb {
+				width: 26px;
+				height: 26px;
+			}
+		}
 	}
 
 	.value-display {

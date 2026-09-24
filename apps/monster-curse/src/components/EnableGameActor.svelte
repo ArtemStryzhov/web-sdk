@@ -8,6 +8,7 @@
 	import { gameActor } from '../game/actor';
 	import { getContext } from '../game/context';
 	import { getBetModeMeta } from '../game/betModeMeta';
+	import { betModeNameMap } from '../game/betModes';
 
 	type Props = {
 		debug?: boolean;
@@ -19,6 +20,9 @@
 	onMount(() => {
 		// Initialize custom bet mode metadata for Monster Curse
 		stateMeta.betModeMeta = getBetModeMeta(stateUrlDerived.social());
+		// The mode-name dictionary the shared UI reads from — the rules modal and
+		// the replay panel name a mode through this rather than repeating a literal.
+		stateMeta.betModeNameMap = betModeNameMap;
 
 		const { unsubscribe } = gameActor.subscribe((snapshot) => {
 			context.stateXstate.value = snapshot.value;

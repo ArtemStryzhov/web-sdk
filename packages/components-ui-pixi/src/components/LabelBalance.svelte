@@ -25,6 +25,7 @@
 
 <UiLabel
 	tiled
+	kind="balance"
 	{label}
 	{value}
 	{numericAmount}

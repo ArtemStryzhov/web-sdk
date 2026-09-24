@@ -132,6 +132,14 @@
 
 			show = false;
 		},
+		// A replay starts the round over, so the outro goes away without playing the
+		// end-of-round sting `freeSpinOutroHide` would.
+		replayReset: async () => {
+			show = false;
+			countUpCompleted = false;
+			totalWinMusicClosed = false;
+			context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_total_win_music_loop' });
+		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;

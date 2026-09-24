@@ -1,13 +1,14 @@
 import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
-import { stateBet, stateUi } from 'state-shared';
+import { stateBet, stateReplayDerived, stateUi } from 'state-shared';
 import type { Bet } from './typesBookEvent';
 import { SECOND } from 'constants-shared/time';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
+import { nextWinBookEventAmount } from './winAccounting';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import type { RawSymbol } from './types';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
@@ -183,6 +184,48 @@ const winLevelSoundsStop = () => {
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 	}
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
+};
+
+/** The win level a win-capped round is presented at. */
+const MAX_WIN_LEVEL = 10 satisfies WinLevel;
+
+/**
+ * Show the win screen for one amount and take it away again. Shared by `setWin`,
+ * which presents a spin's win, and `finalWin`, which presents a capped round's
+ * real total.
+ */
+const presentWinScreen = async ({
+	amount,
+	winLevelData,
+}: {
+	amount: number;
+	winLevelData: WinLevelData;
+}) => {
+	// For big wins (level >= 6), show version 2 mascot 2 seconds before win screen
+	if (winLevelData.level >= 6) {
+		// Broadcast winUpdate immediately (synchronously) to switch mascot to version 2
+		// Use broadcast (not broadcastAsync) to avoid waiting for Win component which isn't shown yet
+		// This only updates Game.svelte's winScreenShowing state for the mascot
+		eventEmitter.broadcast({ type: 'winUpdate', amount, winLevelData });
+
+		// Wait 2 seconds before showing win screen
+		const { waitForTimeout } = await import('utils-shared/wait');
+		await waitForTimeout(2 * SECOND);
+
+		// Now show the win screen and update Win component properly
+		eventEmitter.broadcast({ type: 'winShow' });
+		winLevelSoundsPlay({ winLevelData });
+		// Call winUpdate again so Win component can set up and wait for completion
+		await eventEmitter.broadcastAsync({ type: 'winUpdate', amount, winLevelData });
+	} else {
+		// For non-big wins, keep current behavior
+		eventEmitter.broadcast({ type: 'winShow' });
+		winLevelSoundsPlay({ winLevelData });
+		await eventEmitter.broadcastAsync({ type: 'winUpdate', amount, winLevelData });
+	}
+
+	winLevelSoundsStop();
+	eventEmitter.broadcast({ type: 'winHide' });
 };
 
 const animateSymbols = async ({ positions }: { positions: Position[] }) => {
@@ -589,7 +632,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await playPendingBonusTriggerAnimation();
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
-		stateBet.winBookEventAmount = bookEvent.amount;
+		// The running total, per `winAccounting.ts`; `finalWin` has the last word.
+		stateBet.winBookEventAmount = nextWinBookEventAmount(stateBet.winBookEventAmount, bookEvent);
 		// After all win processing, ensure sticky sword symbols are in 'expand' state.
 		// This handles: (a) swords that expanded this spin but had no wins (winInfo skipped them),
 		// and (b) any symbol that stickySwordEvent couldn't pre-set because expandAnimation was pending.
@@ -718,48 +762,35 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'drawerButtonHide' });
 	},
 	setWin: async (bookEvent: BookEventOfType<'setWin'>) => {
-		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
-
-		// For big wins (level >= 6), show version 2 mascot 2 seconds before win screen
-		if (winLevelData.level >= 6) {
-			// Broadcast winUpdate immediately (synchronously) to switch mascot to version 2
-			// Use broadcast (not broadcastAsync) to avoid waiting for Win component which isn't shown yet
-			// This only updates Game.svelte's winScreenShowing state for the mascot
-			eventEmitter.broadcast({
-				type: 'winUpdate',
-				amount: bookEvent.amount,
-				winLevelData,
-			});
-			
-			// Wait 2 seconds before showing win screen
-			const { waitForTimeout } = await import('utils-shared/wait');
-			await waitForTimeout(2 * SECOND);
-			
-			// Now show the win screen and update Win component properly
-			eventEmitter.broadcast({ type: 'winShow' });
-			winLevelSoundsPlay({ winLevelData });
-			// Call winUpdate again so Win component can set up and wait for completion
-			await eventEmitter.broadcastAsync({
-				type: 'winUpdate',
-				amount: bookEvent.amount,
-				winLevelData,
-			});
-		} else {
-			// For non-big wins, keep current behavior
-			eventEmitter.broadcast({ type: 'winShow' });
-			winLevelSoundsPlay({ winLevelData });
-			await eventEmitter.broadcastAsync({
-				type: 'winUpdate',
-				amount: bookEvent.amount,
-				winLevelData,
-			});
-		}
-		
-		winLevelSoundsStop();
-		eventEmitter.broadcast({ type: 'winHide' });
+		await presentWinScreen({
+			amount: bookEvent.amount,
+			winLevelData: winLevelMap[bookEvent.winLevel as WinLevel],
+		});
 	},
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
-		// Do nothing
+		// `finalWin` carries the round's settled payout — the amount the RGS pays
+		// and the amount `payoutMultiplier` reports. On almost every round it just
+		// repeats the last `setTotalWin`, but on a win-capped round the book's
+		// running total stops where the reels left it and only `finalWin` holds the
+		// capped amount, so the WIN field has to follow `finalWin` rather than the
+		// running total. See `winAccounting.ts`.
+		const runningTotal = stateBet.winBookEventAmount;
+		stateBet.winBookEventAmount = nextWinBookEventAmount(runningTotal, bookEvent);
+
+		// A round that pays more than it counted up to is a capped round, i.e. a max
+		// win. The `setWin` screens along the way announced the pre-cap amount, so
+		// the real total still has to be presented.
+		if (stateBet.winBookEventAmount > runningTotal) {
+			await presentWinScreen({
+				amount: stateBet.winBookEventAmount,
+				winLevelData:
+					stateGameDerived.getWinLevelDataByWinLevelAlias('max') ?? winLevelMap[MAX_WIN_LEVEL],
+			});
+		}
+
+		// The round has paid out. In a replay this is what puts the replay button on
+		// screen; in a normal session it is a no-op, because nothing is playing back.
+		stateReplayDerived.finish();
 	},
 	// customised
 	createBonusSnapshot: async (bookEvent: BookEventOfType<'createBonusSnapshot'>) => {

@@ -247,11 +247,18 @@ export const requestReplay = async (options: {
 	version: string;
 	mode: string;
 	event: string;
+	/** Locale for any text the RGS resolves for the round, e.g. 'en'. */
+	language?: string;
 	rgsUrl: string;
 }) => {
+	// A replay never calls /wallet/authenticate, so this request is the only place
+	// the language reaches the RGS — without it the round comes back in the
+	// operator's default locale whatever the replay URL asked for.
+	const query = options.language ? `?lang=${encodeURIComponent(options.language)}` : '';
+
 	const data = await rgsFetcher.get({
 		// @ts-ignore the replay endpoint is not in the generated schema.ts yet
-		url: `/bet/replay/${options.game}/${options.version}/${options.mode}/${options.event}`,
+		url: `/bet/replay/${options.game}/${options.version}/${options.mode}/${options.event}${query}`,
 		rgsUrl: options.rgsUrl,
 	});
 

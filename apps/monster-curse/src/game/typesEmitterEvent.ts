@@ -18,4 +18,7 @@ export type EmitterEventGame =
 	| EmitterEventSound
 	| EmitterEventStoneFX
 	| EmitterEventTransition
-	| { type: 'bonusGameEnd' };
+	| { type: 'bonusGameEnd' }
+	// Broadcast before a replay plays the same round again: components holding
+	// state that no show/hide event clears reset themselves on it.
+	| { type: 'replayReset' };

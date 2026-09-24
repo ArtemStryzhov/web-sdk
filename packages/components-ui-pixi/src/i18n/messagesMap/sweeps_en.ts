@@ -1,5 +1,6 @@
 export default {
 	BET: 'PLAY',
-	'BUY BONUS': 'PLAY BONUS',
+	// A social build may not offer to buy anything: the control is FEATURE PLAY.
+	'BUY BONUS': 'FEATURE PLAY',
 	PAYTABLE: 'WIN TABLE',
 };

@@ -14,7 +14,7 @@
 		DESKTOP_BACKGROUND_WIDTH_LIST,
 		LANDSCAPE_BACKGROUND_WIDTH_LIST,
 	} from 'components-ui-pixi/src/constants';
-	import { GameVersion, Modals } from 'components-ui-html';
+	import { GameVersion, Modals, ReplayPanel } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
@@ -557,3 +557,6 @@ const shouldUsePortraitStyle = $derived(
 		<GameVersion version="0.0.0" />
 	{/snippet}
 </Modals>
+
+<!-- Replay window only: the round's start panel, and the replay button after it ends. -->
+<ReplayPanel />
