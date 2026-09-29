@@ -12,8 +12,8 @@
 	// Mode names come from the game's bet-mode dictionary, the same one the reels,
 	// the replay panel and index.json read. The second argument is only what a game
 	// that does not register these modes falls back to — the dictionary wins.
-	const contractName = $derived(stateMetaDerived.betModeName('feature_contract', 'Monster Contract'));
-	const bladesName = $derived(stateMetaDerived.betModeName('feature_blades', 'Blades of Fate'));
+	const contractName = $derived(stateMetaDerived.betModeName('play_contract', 'Monster Contract'));
+	const bladesName = $derived(stateMetaDerived.betModeName('play_blades', 'Blades of Fate'));
 	const contractHeading = $derived(contractName.toUpperCase());
 	const bladesHeading = $derived(bladesName.toUpperCase());
 

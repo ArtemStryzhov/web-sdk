@@ -26,7 +26,7 @@ https://<game-host>/?replay=true
 | `rgs_url`  | yes      | host the round is fetched from                                        |
 | `game`     | yes      | game id the round belongs to                                          |
 | `version`  | yes      | math version the round was recorded against                           |
-| `mode`     | yes      | bet mode key of the round — `BASE`, `feature_contract`, `feature_blades`      |
+| `mode`     | yes      | bet mode key of the round — `BASE`, `play_contract`, `play_blades`      |
 | `event`    | yes      | the recorded round (book) to load                                     |
 | `lang`     | no       | locale for the round request **and** the UI; defaults to `en`         |
 | `currency` | no       | currency every amount is printed in                                   |
@@ -113,7 +113,7 @@ from.
 > **Assumption to confirm against a live RGS:** `round.amount` is read as the
 > base wager, which is what the schema implies (`PayoutMultiplier = Payout /
 > Amount`). If the replay endpoint returns the total a feature buy was *charged*
-> instead, a `feature_contract` round would print a 100x-too-large base wager and
+> instead, a `play_contract` round would print a 100x-too-large base wager and
 > total cost, and every book-unit amount in the playback would be scaled with it.
 > `/bet/replay/...` is not in `packages/rgs-fetcher/src/schema.ts`, so this has
 > not been verified against a recorded buy-bonus round.
@@ -151,9 +151,9 @@ multiplier, and it is the only place any of them is written down:
 | the platform manifest   | `toIndexJsonBetModes()`                                      |
 
 `index.json` is uploaded with the build rather than checked in, and its shape is enforced by
-Stake Engine: `name` there **is the mode key** (`base`, `feature_contract`, `feature_blades`) —
+Stake Engine: `name` there **is the mode key** (`base`, `play_contract`, `play_blades`) —
 the Studio's game-mode picker lists it and the RGS receives it as `mode`. It has no display-name
-field, so the keys themselves must not contain restricted wording (`buy` became `feature`), and
+field, so the keys themselves must not contain restricted wording (`buy` became `play`), and
 the math config, the books and `config.betModes` must all use the same keys. The player-facing
 names live only in `betModes.ts` and are used by the game UI. `toIndexJsonBetModes()` yields the
 `name` / `cost` pairs. `stateMetaDerived.betModeName()` matches mode keys case-insensitively,

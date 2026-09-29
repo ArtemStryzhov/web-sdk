@@ -37,7 +37,7 @@ export const BET_MODES: BetModeDefinition[] = [
 		maxWin: 5000,
 	},
 	{
-		key: 'feature_contract',
+		key: 'play_contract',
 		name: 'Monster Contract',
 		socialName: 'Monster Contract',
 		costMultiplier: 100.0,
@@ -45,7 +45,7 @@ export const BET_MODES: BetModeDefinition[] = [
 		maxWin: 5000,
 	},
 	{
-		key: 'feature_blades',
+		key: 'play_blades',
 		name: 'Blades of Fate',
 		socialName: 'Blades of Fate',
 		costMultiplier: 300.0,

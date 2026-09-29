@@ -6,7 +6,7 @@ import { context, type Context } from './machineContext';
 import type { PrimaryMachines } from './types';
 
 const checkSpaceHold = fromPromise(async () => {
-	// Buy modes (feature_blades, feature_contract, etc.) should always end after the bet completes
+	// Buy modes (play_blades, play_contract, etc.) should always end after the bet completes
 	// They are one-time purchases that trigger free spins, not continuous betting
 	if (stateBetDerived.activeBetMode()?.type === 'buy') {
 		stateBet.activeBetModeKey = 'BASE';

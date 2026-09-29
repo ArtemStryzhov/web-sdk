@@ -11,7 +11,7 @@
  * | `rgs_url`  | host the round is fetched from                                    |
  * | `game`     | game id the round belongs to                                      |
  * | `version`  | math version the round was recorded against                       |
- * | `mode`     | bet mode key of the round, e.g. `BASE`, `feature_blades`              |
+ * | `mode`     | bet mode key of the round, e.g. `BASE`, `play_blades`              |
  * | `event`    | the recorded round (book) to load                                 |
  * | `lang`     | locale for the round request and for the UI (optional, 'en')      |
  * | `currency` | currency the amounts are printed in (optional)                    |

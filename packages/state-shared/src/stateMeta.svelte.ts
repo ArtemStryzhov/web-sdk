@@ -75,7 +75,7 @@ export const stateMeta = $state({
 
 /**
  * Mode keys travel between the game, the math config and the RGS in whatever
- * case each of them settled on ('BASE', 'base', 'feature_blades'), so every lookup
+ * case each of them settled on ('BASE', 'base', 'play_blades'), so every lookup
  * by mode key goes through this instead of indexing a map directly.
  */
 const findByBetModeKey = <TValue>(map: Record<string, TValue>, betModeKey: string) => {

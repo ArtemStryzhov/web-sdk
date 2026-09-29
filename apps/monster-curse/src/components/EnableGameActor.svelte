@@ -19,7 +19,7 @@
 
 	// Registered while the component initialises rather than in onMount: the replay
 	// panel and the rules modal name a mode through these, and a name looked up
-	// before they exist would fall back to the raw protocol key (`feature_contract`).
+	// before they exist would fall back to the raw protocol key (`play_contract`).
 	stateMeta.betModeMeta = getBetModeMeta(stateUrlDerived.social());
 	// The mode-name dictionary the shared UI reads from — the rules modal and
 	// the replay panel name a mode through this rather than repeating a literal.
