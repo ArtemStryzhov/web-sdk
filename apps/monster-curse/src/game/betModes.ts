@@ -4,8 +4,8 @@ import type { BetModeNameMap } from 'state-shared';
  * The single dictionary of bet modes for Monster Curse.
  *
  * Every surface that names a mode reads it from here — the game UI, the game
- * rules modal, the replay panel and the platform manifest (`index.json`) — so a
- * round can never be called one thing on the reels and another in the rules.
+ * rules modal and the replay panel — so a round can never be called one thing on
+ * the reels and another in the rules.
  *
  * - `key` is the protocol key the RGS sends back on a round and the replay URL
  *   carries in `mode`. It must match the key in `config.betModes`.
@@ -37,7 +37,7 @@ export const BET_MODES: BetModeDefinition[] = [
 		maxWin: 5000,
 	},
 	{
-		key: 'buy_contract',
+		key: 'feature_contract',
 		name: 'Monster Contract',
 		socialName: 'Monster Contract',
 		costMultiplier: 100.0,
@@ -45,7 +45,7 @@ export const BET_MODES: BetModeDefinition[] = [
 		maxWin: 5000,
 	},
 	{
-		key: 'buy_blades',
+		key: 'feature_blades',
 		name: 'Blades of Fate',
 		socialName: 'Blades of Fate',
 		costMultiplier: 300.0,
@@ -67,14 +67,15 @@ export const betModeNameMap: BetModeNameMap = Object.fromEntries(
 );
 
 /**
- * The mode list in the shape the platform manifest (`index.json`) wants. The
- * manifest is uploaded with the build rather than checked in, so this is what it
- * must be generated from — never a hand-written second list of names.
+ * The modes of the platform manifest (`index.json`). Stake Engine enforces its
+ * shape — `name` is the protocol key itself (what the Studio's game-mode picker
+ * lists and what the RGS receives as `mode`), never a display name, and there is
+ * no other name field. That is why the keys here carry no restricted wording
+ * ("buy"): a display name can only be changed in the game UI, not in the manifest.
+ * The `events` / `weights` file names come from the math build and are added there.
  */
 export const toIndexJsonBetModes = () =>
 	BET_MODES.map((betMode) => ({
-		mode: betMode.key,
-		name: betMode.name,
-		costMultiplier: betMode.costMultiplier,
-		feature: betMode.type === 'buy',
+		name: betMode.key,
+		cost: betMode.costMultiplier,
 	}));

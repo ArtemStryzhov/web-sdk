@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { stateBet, stateModal, stateUi, INFINITY_MARK, type BetModeData } from 'state-shared';
-	import { Button } from 'components-shared';
+	import { stateBet, stateModal, type BetModeData } from 'state-shared';
 	import { getContextEventEmitter } from 'utils-event-emitter';
-	import { currencyPrefix, numberToAmountString } from 'utils-shared/amount';
 
-	import BaseIcon from './BaseIcon.svelte';
 	import BonusCard from './BonusCard.svelte';
-	import BaseButtonContent from './BaseButtonContent.svelte';
+	import BonusCardIcon from './BonusCardIcon.svelte';
+	import BonusCardDescription from './BonusCardDescription.svelte';
+	import BonusCardPrice from './BonusCardPrice.svelte';
+	import BonusCardButton from './BonusCardButton.svelte';
 	import { stateBonus } from '../stateBonus.svelte';
 	import type { EmitterEventModal } from '../types';
 
@@ -20,6 +20,13 @@
 	const base = (import.meta as any).env?.BASE_URL ?? '/';
 	const assetBase = base.endsWith('/') ? base.slice(0, -1) : base;
 	const spritesheetUrl = `${assetBase}/assets/sprites/common/spritesheet.png`;
+
+	// The purchase itself is placed by the confirmation popup, never straight from the card.
+	const askConfirmation = (betModeData: BetModeData) => {
+		stateBonus.selectedBetModeKey = betModeData.mode;
+		stateModal.modal = { name: 'buyBonusConfirm' };
+		eventEmitter.broadcast({ type: 'soundPressGeneral' });
+	};
 </script>
 
 <div class="cards" style={`--spritesheet-url: url(${spritesheetUrl});`}>
@@ -28,70 +35,27 @@
 			<div class="card-item">
 				<BonusCard>
 					{#snippet icon()}
-						{#if idx === 0}
-							<div class="icon-sprite icon-3icons"></div>
-						{:else if idx === 1}
-							<div class="icon-sprite icon-4icons"></div>
-						{/if}
+						<BonusCardIcon index={idx} />
 					{/snippet}
 					{#snippet title()}
 						<div class="title"></div>
 					{/snippet}
 
 					{#snippet description()}
-						{#if betModeData?.text?.description}
-							<div class="description">
-								{betModeData.text.description}
-							</div>
-						{/if}
+						<BonusCardDescription text={betModeData?.text?.description} />
 					{/snippet}
 
 					{#snippet price()}
-						{@const price = stateBet.betAmount * betModeData.costMultiplier}
-						{@const currencySymbol = currencyPrefix()}
-						{@const formatted = numberToAmountString(price)}
-						{@const [intPart, decPart] = formatted.split('.')}
-						<div class="price">
-							<span class="currency">{currencySymbol}</span>
-							<span class="price-int">{intPart}</span>
-							<span class="price-sep">.</span>
-							<span class="price-dec">{decPart}</span>
-						</div>
+						<BonusCardPrice amount={stateBet.betAmount * betModeData.costMultiplier} />
 					{/snippet}
 
 					{#snippet button()}
-						{@const isDisabled = stateBet.betAmount <= 0 ||
-							stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
-						<div class={`button-container ${isDisabled ? 'disabled' : ''}`}>
-							<Button
-								onclick={() => {
-									// Set active bet mode for the initial purchase
-									stateBet.activeBetModeKey = betModeData.mode;
-									
-									// Close the buy bonus modal
-									stateModal.modal = null;
-									
-									// For 'buy' type, immediately place the bet
-									if (betModeData.type === 'buy') {
-										eventEmitter.broadcast({ type: 'bet' });
-									}
-									
-									// For 'activate' type, set infinity limits (same as confirmation logic)
-									if (betModeData.type === 'activate') {
-										stateUi.autoSpinsLossLimitText = INFINITY_MARK;
-										stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
-									}
-									
-									eventEmitter.broadcast({ type: 'soundPressGeneral' });
-								}}
-								disabled={isDisabled}
-							>
-								<div class="button-background"></div>
-								<BaseButtonContent>
-									<span class="button-text">{betModeData.text.button}</span>
-								</BaseButtonContent>
-							</Button>
-						</div>
+						<BonusCardButton
+							label={betModeData.text.button}
+							disabled={stateBet.betAmount <= 0 ||
+								stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
+							onclick={() => askConfirmation(betModeData)}
+						/>
 					{/snippet}
 				</BonusCard>
 			</div>
@@ -113,127 +77,6 @@
 
 	.title {
 		display: none;
-	}
-
-	.description {
-		font-family: 'Chelsea Market', 'Arial', sans-serif;
-		font-size: 1.16rem; /* 20% smaller */
-		text-align: center;
-		min-height: 4.5rem;
-		white-space: pre-line;
-		display: inline-flex;
-		align-items: center;
-		color: #FFFFFF;
-	}
-
-	.description:empty {
-		display: none;
-	}
-
-	.price {
-		display: inline-block;
-		font-size: 42px; /* further -15% */
-		line-height: 1.1em;
-		text-align: center;
-		white-space: nowrap;
-		font-family: 'Crom', Arial, sans-serif;
-		font-weight: normal;
-		color: #61E5FF;
-		text-shadow: 3px 6px 0px #BF00B5;
-		-webkit-text-stroke: 5px transparent;
-		background: linear-gradient(180deg, #FF70EA 0%, #7B15FF 100%);
-		-webkit-background-clip: text;
-		background-clip: text;
-		padding: 2px 4px;
-		display: inline-flex;
-		align-items: baseline;
-		gap: 6px;
-	}
-
-	.price .currency {
-		font-family: 'Kanit', Arial, sans-serif; /* fallback font with currency glyphs */
-		font-size: 0.9em;
-	}
-
-	.price .price-int {
-		font-family: 'Crom', Arial, sans-serif;
-	}
-
-	.price .price-sep,
-	.price .price-dec {
-		font-family: 'Crom', Arial, sans-serif;
-	}
-
-	/* Make decimal point always visible */
-	.price .price-sep {
-		font-family: 'Kanit', Arial, sans-serif; /* ensure glyph */
-		font-size: 0.95em;
-		-webkit-text-stroke: 0;
-		text-shadow: none;
-		color: #61E5FF;
-		display: inline-block;
-		line-height: 1em;
-	}
-
-	.button-container {
-		position: relative;
-		width: 100%;
-		height: 72px;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.button-background {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		width: 166px;
-		height: 63px;
-		transform: translate(-50%, -50%);
-		background-image: var(--spritesheet-url);
-		background-size: 2884px 2027px; /* full atlas */
-		background-position: -1795px -1px; /* buy_btn_active */
-		background-repeat: no-repeat;
-		z-index: 0;
-		pointer-events: none;
-	}
-
-	.button-container.disabled .button-background {
-		background-position: -1795px -66px; /* buy_btn_disabled */
-	}
-
-	.button-text {
-		position: relative;
-		z-index: 1;
-		font-family: 'Lalezar', sans-serif;
-		font-weight: 400;
-		font-style: normal;
-		font-size: 39px; /* further -15% */
-		line-height: 100%;
-		text-align: center;
-		color: #61E5FF;
-	}
-
-	.icon-sprite {
-		background-image: var(--spritesheet-url);
-		background-size: 2884px 2027px;
-		background-repeat: no-repeat;
-		pointer-events: none;
-	}
-
-	.icon-3icons {
-		margin-top: 35px;
-		width: 156px;
-		height: 156px;
-		background-position: -1px -1px;
-	}
-
-	.icon-4icons {
-		margin-top: 35px;
-		width: 176px;
-		height: 156px;
-		background-position: -159px -1px;
 	}
 
 	/* Portrait: stack cards vertically */

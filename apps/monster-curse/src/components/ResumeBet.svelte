@@ -4,6 +4,7 @@
 	import { getReplayBet } from 'components-shared';
 	import {
 		stateBet,
+		stateMetaDerived,
 		stateReplay,
 		stateReplayDerived,
 		stateUi,
@@ -105,10 +106,10 @@
 		if (stateUrlDerived.replay()) return;
 
 		if (stateBet.lastBet?.active && stateBet.lastBet.mode) {
-			// Buy bonus modes (buy_contract, buy_blades, etc.) should only be used for the initial purchase
+			// Buy bonus modes (feature_contract, feature_blades, etc.) should only be used for the initial purchase
 			// Once in an active freespin session, all continuation bets should use BASE mode
 			// This prevents trying to re-purchase the bonus when resuming during freespins
-			const isBuyBonusMode = stateBet.lastBet.mode.startsWith('buy_');
+			const isBuyBonusMode = stateMetaDerived.betModeData(stateBet.lastBet.mode)?.type === 'buy';
 			if (isBuyBonusMode) {
 				// Update both activeBetModeKey and the lastBet.mode itself
 				stateBet.activeBetModeKey = 'BASE';

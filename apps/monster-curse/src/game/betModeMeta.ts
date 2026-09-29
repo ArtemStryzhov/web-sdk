@@ -3,8 +3,8 @@ import type { BetModeMeta } from 'state-shared';
 import { BET_MODE_MAP } from './betModes';
 
 const BASE = BET_MODE_MAP.BASE;
-const CONTRACT = BET_MODE_MAP.buy_contract;
-const BLADES = BET_MODE_MAP.buy_blades;
+const CONTRACT = BET_MODE_MAP.feature_contract;
+const BLADES = BET_MODE_MAP.feature_blades;
 
 const EMPTY_ASSETS = {
 	icon: '',

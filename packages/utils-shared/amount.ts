@@ -1,5 +1,3 @@
-import { stateI18n } from 'state-shared';
-
 import { BOOK_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import { stateBet } from 'state-shared';
 
@@ -82,6 +80,15 @@ export const currencyTicker = (currency: string = stateBet.currency): string | n
 		: null;
 
 /**
+ * The locale every amount is written in, whatever language the player picked.
+ * A currency must read the same in all languages — the symbol, where it sits and
+ * the digits around it — so the game language is deliberately not consulted:
+ * with it, one USD amount comes out as "$1,234.50", "1234,50 US$", "1 234,50 $US"
+ * or even "1,234.50 US$" with Arabic-Indic digits, depending on the language.
+ */
+const AMOUNT_LOCALE = 'en-US';
+
+/**
  * The currency part of a formatted amount, ready to sit in front of the digits.
  * Use it wherever the amount is rendered piecewise instead of through
  * `numberToCurrencyString` — never a literal symbol.
@@ -91,14 +98,14 @@ export const currencyPrefix = (currency: string = stateBet.currency) => {
 	if (ticker) return `${ticker} `;
 
 	try {
-		const symbol = new Intl.NumberFormat(stateI18n.i18n.locale, {
+		const symbol = new Intl.NumberFormat(AMOUNT_LOCALE, {
 			style: 'currency',
 			currency,
 		})
 			.formatToParts(0)
 			.find((part) => part.type === 'currency')?.value;
 
-		// a one-character symbol ("$", "€") hugs the amount, a word-like one ("R$") does not
+		// a one-character symbol ("$", "€") hugs the amount, a word-like one ("CA$") does not
 		if (symbol) return symbol.length > 1 ? `${symbol} ` : symbol;
 	} catch {
 		// an unknown code: fall through to rendering the code itself
@@ -112,19 +119,13 @@ export const numberToCurrencyString = (value: number) => {
 	const ticker = currencyTicker();
 	if (ticker) return `${ticker} ${numberToFloat(value).toFixed(fractionDigits)}`;
 
-	try {
-		return stateI18n.i18n.number(value, {
-			minimumFractionDigits: fractionDigits,
-			maximumFractionDigits: fractionDigits,
-			style: 'currency',
-			currency: stateBet.currency,
-			// numberingSystem: 'latn',
-		});
-	} catch {
-		// Intl throws on a currency code it does not recognise — render it verbatim
-		// rather than letting the whole UI fail on an unexpected ticker
-		return `${stateBet.currency} ${numberToFloat(value).toFixed(fractionDigits)}`;
-	}
+	// Symbol first, then the digits — always, in every language (see AMOUNT_LOCALE).
+	const digits = new Intl.NumberFormat(AMOUNT_LOCALE, {
+		minimumFractionDigits: fractionDigits,
+		maximumFractionDigits: fractionDigits,
+	}).format(Math.abs(value));
+
+	return `${value < 0 ? '-' : ''}${currencyPrefix()}${digits}`;
 };
 
 export const bookEventAmountToCurrencyString = (bookEventAmount: number) => {

@@ -11,7 +11,7 @@
  * unnoticed. They do not agree on a win-capped round: the math stops the running
  * total where the reels left it and puts the capped amount in `finalWin` alone
  * (in the shipped Monster Curse math, 100 of 100 000 base books and 100 of
- * 100 000 `buy_contract` books do exactly this, some of them running `finalWin`
+ * 100 000 `feature_contract` books do exactly this, some of them running `finalWin`
  * up to 20 000x from a `setTotalWin` of 0). `finalWin` is the amount the RGS
  * settles and the amount `payoutMultiplier` reports, so it wins every tie.
  *

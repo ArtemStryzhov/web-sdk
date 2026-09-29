@@ -13,14 +13,14 @@ export default {
 			"rtp": 0.97,
 			"max_win": 5000.0
 		},
-		"buy_contract": {
+		"feature_contract": {
 			"cost": 100.0,
 			"feature": false,
 			"buyBonus": true,
 			"rtp": 0.97,
 			"max_win": 5000.0
 		},
-		"buy_blades": {
+		"feature_blades": {
 			"cost": 300.0,
 			"feature": false,
 			"buyBonus": true,

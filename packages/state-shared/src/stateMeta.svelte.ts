@@ -75,7 +75,7 @@ export const stateMeta = $state({
 
 /**
  * Mode keys travel between the game, the math config and the RGS in whatever
- * case each of them settled on ('BASE', 'base', 'buy_blades'), so every lookup
+ * case each of them settled on ('BASE', 'base', 'feature_blades'), so every lookup
  * by mode key goes through this instead of indexing a map directly.
  */
 const findByBetModeKey = <TValue>(map: Record<string, TValue>, betModeKey: string) => {
@@ -84,6 +84,22 @@ const findByBetModeKey = <TValue>(map: Record<string, TValue>, betModeKey: strin
 };
 
 const betModeData = (betModeKey: string) => findByBetModeKey(stateMeta.betModeMeta, betModeKey);
+
+/**
+ * Last resort for a mode nothing has a name for. The key is an RGS identifier and
+ * the word 'buy' in it is restricted wording in a social (sweepstakes) build, so
+ * there it is made readable ('buy_contract' -> 'Contract') instead of printed as-is.
+ */
+const readableBetModeKey = (betModeKey: string) => {
+	if (!stateUrlDerived.social()) return betModeKey.toUpperCase();
+
+	const words = betModeKey.split(/[_\s-]+/).filter(Boolean);
+	const printable = words.filter((word) => word.toLowerCase() !== 'buy');
+
+	return (printable.length ? printable : words)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+		.join(' ');
+};
 
 /**
  * The name to print for a bet mode. A game registers its dictionary in
@@ -95,7 +111,7 @@ const betModeName = (betModeKey: string, fallbackName?: string) => {
 	const nameData = findByBetModeKey(stateMeta.betModeNameMap, betModeKey);
 	if (nameData) return (stateUrlDerived.social() && nameData.socialName) || nameData.name;
 
-	return fallbackName || betModeData(betModeKey)?.text.title || betModeKey.toUpperCase();
+	return fallbackName || betModeData(betModeKey)?.text.title || readableBetModeKey(betModeKey);
 };
 
 export const stateMetaDerived = {

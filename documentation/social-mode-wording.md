@@ -28,12 +28,15 @@ Everything below is **social-only** — the real-money build keeps its original 
 | Cost Multiplier                                        | Feature Multiplier                     | platform round-details panel, replay start panel                                        |
 | Payout Multiplier                                      | Final Multiplier                       | platform round-details panel, replay start panel                                        |
 | Bet Replay                                             | Play Replay                            | replay start panel title                                                                |
-| Total Bet Cost                                         | Total Play Cost                        | replay start panel                                                                      |
+| Total Bet Cost                                         | Total Play                             | replay start panel                                                                      |
 | a previous bet round / no bets will be placed          | a previous play round / no plays…      | replay start panel footnote                                                             |
 | `© 2026 Stake Engine` / `TM and © 2026 Stake Engine` | `TM and © 2026. All rights reserved.` | General Game Disclaimer _(both builds)_                                                 |
 
 `TM and © 2026. All rights reserved.` always sits on its own line — it is a separate `<p>`
 at the end of the General Game Disclaimer, never appended to the malfunction paragraph.
+
+Source of the table: the Stake Engine [jurisdiction requirements](https://stake-engine.com/docs/approval-guidelines/jurisdiction-requirements)
+(`total bet` → `total play`; `cost of` / `at the cost of` are restricted too, so "Total Play **Cost**" is not used).
 
 ### Deliberately **not** replaced
 
@@ -111,6 +114,14 @@ The ticker is mapped at the formatter, not at the call sites:
 | `XSC`                      | `SC`         |
 | `XGC`                      | `GC`         |
 | `SC` / `GC` _(bare)_       | unchanged    |
+
+### The game language never changes the currency
+
+Every amount is written by `utils-shared/amount.ts` in one fixed locale (`en-US`), not the
+player's language: symbol first, then the digits, whatever `lang` says. Formatting with the game
+language made one USD amount read `$1,234.50`, `1234,50 US$`, `1 234,50 $US` or `1,234.50 US$`
+(Arabic-Indic digits included) depending on the language, which is not allowed. Social sessions are
+locked to English anyway, and their `SC` / `GC` tickers are never localised.
 
 `NO_LOCALISATION_CURRENCY_MAP` in `packages/utils-shared/amount.ts` is the single source
 of truth. Everything the player sees goes through one of the two helpers beside it:

@@ -6,6 +6,7 @@ export const i18nDerived = {
 	betMenu: () => stateI18nDerived.translate('BET MENU'),
 	selectYourBet: () => stateI18nDerived.translate('SELECT YOUR BET'),
 	confirm: () => stateI18nDerived.translate('CONFIRM'),
+	confirmPurchase: () => stateI18nDerived.translate('CONFIRM PURCHASE'),
 	masterVolume: () => stateI18nDerived.translate('MASTER VOLUME'),
 	musicVolume: () => stateI18nDerived.translate('MUSIC VOLUME'),
 	soundEffectVolume: () => stateI18nDerived.translate('SOUND EFFECT VOLUME'),

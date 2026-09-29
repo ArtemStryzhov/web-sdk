@@ -7,7 +7,7 @@
 	const SPRITE_SCALE = { width: 1.18, height: 1.18};
 	const POSITION_ADJUSTMENT = 1.01;
 
-	// Detect bonus game state (buy_blades and buy_contract trigger freegame)
+	// Detect bonus game state (feature_blades and feature_contract trigger freegame)
 	const isBonusGame = $derived(context.stateGame.gameType === 'freegame');
 	
 	// Switch frame based on game type

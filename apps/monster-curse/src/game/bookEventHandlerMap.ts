@@ -660,7 +660,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		// show free spin intro
-		// Ensure we don't continue in a buy_ mode during freespins (prevents re-purchase loops)
+		// Ensure we don't continue in a buy-type mode during freespins (prevents re-purchase loops)
 		try {
 			const { stateBet } = await import('state-shared');
 			stateBet.activeBetModeKey = 'BASE';

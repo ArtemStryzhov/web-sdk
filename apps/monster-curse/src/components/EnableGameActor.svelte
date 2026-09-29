@@ -17,13 +17,15 @@
 	const props: Props = $props();
 	const context = getContext();
 
-	onMount(() => {
-		// Initialize custom bet mode metadata for Monster Curse
-		stateMeta.betModeMeta = getBetModeMeta(stateUrlDerived.social());
-		// The mode-name dictionary the shared UI reads from — the rules modal and
-		// the replay panel name a mode through this rather than repeating a literal.
-		stateMeta.betModeNameMap = betModeNameMap;
+	// Registered while the component initialises rather than in onMount: the replay
+	// panel and the rules modal name a mode through these, and a name looked up
+	// before they exist would fall back to the raw protocol key (`feature_contract`).
+	stateMeta.betModeMeta = getBetModeMeta(stateUrlDerived.social());
+	// The mode-name dictionary the shared UI reads from — the rules modal and
+	// the replay panel name a mode through this rather than repeating a literal.
+	stateMeta.betModeNameMap = betModeNameMap;
 
+	onMount(() => {
 		const { unsubscribe } = gameActor.subscribe((snapshot) => {
 			context.stateXstate.value = snapshot.value;
 			// const childActor = snapshot.children[snapshot.value];
