@@ -18,6 +18,9 @@
 			state?: unknown[];
 		};
 		config?: {
+			minBet?: number;
+			maxBet?: number;
+			stepBet?: number;
 			betLevels?: number[];
 			betModes?: Record<string, { mode?: string; costMultiplier?: number; feature?: boolean }>;
 			defaultBetLevel?: number;
@@ -45,7 +48,7 @@
 		stateModal,
 		stateUi,
 	} from 'state-shared';
-	import { API_AMOUNT_MULTIPLIER, MOST_USED_BET_INDEXES } from 'constants-shared/bet';
+	import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 	import { loadReplayRound } from '../replay';
 
@@ -54,6 +57,17 @@
 	const props: Props = $props();
 
 	let authenticated = $state(false);
+
+	const MENU_OPTIONS_MAX = 19;
+	// evenly spread subset of the RGS levels, always including first and last
+	const pickMenuOptions = (levels: number[]) => {
+		if (levels.length <= MENU_OPTIONS_MAX) return levels;
+		const picked = Array.from(
+			{ length: MENU_OPTIONS_MAX },
+			(_, i) => levels[Math.round((i * (levels.length - 1)) / (MENU_OPTIONS_MAX - 1))],
+		);
+		return picked.filter((value, index, array) => array.indexOf(value) === index);
+	};
 
 	const authenticate = async () => {
 		try {
@@ -108,12 +122,33 @@
 				// 	}
 				// }
 				stateConfig.jurisdiction = typedData?.config?.jurisdiction;
-				stateConfig.betAmountOptions = (typedData.config?.betLevels || []).map(
-					(level: number) => level / API_AMOUNT_MULTIPLIER,
+				const { minBet, maxBet, stepBet, defaultBetLevel, betLevels } = typedData.config;
+				const toAmount = (value: number) => value / API_AMOUNT_MULTIPLIER;
+
+				let levels = [...(betLevels || [])].sort((a, b) => a - b).map(toAmount);
+				if (minBet !== undefined) levels = levels.filter((level) => level >= toAmount(minBet));
+				if (maxBet !== undefined) levels = levels.filter((level) => level <= toAmount(maxBet));
+
+				if (levels.length > 0) {
+					stateConfig.betAmountOptions = levels;
+					stateConfig.betMenuOptions = pickMenuOptions(levels);
+				}
+				stateConfig.minBet = minBet !== undefined ? toAmount(minBet) : levels[0];
+				stateConfig.maxBet = maxBet !== undefined ? toAmount(maxBet) : levels[levels.length - 1];
+				stateConfig.stepBet = stepBet !== undefined ? toAmount(stepBet) : undefined;
+				stateConfig.defaultBetLevel =
+					defaultBetLevel !== undefined ? toAmount(defaultBetLevel) : undefined;
+
+				// initial bet: RGS default, otherwise the closest allowed level
+				const initialBet = stateConfig.defaultBetLevel ?? stateBet.betAmount;
+				const allowed = stateConfig.betAmountOptions;
+				const closest = allowed.reduce(
+					(best, level) =>
+						Math.abs(level - initialBet) < Math.abs(best - initialBet) ? level : best,
+					allowed[0],
 				);
-				stateConfig.betMenuOptions = stateConfig.betAmountOptions.filter((_, index) =>
-					MOST_USED_BET_INDEXES.includes(index),
-				);
+				stateBet.betAmount = closest;
+				stateBet.wageredBetAmount = closest;
 			}
 
 			// round

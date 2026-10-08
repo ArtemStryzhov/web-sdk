@@ -859,33 +859,6 @@ const textStyle = $derived({
 	align: 'center' as const,
 });
 
-	$effect(() => {
-		if (!shouldShowWelcomeFrames) {
-			return;
-		}
-
-		console.info('[PressToContinue] viewport/mode', {
-			width: canvasSizes.width,
-			height: canvasSizes.height,
-			isLandscape,
-			isSliderMode,
-			isShortLandscapeLike,
-			isViewport800x450Like,
-			isUltraShortLandscape,
-			isViewport400x225Like,
-			shouldUseCompactBlockGap,
-			frameGap,
-			frameGapEffective,
-			compactSpacingOffset,
-			compactSpacingMultiplier,
-			frameRenderScale,
-			targetCompactVisibleGap,
-			frameSpacingBase,
-			frameSpacing,
-			frameScale,
-		});
-	});
-
 	const handlePress = () => {
 		// Mark that we've shown the welcome frames, so they won't appear again
 		hasShownWelcomeFrames = true;
